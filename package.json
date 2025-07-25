@@ -1,0 +1,59 @@
+{
+  "name": "claude-code-docs-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Claude Code documentation RAG system",
+  "main": "build/index.js",
+  "type": "module",
+  "bin": {
+    "claude-code-docs-mcp": "./build/index.js"
+  },
+  "scripts": {
+    "setup": "tsx src/utils/setup-collection.ts",
+    "fetch-docs": "tsx src/services/fetch-docs.ts",
+    "start": "tsx src/index.ts",
+    "build": "tsc && chmod 755 build/index.js",
+    "prepare": "npm run build",
+    "watch": "tsc --watch",
+    "debug": "npx @modelcontextprotocol/inspector node build/index.js",
+    "test": "jest",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:runner": "tsx tests/test-runner.ts",
+    "integration-test": "tsx src/utils/test.ts"
+  },
+  "files": [
+    "build"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@qdrant/js-client-rest": "^1.12.0",
+    "dotenv": "^16.4.5",
+    "jsdom": "^25.0.1",
+    "node-fetch": "^3.3.2",
+    "ollama": "^0.5.9",
+    "openai": "^4.67.1"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/inspector": "latest",
+    "@types/jest": "^30.0.0",
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^22.9.0",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  },
+  "keywords": [
+    "mcp",
+    "claude-code",
+    "rag",
+    "documentation",
+    "embeddings",
+    "qdrant"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
