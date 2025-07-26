@@ -14,7 +14,18 @@ export function formatSearchResults(results: SearchResult[]): string {
     formatted += `**Section:** ${result.section}\\n`;
     formatted += `**Source:** [${result.url}](${result.url})\\n`;
     formatted += `**Relevance Score:** ${(result.score * 100).toFixed(1)}%\\n`;
-    formatted += `**Provider:** ${result.provider}\\n\\n`;
+    formatted += `**Provider:** ${result.provider}\\n`;
+    
+    // Add enhanced metadata if available
+    if (result.keyConcepts && result.keyConcepts.length > 0) {
+      formatted += `**Key Concepts:** ${result.keyConcepts.join(', ')}\\n`;
+    }
+    
+    if (result.extractionMethod) {
+      formatted += `**Extraction Method:** ${result.extractionMethod}\\n`;
+    }
+    
+    formatted += `\\n`;
     
     // Add content (truncated if too long)
     const maxContentLength = 800;
@@ -72,7 +83,13 @@ export async function searchDocumentation(
         url: point.payload?.url as string || '',
         score: point.score || 0,
         codeExamples: point.payload?.codeExamples as string[] || [],
-        provider: searchProvider
+        provider: searchProvider,
+        // Enhanced metadata from Claude-driven ingestion
+        keyConcepts: point.payload?.keyConcepts as string[] || undefined,
+        extractionMethod: point.payload?.extractionMethod as string || undefined,
+        pageTitle: point.payload?.pageTitle as string || undefined,
+        summary: point.payload?.summary as string || undefined,
+        lastUpdated: point.payload?.lastUpdated as string || undefined
       }));
       
       results.push(...providerResults);
@@ -91,3 +108,6 @@ export async function searchDocumentation(
   results.sort((a, b) => b.score - a.score);
   return results.slice(0, limit);
 }
+
+// Export alias for convenience
+export { searchDocumentation as search };

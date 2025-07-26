@@ -11,7 +11,7 @@ export default {
       }
     }]
   },
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.(js|ts)$': '$1'
   },
   testMatch: [

@@ -6,6 +6,12 @@ export interface SearchResult {
   score: number;
   codeExamples: string[];
   provider: string;
+  // Enhanced metadata from Claude-driven ingestion
+  keyConcepts?: string[];
+  extractionMethod?: string;
+  pageTitle?: string;
+  summary?: string;
+  lastUpdated?: string;
 }
 
 export interface SearchParams {

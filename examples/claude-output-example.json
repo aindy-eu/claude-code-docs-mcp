@@ -1,0 +1,90 @@
+{
+  "source": "https://docs.anthropic.com/en/docs/claude-code/slash-commands",
+  "pageTitle": "Claude Code Slash Commands",
+  "summary": "Slash commands in Claude Code are custom prompts that extend functionality by allowing users to create reusable commands with parameters. They enable workflow automation and consistent interactions.",
+  "sections": [
+    {
+      "title": "What are Slash Commands",
+      "content": "Slash commands are custom prompts stored as Markdown files that can be invoked using a forward slash. They act as reusable templates that can accept parameters and help standardize common workflows.",
+      "codeExamples": [
+        {
+          "language": "bash",
+          "code": "claude /test",
+          "description": "Basic slash command invocation",
+          "demonstrates": ["command-invocation", "basic-usage"]
+        },
+        {
+          "language": "bash",
+          "code": "claude /review-pr https://github.com/user/repo/pull/123",
+          "description": "Slash command with URL parameter",
+          "demonstrates": ["parameters", "pr-review"]
+        }
+      ],
+      "keyConcepts": ["slash-commands", "custom-prompts", "parameters", "markdown-files"],
+      "bestPractices": [
+        "Keep slash commands focused on a single task",
+        "Use descriptive names that indicate the command's purpose",
+        "Document parameter requirements clearly"
+      ],
+      "relatedSections": ["Creating Slash Commands", "Parameter Handling"]
+    },
+    {
+      "title": "Creating Slash Commands",
+      "content": "Slash commands are created by placing Markdown files in the ~/.claude/slash directory. The filename becomes the command name. Commands can include parameter placeholders using $1, $2, etc.",
+      "codeExamples": [
+        {
+          "language": "markdown",
+          "code": "# Review Pull Request\n\nPlease review this pull request: $1\n\nFocus on:\n- Code quality and best practices\n- Potential bugs or issues\n- Performance implications\n- Security considerations",
+          "description": "Example slash command template for PR reviews",
+          "demonstrates": ["template-structure", "parameter-usage", "structured-prompts"]
+        },
+        {
+          "language": "bash",
+          "code": "echo '# Explain Code\\n\\nPlease explain this code in detail:\\n\\n```\\n$1\\n```' > ~/.claude/slash/explain.md",
+          "description": "Creating a slash command via command line",
+          "demonstrates": ["command-creation", "file-structure"]
+        }
+      ],
+      "keyConcepts": ["template-files", "parameter-placeholders", "slash-directory"],
+      "warnings": [
+        "Slash command files must have .md extension",
+        "Command names should not contain spaces or special characters"
+      ],
+      "bestPractices": [
+        "Use clear parameter placeholders like $1, $2",
+        "Include usage instructions in the command template",
+        "Test commands thoroughly before relying on them"
+      ]
+    },
+    {
+      "title": "Built-in Slash Commands",
+      "content": "Claude Code includes several built-in slash commands for common tasks like /help, /clear, and /save. These provide quick access to frequently used functionality.",
+      "codeExamples": [
+        {
+          "language": "bash",
+          "code": "claude /help",
+          "description": "Display available commands and usage information",
+          "demonstrates": ["built-in-commands", "help-system"]
+        }
+      ],
+      "keyConcepts": ["built-in-commands", "system-commands"],
+      "relatedSections": ["Custom Slash Commands"]
+    }
+  ],
+  "prerequisites": [
+    "Claude Code CLI installed",
+    "Basic understanding of command line usage",
+    "Familiarity with Markdown syntax"
+  ],
+  "useCases": [
+    "Standardizing code review processes",
+    "Creating reusable analysis templates",
+    "Automating repetitive prompts",
+    "Building team-specific workflows"
+  ],
+  "metadata": {
+    "extractedAt": "2024-01-25T10:30:00Z",
+    "modelUsed": "claude-3-opus",
+    "extractionNotes": ["Focused on practical usage patterns", "Included security considerations"]
+  }
+}

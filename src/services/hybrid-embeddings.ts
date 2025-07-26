@@ -4,9 +4,20 @@ import { config } from 'dotenv';
 
 config();
 
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY 
-});
+// Lazy-load OpenAI client only when needed
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY environment variable is required for OpenAI provider');
+    }
+    openaiClient = new OpenAI({ 
+      apiKey: process.env.OPENAI_API_KEY 
+    });
+  }
+  return openaiClient;
+}
 
 export type EmbeddingProvider = 'openai' | 'ollama';
 
@@ -45,7 +56,7 @@ export async function generateEmbedding(
         throw new Error('OPENAI_API_KEY is required for OpenAI embeddings');
       }
       
-      const response = await openai.embeddings.create({
+      const response = await getOpenAIClient().embeddings.create({
         model: EMBEDDING_CONFIGS.openai.model,
         input: text
       });
