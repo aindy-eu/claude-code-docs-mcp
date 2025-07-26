@@ -49,10 +49,20 @@ for i in "${!PAGES[@]}"; do
   
   # Use Claude to read the documentation
   echo "  → Reading with Claude..."
+  echo "  → This may take 10-30 seconds..."
   if claude "$PROMPT_TEMPLATE
 
-Please read: $page" > "$output_file" 2>> "$LOG_FILE"; then
+Please read: $page" > "${output_file}.raw" 2>> "$LOG_FILE"; then
     echo "  ✓ Claude read successful"
+    
+    # Clean up Claude's output (remove markdown code blocks if present)
+    echo "  → Cleaning output..."
+    if grep -q '```json' "${output_file}.raw"; then
+      sed '1d;$d' "${output_file}.raw" | sed 's/^```json$//' | sed 's/^```$//' > "$output_file"
+    else
+      cp "${output_file}.raw" "$output_file"
+    fi
+    rm -f "${output_file}.raw"
     
     # Validate JSON
     if jq . "$output_file" > /dev/null 2>&1; then
