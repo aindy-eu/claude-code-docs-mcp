@@ -9,7 +9,6 @@
   },
   "scripts": {
     "setup": "tsx src/utils/setup-collection.ts",
-    "fetch-docs": "tsx src/services/fetch-docs.ts",
     "process-claude": "tsx src/scripts/process-claude-output.ts",
     "search": "tsx src/scripts/test-search.ts",
     "start": "tsx src/index.ts",

@@ -95,7 +95,7 @@ async function testSearch(provider: EmbeddingProvider) {
       return true;
     } else {
       console.log(`⚠️  Search returned no results - collection may be empty`);
-      console.log(`💡 Run "npm run fetch-docs" to index documentation`);
+      console.log(`💡 Use Claude-driven ingestion: ./examples/ingest-batch.sh`);
       return false;
     }
   } catch (error: any) {
@@ -175,9 +175,9 @@ async function runTests() {
     console.log('\\n❌ Setup incomplete. Next steps:');
     if (!results.ollama_collection && !results.openai_collection) {
       console.log('1. Run "npm run setup" to create collections');
-      console.log('2. Run "npm run fetch-docs" to index documentation');
+      console.log('2. Use Claude-driven ingestion: ./examples/ingest-batch.sh');
     } else if (!results.ollama_search && !results.openai_search) {
-      console.log('1. Run "npm run fetch-docs" to index documentation');
+      console.log('1. Use Claude-driven ingestion: ./examples/ingest-batch.sh');
     }
   }
 }

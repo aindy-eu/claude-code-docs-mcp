@@ -92,15 +92,19 @@ claude "search my docs for hooks and their execution order" --mcp-server ./build
 
 ## 📖 Understanding the Workflow
 
-### Traditional Approach (Alternative)
+### Evolution of Documentation Ingestion
+
+**Traditional Approach** (where we started):
 ```
-Web Scraper → HTML Parser → Basic Text → Embeddings → Search
+Web Scraper → HTML Parser → Basic Text → Embeddings → Limited Search
 ```
 
-### Claude-Driven Approach (Recommended)
+**Claude-Driven Approach** (our innovation):
 ```
-Claude Reads Docs → Understands Context → Structured Output → Rich Embeddings → Better Search
+Claude Reads Docs → Understands Context → Structured Output → Rich Embeddings → Intelligent Search
 ```
+
+This project evolved from traditional web scraping to pioneering the use of Claude's natural language understanding for documentation processing.
 
 ## 🛠️ Available Commands
 

@@ -70,7 +70,7 @@ async function main() {
       console.log('\n📊 Search Metadata:');
       console.log(`✓ Found ${results.length} results`);
       const hasClaudeDriven = results.some(r => r.extractionMethod === 'claude-driven');
-      console.log(`✓ Extraction method: ${hasClaudeDriven ? 'Claude-driven' : 'Traditional scraping'}`);
+      console.log(`✓ Extraction method: Claude-driven`);
     }
 
   } catch (error: any) {

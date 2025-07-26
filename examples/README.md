@@ -8,6 +8,7 @@ This directory contains examples and utilities for ingesting documentation using
 - **`ingest-single.sh`** - Ingest a single documentation page
 - **`ingest-batch.sh`** - Process multiple documentation pages in batch
 - **`ingest-demo.sh`** - Demo script showing the full workflow
+- **`clean-claude-json.sh`** - Utility to clean Claude's JSON output (removes markdown wrappers)
 
 ### Templates
 - **`prompts/overview-prompt.txt`** - Prompt template for extracting documentation
@@ -85,6 +86,20 @@ Please read: [API doc URL]" > claude-outputs/api-reference.json
 ```
 
 ## Troubleshooting
+
+### Common Issues
+
+**"Invalid JSON output"**
+- Claude often wraps JSON in markdown code blocks (```json...```)
+- The scripts now automatically handle this
+- For manual cleaning: `bash examples/clean-claude-json.sh input.json output.json`
+
+**Long wait times**
+- Claude takes 10-30 seconds to read documentation
+- The scripts now show progress indicators
+- Check terminal for status updates
+
+### General Troubleshooting
 
 If ingestion fails:
 1. Check if Claude Code is working: `claude --version`

@@ -66,6 +66,16 @@ claude "search my docs for slash command examples" --mcp-server ./build/index.js
 
 ## 📋 Detailed Usage
 
+### Progress Indicators
+
+The ingestion scripts now provide detailed progress feedback:
+- 📋 Loading prompt template
+- 🤖 Calling Claude with the URL
+- ⏳ Expected wait time (10-30 seconds)
+- 🧹 Cleaning Claude's output
+- 🔄 Generating embeddings
+- ✅ Success confirmation
+
 ### Using Different Documentation Types
 
 The system includes specialized prompts for different documentation types:
@@ -211,6 +221,8 @@ Always request structured JSON output:
 claude "Read [URL] and extract information. Output as JSON only, no other text."
 ```
 
+**Note**: Claude may wrap JSON in markdown code blocks (```json...```). Our scripts automatically detect and remove these wrappers.
+
 ### 3. **Respect Rate Limits**
 Add delays between requests when processing multiple pages:
 ```bash
@@ -239,9 +251,10 @@ Match the prompt to the documentation type:
 ### Common Issues
 
 1. **Invalid JSON Output**
-   - Ensure prompt explicitly requests "JSON only"
-   - Check for truncated output
-   - Validate with `jq` before processing
+   - Claude may wrap JSON in ```json markdown blocks
+   - Our scripts automatically clean this (since v1.1)
+   - If manual: use `sed '1d;$d' file.json` to remove first/last lines
+   - Always validate with `jq` before processing
 
 2. **Missing Embeddings**
    - Verify Ollama is running: `curl http://localhost:11434/api/tags`

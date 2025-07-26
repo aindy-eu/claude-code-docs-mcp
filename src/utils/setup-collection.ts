@@ -55,7 +55,7 @@ async function setupAllCollections() {
     
     console.log('\n🎉 All collections setup complete!');
     console.log('\nNext steps:');
-    console.log('1. Run "npm run fetch-docs" to index Claude Code documentation');
+    console.log('1. Use Claude-driven ingestion: ./examples/ingest-batch.sh');
     console.log('2. Run "npm start" to start the MCP server');
     
   } catch (error: any) {

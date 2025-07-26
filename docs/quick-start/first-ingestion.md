@@ -94,8 +94,10 @@ chmod +x examples/ingest-batch.sh
 Make sure Claude Code is installed and in your PATH.
 
 ### "Invalid JSON output"
+- Claude may wrap JSON in ```json markdown blocks
+- Scripts automatically clean this (v1.1+)
 - Check `claude-outputs/` for the raw output
-- Ensure you asked for "JSON only" in the prompt
+- Manual fix: `sed '1d;$d' file.json > cleaned.json`
 - Try a simpler page first
 
 ### "No embeddings generated"
