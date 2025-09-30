@@ -9,19 +9,19 @@ import { registerTools } from './tools/index.js';
 config();
 
 const server = new Server(
-  { 
-    name: 'claude-code-docs', 
-    version: '1.0.0' 
+  {
+    name: 'claude-code-docs',
+    version: '1.0.0'
   },
-  { 
-    capabilities: { 
-      tools: {} 
-    } 
+  {
+    capabilities: {
+      tools: {}
+    }
   }
 );
 
-const qdrant = new QdrantClient({ 
-  host: process.env.QDRANT_HOST || 'localhost', 
+const qdrant = new QdrantClient({
+  host: process.env.QDRANT_HOST || 'localhost',
   port: parseInt(process.env.QDRANT_PORT || '6333')
 });
 
@@ -38,12 +38,18 @@ process.on('SIGINT', async () => {
 // Start server
 async function startServer() {
   console.log('🚀 Starting Claude Code Documentation MCP Server...');
-  console.log(`📡 Qdrant: ${process.env.QDRANT_HOST || 'localhost'}:${process.env.QDRANT_PORT || '6333'}`);
+  console.log(
+    `📡 Qdrant: ${process.env.QDRANT_HOST || 'localhost'}:${process.env.QDRANT_PORT || '6333'}`
+  );
   console.log(`🧠 Default provider: ${process.env.DEFAULT_EMBEDDING_PROVIDER || 'ollama'}`);
   console.log('\\n📖 Available tools:');
   console.log('  - search_claude_code_docs: Search Claude Code documentation');
   console.log('\\n💡 Usage with Claude Code:');
-  console.log('  claude "How do I implement slash commands?" --mcp-server ./build/index.js');
+  console.log(
+    '  1. Add server: claude mcp add claude-docs node',
+    process.cwd() + '/build/index.js'
+  );
+  console.log('  2. Use Claude: claude "How do I implement slash commands?"');
   console.log('\\n✅ Server ready for connections\\n');
 
   const transport = new StdioServerTransport();

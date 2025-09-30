@@ -2,7 +2,7 @@
 /**
  * Process Claude Output Script
  * Reads Claude's JSON output from stdin or file and processes it into embeddings
- * 
+ *
  * Usage:
  *   npm run process-claude < claude-output.json
  *   npm run process-claude claude-output.json
@@ -15,6 +15,7 @@ import { ClaudeOutputProcessor } from '../services/claude-output-processor.js';
 import { EmbeddingProvider } from '../services/hybrid-embeddings.js';
 import { logger } from '../utils/logger.js';
 import { ClaudeDocOutput } from '../types/claude-ingestion.js';
+import { IngestionTracker } from '../services/ingestion-tracker.js';
 
 async function main() {
   const args = process.argv.slice(2);
@@ -45,7 +46,7 @@ async function main() {
       // Read from stdin
       jsonString = '';
       process.stdin.setEncoding('utf-8');
-      
+
       for await (const chunk of process.stdin) {
         jsonString += chunk;
       }
@@ -59,7 +60,7 @@ async function main() {
 
     // Parse and validate
     const output: ClaudeDocOutput = JSON.parse(jsonString);
-    
+
     if (!output.sections || !Array.isArray(output.sections)) {
       throw new Error('Invalid format: missing sections array');
     }
@@ -69,9 +70,23 @@ async function main() {
       url: process.env.QDRANT_URL || 'http://localhost:6333'
     });
 
+    // Initialize tracker
+    const tracker = new IngestionTracker();
+
     // Process the output
     const processor = new ClaudeOutputProcessor(qdrantClient, provider);
     const result = await processor.processClaudeOutput(output, provider);
+
+    // Track the ingestion
+    if (result.success && output.source) {
+      tracker.recordSuccess(
+        output.source,
+        jsonString,
+        result.stats.totalSections,
+        result.embeddingsGenerated,
+        provider
+      );
+    }
 
     // Report results
     console.log('\n📊 Processing Results:');
@@ -93,18 +108,31 @@ async function main() {
       console.log('\n🔍 You can now search this content using:');
       console.log(`   npm run search "your query" -- --provider ${provider}`);
       console.log('\n💡 Or use the MCP server with Claude Code:');
-      console.log('   claude "search for X in my documentation" --mcp-server ./build/index.js');
+      console.log('   1. Add: claude mcp add claude-docs node', process.cwd() + '/build/index.js');
+      console.log('   2. Use: claude "search for X in my documentation"');
     }
 
     process.exit(result.success ? 0 : 1);
-
   } catch (error: any) {
     logger.error('Processing failed:', error);
     console.error('\n❌ Error:', error.message);
+
+    // Try to track the failure if we have a source URL
+    try {
+      const tracker = new IngestionTracker();
+      if (source && source !== 'manual-ingestion') {
+        tracker.recordFailure(source, error.message);
+      }
+    } catch (trackError) {
+      // Ignore tracking errors
+    }
+
     console.error('\nUsage:');
     console.error('  npm run process-claude < claude-output.json');
     console.error('  npm run process-claude claude-output.json');
-    console.error('  npm run process-claude --provider openai --source "docs-url" < claude-output.json');
+    console.error(
+      '  npm run process-claude --provider openai --source "docs-url" < claude-output.json'
+    );
     process.exit(1);
   }
 }

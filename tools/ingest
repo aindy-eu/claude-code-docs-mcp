@@ -1,0 +1,159 @@
+#!/bin/bash
+# Single Page Documentation Ingestion Example
+# Shows best practices for ingesting individual documentation pages
+
+set -e
+
+# Configuration
+OUTPUT_DIR="./claude-outputs"
+mkdir -p "$OUTPUT_DIR"
+
+# Check if URL is provided
+if [ $# -eq 0 ]; then
+  echo "Usage: $0 <documentation-url> [output-name]"
+  echo "Example: $0 https://docs.claude.com/en/docs/claude-code/overview overview"
+  exit 1
+fi
+
+URL="$1"
+OUTPUT_NAME="${2:-$(echo "$URL" | sed 's|.*/||' | sed 's|[^a-zA-Z0-9-]|_|g')}"
+OUTPUT_FILE="$OUTPUT_DIR/${OUTPUT_NAME}.json"
+
+START_TIME=$(date +%s)
+
+echo "📚 Claude-Driven Documentation Ingestion"
+echo "========================================"
+echo "📍 URL: $URL"
+echo "📁 Output: $OUTPUT_FILE"
+echo ""
+
+# Determine the project root directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Check if already ingested (if tracking is available)
+if [ -f "$PROJECT_ROOT/build/services/ingestion-tracker.js" ] && [ -f "$PROJECT_ROOT/claude-outputs/ingestion-manifest.json" ]; then
+  echo "🔍 Checking ingestion status..."
+  
+  # Create a simple check script
+  cat > "$PROJECT_ROOT/check-single-ingestion-temp.js" << EOF
+import { IngestionTracker } from './build/services/ingestion-tracker.js';
+const tracker = new IngestionTracker();
+const status = tracker.checkIngestionStatus('$URL');
+console.log(JSON.stringify(status));
+EOF
+  
+  status_json=$(cd "$PROJECT_ROOT" && node check-single-ingestion-temp.js 2>/dev/null || echo '{"needsUpdate":true,"error":"check failed"}')
+  needs_update=$(echo "$status_json" | jq -r '.needsUpdate')
+  days_since=$(echo "$status_json" | jq -r '.daysSinceIngestion // "N/A"')
+  reason=$(echo "$status_json" | jq -r '.reason // "unknown"')
+  
+  if [ "$needs_update" = "false" ]; then
+    echo "⚠️  This page was already ingested ${days_since} days ago"
+    echo ""
+    read -p "Do you want to re-ingest it anyway? (y/N) " -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      echo "Skipping ingestion. Page is still fresh."
+      echo ""
+      echo "💡 To force re-ingestion, answer 'y' when prompted"
+      echo "   Or use: ./tools/batch-ingest --force"
+      exit 0
+    fi
+    echo "Proceeding with re-ingestion..."
+    echo ""
+  else
+    echo "  → Ingestion needed: $reason"
+    echo ""
+  fi
+  
+  rm -f "$PROJECT_ROOT/check-single-ingestion-temp.js"
+else
+  echo "⚠️  Ingestion tracking not available (missing build or manifest)"
+  echo ""
+fi
+
+# Step 1: Use Claude to read the documentation
+echo "1️⃣ Reading documentation with Claude..."
+echo "   📋 Loading prompt template..."
+if [ -f "$PROJECT_ROOT/docs/ingestion/prompts/claude-docs.prompt.md" ]; then
+  PROMPT=$(cat "$PROJECT_ROOT/docs/ingestion/prompts/claude-docs.prompt.md")
+  echo "   ✓ Using enhanced Claude documentation prompt"
+else
+  # Fallback prompt if template not found
+  PROMPT="Please read this documentation page and extract structured information as JSON. Include sections, code examples, key concepts, and best practices. Output only valid JSON."
+  echo "   ⚠️  Using fallback prompt (template not found)"
+fi
+
+echo "   🤖 Asking Claude to read: $URL"
+echo "   ⏳ This may take 10-60 seconds..."
+claude "$PROMPT
+
+Please read: $URL" > "$OUTPUT_FILE.raw"
+
+# Clean up Claude's output (remove markdown code blocks if present)
+echo "   🧹 Cleaning Claude's output..."
+if [ -f "$SCRIPT_DIR/utils/clean-json" ]; then
+  if bash "$SCRIPT_DIR/utils/clean-json" "$OUTPUT_FILE.raw" "$OUTPUT_FILE"; then
+    echo "   ✓ Output cleaned successfully"
+  else
+    echo "   ⚠️  Cleaning completed with warnings"
+  fi
+else
+  # Fallback if cleaner script not found
+  echo "   📝 Extracting JSON from Claude's response..."
+  # First, extract just the JSON (from first { to last })
+  sed -n '/{/,$p' "$OUTPUT_FILE.raw" | sed -n '1,/^}$/p' > "$OUTPUT_FILE.tmp1"
+
+  # Then remove any markdown code block markers if present
+  if grep -q '```' "$OUTPUT_FILE.tmp1"; then
+    sed 's/^```json$//' "$OUTPUT_FILE.tmp1" | sed 's/^```$//' > "$OUTPUT_FILE"
+  else
+    mv "$OUTPUT_FILE.tmp1" "$OUTPUT_FILE"
+  fi
+
+  rm -f "$OUTPUT_FILE.tmp1"
+fi
+rm -f "$OUTPUT_FILE.raw"
+
+# Step 2: Validate the JSON output
+echo "2️⃣ Validating JSON output..."
+if jq . "$OUTPUT_FILE" > /dev/null 2>&1; then
+  echo "   ✅ Valid JSON"
+  
+  # Show a preview of what was extracted
+  echo ""
+  echo "   📋 Extracted content preview:"
+  echo "   - Title: $(jq -r '.pageTitle' "$OUTPUT_FILE")"
+  echo "   - Sections: $(jq '.sections | length' "$OUTPUT_FILE")"
+  echo "   - Code examples: $(jq '[.sections[].codeExamples | length] | add' "$OUTPUT_FILE")"
+  echo "   - Key concepts: $(jq '[.sections[].keyConcepts | length] | add' "$OUTPUT_FILE")"
+else
+  echo "   ❌ Invalid JSON output"
+  echo "   Check the file: $OUTPUT_FILE"
+  exit 1
+fi
+
+# Step 3: Process the output into embeddings
+echo ""
+echo "3️⃣ Processing into embeddings..."
+echo "   🔄 Generating embeddings with ${EMBEDDING_PROVIDER:-ollama}..."
+echo "   📊 This may take a few seconds..."
+npm run process-claude "$OUTPUT_FILE"
+
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
+MINUTES=$((DURATION / 60))
+SECONDS=$((DURATION % 60))
+
+echo ""
+echo "✅ Documentation successfully ingested!"
+echo ""
+if [ $MINUTES -gt 0 ]; then
+  echo "⏱️  Total time: ${MINUTES}m ${SECONDS}s"
+else
+  echo "⏱️  Total time: ${SECONDS}s"
+fi
+echo ""
+echo "🔍 Try searching:"
+echo "   npm run search \"$(jq -r '.sections[0].keyConcepts[0] // "your query"' "$OUTPUT_FILE" 2>/dev/null)\""

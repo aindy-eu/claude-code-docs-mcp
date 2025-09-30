@@ -76,7 +76,15 @@ coverage/
 *.lcov
 
 CLAUDE.local.md
-.claude/**/local.md
+.claude/
 
 # Claude ingestion outputs
 claude-outputs/
+
+# AI Handovers (keep README, ignore actual handovers)
+# .claude/handovers/*.md
+# !.claude/handovers/README.md
+
+# Project specific
+.local/
+local-resources/

@@ -1,0 +1,143 @@
+#!/bin/bash
+# Enhanced JSON cleaner for Claude's output
+# Production-ready with multiple extraction strategies
+
+INPUT_FILE="$1"
+OUTPUT_FILE="$2"
+DEBUG="${3:-false}"
+
+if [ -z "$INPUT_FILE" ] || [ -z "$OUTPUT_FILE" ]; then
+  echo "Usage: $0 <input-file> <output-file> [debug]"
+  echo "  debug: Set to 'true' for verbose output"
+  exit 1
+fi
+
+# Logging function
+log() {
+  if [ "$DEBUG" = "true" ]; then
+    echo "[DEBUG] $1" >&2
+  fi
+}
+
+# Create temporary files
+TEMP_FILE=$(mktemp)
+BACKUP_FILE="${OUTPUT_FILE}.raw"
+
+# Save original for debugging
+cp "$INPUT_FILE" "$BACKUP_FILE"
+cp "$INPUT_FILE" "$TEMP_FILE"
+
+log "Processing file: $INPUT_FILE"
+
+# Strategy 1: Remove markdown code blocks
+log "Strategy 1: Removing markdown wrappers..."
+# Remove ```json and ``` markers
+sed 's/^```json$//' "$TEMP_FILE" | sed 's/^```$//' > "${TEMP_FILE}.1"
+mv "${TEMP_FILE}.1" "$TEMP_FILE"
+
+# Strategy 2: Extract JSON between first { and last }
+log "Strategy 2: Extracting JSON object..."
+# Find line numbers of first { and last }
+FIRST_BRACE=$(grep -n '{' "$TEMP_FILE" | head -1 | cut -d: -f1)
+LAST_BRACE=$(grep -n '}' "$TEMP_FILE" | tail -1 | cut -d: -f1)
+
+if [ ! -z "$FIRST_BRACE" ] && [ ! -z "$LAST_BRACE" ]; then
+  log "Found JSON from line $FIRST_BRACE to $LAST_BRACE"
+  sed -n "${FIRST_BRACE},${LAST_BRACE}p" "$TEMP_FILE" > "${TEMP_FILE}.2"
+  
+  # Test if this extraction is valid JSON
+  if jq . "${TEMP_FILE}.2" > /dev/null 2>&1; then
+    log "Valid JSON extracted"
+    mv "${TEMP_FILE}.2" "$TEMP_FILE"
+  else
+    log "Extracted content is not valid JSON, trying next strategy"
+    rm -f "${TEMP_FILE}.2"
+  fi
+fi
+
+# Strategy 3: Remove common problematic patterns
+log "Strategy 3: Cleaning common issues..."
+# Remove trailing commas before } or ]
+# Use explicit temp files instead of -i for better compatibility
+sed 's/,\s*}/}/g' "$TEMP_FILE" > "${TEMP_FILE}.3"
+mv "${TEMP_FILE}.3" "$TEMP_FILE"
+sed 's/,\s*]/]/g' "$TEMP_FILE" > "${TEMP_FILE}.3"
+mv "${TEMP_FILE}.3" "$TEMP_FILE"
+# Remove any text after the last }
+LAST_BRACE_LINE=$(grep -n '}' "$TEMP_FILE" | tail -1 | cut -d: -f1)
+if [ ! -z "$LAST_BRACE_LINE" ]; then
+  sed "${LAST_BRACE_LINE}q" "$TEMP_FILE" > "${TEMP_FILE}.3"
+  mv "${TEMP_FILE}.3" "$TEMP_FILE"
+fi
+
+# Strategy 4: Try to parse and format with jq
+log "Strategy 4: Attempting jq parsing..."
+if jq . "$TEMP_FILE" > "${TEMP_FILE}.formatted" 2>/dev/null; then
+  log "Successfully formatted with jq"
+  mv "${TEMP_FILE}.formatted" "$OUTPUT_FILE"
+  rm -f "$TEMP_FILE" "${TEMP_FILE}.bak"
+  echo "✅ JSON cleaned and validated successfully"
+  exit 0
+fi
+
+# Strategy 5: Use Python for more intelligent parsing
+log "Strategy 5: Using Python for advanced extraction..."
+python3 -c "
+import json
+import re
+import sys
+
+def extract_json(text):
+    # Try to find JSON object
+    match = re.search(r'\\{[^{}]*(?:\\{[^{}]*\\}[^{}]*)*\\}', text, re.DOTALL)
+    if match:
+        try:
+            json_str = match.group(0)
+            # Fix common issues
+            json_str = re.sub(r',(\s*[}\]])', r'\1', json_str)  # Remove trailing commas
+            json_str = re.sub(r'(["\d\w])\s*\n\s*(["\d\w])', r'\1,\n\2', json_str)  # Add missing commas
+            parsed = json.loads(json_str)
+            return json.dumps(parsed, indent=2)
+        except:
+            pass
+    return None
+
+with open('$TEMP_FILE', 'r') as f:
+    content = f.read()
+    
+result = extract_json(content)
+if result:
+    with open('${OUTPUT_FILE}', 'w') as out:
+        out.write(result)
+    sys.exit(0)
+else:
+    sys.exit(1)
+" 2>/dev/null
+
+if [ $? -eq 0 ]; then
+  rm -f "$TEMP_FILE" "${TEMP_FILE}.bak"
+  echo "✅ JSON cleaned using advanced extraction"
+  exit 0
+fi
+
+# If all strategies fail, provide helpful error message
+echo "❌ Failed to extract valid JSON from Claude's output"
+echo ""
+echo "Debugging information:"
+echo "1. Original file saved as: $BACKUP_FILE"
+echo "2. First 10 lines of input:"
+head -10 "$INPUT_FILE"
+echo ""
+echo "3. Last 10 lines of input:"
+tail -10 "$INPUT_FILE"
+echo ""
+echo "Try:"
+echo "  - Manually edit $BACKUP_FILE to fix JSON syntax"
+echo "  - Re-run ingestion with a clearer prompt"
+echo "  - Check if Claude's response was truncated"
+
+# Save partially cleaned version
+cp "$TEMP_FILE" "$OUTPUT_FILE"
+rm -f "$TEMP_FILE" "${TEMP_FILE}.bak"
+
+exit 1

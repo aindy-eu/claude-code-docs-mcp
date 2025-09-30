@@ -1,39 +1,39 @@
 # Claude Code Documentation MCP Server
 
-A Model Context Protocol (MCP) server that provides intelligent search capabilities for Claude Code documentation. This project solves the knowledge gap where Claude Code was released after Claude's knowledge cutoff date.
+MCP server that uses Claude to read and understand documentation for intelligent semantic search.
 
-## 🌟 What Makes This Special
+## ✨ Key Innovation
 
-This project introduces a **Claude-driven documentation ingestion** approach - instead of traditional web scraping, we use Claude Code itself to read and understand documentation naturally. This results in:
+Instead of parsing HTML, Claude reads documentation naturally - understanding context, relationships, and implicit knowledge. This creates dramatically better search results.
 
-- 🧠 **Deeper Understanding**: Claude extracts implicit knowledge, relationships, and patterns
-- 🎯 **Better Search Results**: Includes key concepts, best practices, and contextual information
-- ⚖️ **Ethical & Legal**: Uses Claude Code for its intended purpose (reading documentation)
-- 🔍 **Enhanced Metadata**: Search results show extraction method, key concepts, and more
-
-## 🚀 Quick Start for New Users
-
-Just forked this project? Here's exactly what to do:
+## 🚀 Quick Start
 
 ### Prerequisites
 
 1. **Docker** - For running Qdrant (vector database)
 2. **Node.js 18+** - For running the MCP server
-3. **Ollama** - For local embeddings (recommended)
+3. **Embedding Provider** (choose one):
+   - **Ollama** (default, free, local) - Recommended for privacy and cost
+   - **OpenAI API** - Better quality embeddings but requires API key and costs money
 4. **Claude Code** - For reading documentation
 
-### Step 1: Start Required Services
+### Setup (5 minutes)
+
+1. **Start services:**
 
 ```bash
 # Start Qdrant vector database
 docker run -p 6333:6333 -p 6334:6334 qdrant/qdrant
 
-# Install and start Ollama (if not already installed)
+# For Ollama users (default):
 curl -fsSL https://ollama.ai/install.sh | sh
 ollama pull nomic-embed-text
+
+# For OpenAI users (skip if using Ollama):
+# Add your API key to .env file: OPENAI_API_KEY=sk-...
 ```
 
-### Step 2: Set Up the Project
+2. **Install and configure:**
 
 ```bash
 # Install dependencies
@@ -46,183 +46,121 @@ cp .env.example .env
 npm run setup
 ```
 
-### Step 3: Ingest Documentation (Claude-Driven Approach)
-
-This is where the magic happens! We'll use Claude Code to read and understand documentation:
+3. **Ingest documentation:**
 
 ```bash
 # Make scripts executable
-chmod +x examples/ingest-single.sh examples/ingest-batch.sh
+chmod +x tools/ingest tools/batch-ingest
 
-# Option 1: Ingest a single documentation page
-./examples/ingest-single.sh https://docs.anthropic.com/en/docs/claude-code/overview
-
-# Option 2: Batch ingest multiple pages (recommended for first-time setup)
-./examples/ingest-batch.sh
+# Ingest all 10 Claude Code documentation pages
+./tools/batch-ingest
 ```
 
-The batch script will:
-- Use Claude to read each documentation page
-- Extract structured information with context
-- Save outputs to `claude-outputs/` directory
-- Generate embeddings for semantic search
-- Log progress to help you track what's happening
+The batch script ingests these Claude Code documentation pages:
+- **Overview** - Introduction to Claude Code
+- **Quickstart** - Getting started guide
+- **Slash Commands** - Custom command creation
+- **Hooks** - Event-driven automation
+- **Settings** - Configuration options
+- **MCP** - Model Context Protocol integration
+- **Memory** - Context management system
+- **Common Workflows** - Typical usage patterns
+- **Interactive Mode** - Chat-based coding
+- **CLI Reference** - Command line options
 
-### Step 4: Test Your Setup
+It will save outputs to `claude-outputs/` and generate embeddings for search.
+
+4. **Test search:**
 
 ```bash
-# Search your knowledge base
-npm run search "how do slash commands work"
-
-# You should see results with enhanced metadata like:
-# - Key concepts
-# - Extraction method (claude-driven)
-# - Code examples
+npm run search "how do hooks work"
 ```
 
-### Step 5: Use with Claude Code
+## 🤖 Using with Claude Code
+
+Once your knowledge base is populated, use it with Claude Code via MCP:
 
 ```bash
 # Build the MCP server
 npm run build
 
-# Use it with Claude Code
-claude "search my docs for hooks and their execution order" --mcp-server ./build/index.js
+# Add the server to Claude Code
+claude mcp add claude-docs node $(pwd)/build/index.js
+
+# Use Claude normally - it now has access to the docs
+claude "search for slash commands with parameters"
 ```
 
-## 📖 Understanding the Workflow
+The MCP server provides a `search_claude_code_docs` tool that Claude can use to search your ingested documentation.
 
-### Evolution of Documentation Ingestion
+## 📖 Documentation
 
-**Traditional Approach** (where we started):
+- [Overview](docs/README.md) - Documentation for this project
+- [How Ingestion Works](docs/ingestion/README.md) - Claude-driven documentation processing
+- [Qdrant](docs/qdrant/README.md) - What is Qdrant – how to setup and operate
+- [RAG Architecture](docs/rag/README.md) - The RAG System design and Architecture
+- [Setup Guide](docs/mcp-server-guide.md) - Detailed MCP configuration
+- [Testing](docs/testing.md) - How to test the RAG System
+
+
+## 🛠️ Commands
+
+### Ingestion
+
+- `./tools/batch-ingest` - Ingest all 10 configured Claude Code docs
+- `./tools/ingest <url>` - Ingest any single documentation page
+- `./tools/batch-ingest --force` - Re-ingest everything (ignore cache)
+
+### Search & Management
+
+- `npm run search "query"` - Search your knowledge base
+- `npm run search "query" -- --provider openai` - Search using OpenAI embeddings
+- `npm run ingestion-status` - Check what's been ingested
+- `npm run process-claude <file.json>` - Process existing Claude output
+
+### Development
+
+- `npm run build` - Build the MCP server (✅ working)
+- `npm test` - Run tests (⚠️ some tests need fixing - contributions welcome!)
+- `npm run test:unit` - Run unit tests only
+- `npm run debug` - Debug with MCP inspector
+
+## 🔧 Configuration
+
+See `.env.example` for all configuration options. Key settings:
+
+```bash
+DEFAULT_EMBEDDING_PROVIDER=ollama  # or openai
+QDRANT_HOST=localhost
+QDRANT_PORT=6333
 ```
-Web Scraper → HTML Parser → Basic Text → Embeddings → Limited Search
-```
-
-**Claude-Driven Approach** (our innovation):
-```
-Claude Reads Docs → Understands Context → Structured Output → Rich Embeddings → Intelligent Search
-```
-
-This project evolved from traditional web scraping to pioneering the use of Claude's natural language understanding for documentation processing.
-
-## 🛠️ Available Commands
-
-### Ingestion Commands
-- `./examples/ingest-single.sh <url>` - Ingest a single documentation page
-- `./examples/ingest-batch.sh` - Process multiple pages automatically
-- `npm run process-claude <file>` - Process Claude's JSON output
-
-### Search Commands
-- `npm run search "query"` - Search from command line
-- Use with Claude Code via MCP for integrated search
-
-### Setup Commands
-- `npm run setup` - Initialize vector database collections
-- `npm test` - Verify everything is working
 
 ## 📁 Project Structure
 
 ```
-claude-code-docs-mcp/
-├── examples/               # Example scripts and templates
-│   ├── ingest-single.sh   # Single page ingestion
-│   ├── ingest-batch.sh    # Batch ingestion
-│   └── prompts/           # Claude prompt templates
-├── claude-outputs/        # Where Claude's outputs are saved (git-ignored)
+├── tools/                # Ingestion scripts
+│   ├── ingest           # Single page ingestion
+│   └── batch-ingest     # Batch ingestion (all pages)
+├── docs/
+│   └── ingestion/       # Documentation for the ingestion system
+│       ├── README.md    # How it works
+│       ├── prompts/     # Prompt templates
+│       └── *.md         # Guides and troubleshooting
 ├── src/
-│   ├── services/          # Core services
-│   │   ├── claude-output-processor.ts  # Processes Claude's output
-│   │   └── hybrid-embeddings.ts        # Embedding generation
-│   ├── scripts/           # CLI scripts
-│   └── types/             # TypeScript definitions
-└── docs/                  # Additional documentation
+│   ├── config/          # URL configuration
+│   ├── services/        # Core services
+│   ├── scripts/         # CLI tools
+│   └── index.ts         # MCP server entry point
+└── claude-outputs/      # Ingestion outputs (git-ignored)
 ```
-
-## 🎯 Common Use Cases
-
-### First-Time Setup
-```bash
-# Run the batch ingestion to populate your knowledge base
-./examples/ingest-batch.sh
-```
-
-### Adding New Documentation
-```bash
-# When new Claude Code features are released
-./examples/ingest-single.sh https://docs.anthropic.com/en/docs/claude-code/new-feature
-```
-
-### Searching for Specific Features
-```bash
-# Command line search
-npm run search "MCP server configuration"
-
-# With Claude Code
-claude "find examples of slash commands with parameters" --mcp-server ./build/index.js
-```
-
-## 🔧 Configuration
-
-### Environment Variables (`.env`)
-```bash
-# Ollama (default, no config needed if running locally)
-OLLAMA_HOST=localhost
-OLLAMA_PORT=11434
-
-# OpenAI (optional alternative)
-OPENAI_API_KEY=sk-your-key-here
-
-# Qdrant
-QDRANT_URL=http://localhost:6333
-
-# Default embedding provider
-DEFAULT_EMBEDDING_PROVIDER=ollama
-```
-
-## 🐛 Troubleshooting
-
-### "Qdrant not running"
-```bash
-docker run -p 6333:6333 -p 6334:6334 qdrant/qdrant
-```
-
-### "Ollama not found"
-```bash
-# Install Ollama
-curl -fsSL https://ollama.ai/install.sh | sh
-
-# Pull embedding model
-ollama pull nomic-embed-text
-```
-
-### "No search results"
-```bash
-# Check if you've ingested any documentation
-ls -la claude-outputs/
-
-# If empty, run ingestion
-./examples/ingest-batch.sh
-```
-
-### "Invalid JSON from Claude"
-- Make sure to ask Claude for "JSON only" output
-- Check `claude-outputs/ingestion-log.txt` for errors
-- Try with a simpler page first
-
-## 📚 Learn More
-
-- [Claude-Driven Ingestion Guide](docs/claude-driven-ingestion-guide.md) - Detailed guide on the ingestion process
-- [Implementation Summary](docs/ai/doc-ingestion-think/implementation-summary.md) - Technical details of the implementation
-- [Examples README](examples/README.md) - More examples and customization options
 
 ## 🤝 Contributing
 
-We welcome contributions! The Claude-driven approach opens up many possibilities:
-- Custom prompt templates for different documentation types
-- Automated quality validation
-- Integration with other documentation sources
-- Enhanced search capabilities
+We welcome contributions! Please ensure:
+
+- Tests pass (`npm test`)
+- Code follows existing patterns
+- Documentation is updated if needed
 
 ## 📄 License
 
@@ -230,4 +168,4 @@ MIT
 
 ---
 
-**Note**: This project demonstrates an innovative approach to documentation ingestion using Claude Code for its intended purpose - reading and understanding documentation. No automated scraping or unauthorized access is performed.
+_Built with Claude Code, TypeScript, and Qdrant. Pioneering the use of AI for intelligent documentation understanding._

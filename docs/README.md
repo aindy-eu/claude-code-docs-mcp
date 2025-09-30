@@ -1,118 +1,83 @@
-# Claude Code Documentation MCP Server - Knowledge Base
+# Claude Code Documentation MCP Server
 
-This documentation captures comprehensive knowledge gained from building a production-ready MCP server with RAG capabilities and innovative Claude-driven documentation ingestion.
+MCP server that enables Claude to search documentation it has read and understood.
 
-## 📚 Documentation Structure
+## Quick Start
 
-### 🏗️ Core Development
-- [MCP Server Development Guide](./development/mcp-server-guide.md) - Complete guide to building MCP servers
-- [TypeScript & ES Modules Setup](./development/typescript-setup.md) - Modern TS configuration patterns
-- [Project Architecture](./development/architecture.md) - Scalable project structure patterns
+```bash
+# 1. Install Qdrant
+docker run -p 6333:6333 qdrant/qdrant
 
-### 🤖 Claude Code Integration  
-- [Claude Code Setup & Configuration](./claude-code/setup.md) - Settings, permissions, and hooks
-- [MCP Integration Patterns](./claude-code/mcp-integration.md) - Connection and tool registration
-- [Debugging & Development](./claude-code/debugging.md) - Inspector tools and workflows
+# 2. Setup project
+npm install
+npm run setup
 
-### 🧠 Claude-Driven Documentation Ingestion
-- [Claude-Driven Ingestion Guide](./claude-driven-ingestion-guide.md) - Revolutionary approach to documentation processing
-- [Implementation Details](./ai/doc-ingestion-think/implementation-summary.md) - Technical architecture and design decisions
-- [Ingestion Examples](../examples/README.md) - Practical examples and scripts
-- [Prompt Engineering](./ingestion/prompt-templates.md) - Crafting effective extraction prompts
+# 3. Add to Claude
+claude mcp add claude-docs node $(pwd)/build/index.js
 
-### 🗄️ Vector Database & RAG
-- [Qdrant Setup & Operations](./qdrant/setup.md) - Docker, collections, and management
-- [Vector Operations](./qdrant/operations.md) - Storage, retrieval, and optimization
-- [RAG System Architecture](./rag/architecture.md) - Complete RAG implementation guide
-- [Enhanced Search](./rag/enhanced-search.md) - Leveraging Claude-extracted metadata
+# 4. Search
+claude "search the docs for error handling"
+```
 
-### 🧠 Embedding Services
-- [Embedding Providers](./embeddings/providers.md) - Ollama, OpenAI, and hybrid strategies
-- [Performance Optimization](./embeddings/optimization.md) - Caching, batching, and scaling
-- [Error Handling](./embeddings/error-handling.md) - Fallbacks and resilience patterns
+## How It Works
 
-### 🧪 Testing Strategies
-- [Testing Guide](./testing/guide.md) - Unit, integration, and E2E testing
-- [Mock Strategies](./testing/mocking.md) - Effective mocking patterns
-- [CI/CD Setup](./testing/ci-cd.md) - GitHub Actions and automation
+1. **Claude reads** documentation pages naturally (not HTML parsing)
+2. **Extracts** content, code examples, concepts, relationships
+3. **Stores** as vector embeddings in Qdrant
+4. **Searches** semantically - finds meaning, not just keywords
 
-### 🚀 Production & Deployment
-- [Deployment Guide](./deployment/guide.md) - Docker, environment, and scaling
-- [Monitoring & Observability](./deployment/monitoring.md) - Health checks and metrics
-- [Security Best Practices](./deployment/security.md) - Authentication and hardening
+That's it. No complex architecture. Just AI understanding + vector search.
 
-### 🔧 Troubleshooting
-- [Common Issues](./troubleshooting/common-issues.md) - Error patterns and solutions
-- [Performance Debugging](./troubleshooting/performance.md) - Optimization techniques
-- [Service Connectivity](./troubleshooting/connectivity.md) - Network and integration issues
-- [Ingestion Issues](./troubleshooting/ingestion.md) - Claude output and processing problems
+## Documentation
 
-### 📖 Reference
-- [API Reference](./reference/api.md) - Complete API documentation
-- [Configuration Reference](./reference/configuration.md) - All configuration options
-- [Best Practices](./reference/best-practices.md) - Accumulated wisdom and patterns
-- [Claude Output Schema](./reference/claude-output-schema.md) - Expected JSON structure
+- [**Ingestion**](./ingestion/README.md) - How Claude reads and processes docs
+- [**Search**](./rag/README.md) - How semantic search works with metadata
+- [**Storage**](./qdrant/README.md) - Qdrant vector database 
+- [**Setup Guide**](./mcp-server-guide.md) - Detailed MCP configuration
+- [**Testing**](./testing.md) - Running the test suite
 
-## 🎯 Quick Start Guides
+## Development
 
-- [5-Minute Setup](./quick-start/5-minute-setup.md) - Get running fast
-- [Development Environment](./quick-start/dev-environment.md) - Complete dev setup
-- [First MCP Server](./quick-start/first-server.md) - Build your first server
-- [First Documentation Ingestion](./quick-start/first-ingestion.md) - Ingest docs with Claude
+```bash
+# Ingest Claude Code docs
+./tools/batch-ingest
 
-## 💡 Advanced Topics
+# Process existing Claude output
+npm run process-claude file.json
 
-- [Multi-Provider Architecture](./advanced/multi-provider.md) - Hybrid embedding strategies  
-- [Caching & Performance](./advanced/caching.md) - Advanced optimization patterns
-- [Plugin Architecture](./advanced/plugins.md) - Extensible design patterns
-- [Authentication Patterns](./advanced/auth.md) - Security and access control
-- [Intelligent Extraction](./advanced/intelligent-extraction.md) - Advanced Claude prompting techniques
-- [Quality Validation](./advanced/quality-validation.md) - Ensuring high-quality extractions
+# Search from CLI
+npm run search "your query"
 
-## 🔄 Migration Guides
+# Check ingestion status
+npm run ingestion-status
 
-- [Legacy to Modern Structure](./migration/project-structure.md) - Restructuring existing projects
-- [Testing Migration](./migration/testing.md) - Adding comprehensive tests
-- [Performance Optimization](./migration/performance.md) - Scaling existing systems
-- [From Scraping to Claude-Driven](./migration/scraping-to-claude.md) - Migrating from traditional approaches
+# Run tests
+npm test
+```
 
----
+## Project Structure
 
-## 🌟 Key Learnings
+```
+src/
+  config/         # URL configuration
+  scripts/        # Processing scripts
+  services/       # Core services (embeddings, ingestion)
+  tools/          # MCP tool definitions
+docs/
+  ingestion/      # Ingestion documentation
+  rag/            # Search architecture
+  qdrant/         # Vector storage
+tools/            # Shell scripts for operations
+tests/            # Test suite
+```
 
-This project demonstrates:
-- **Claude-Driven Documentation Ingestion** - Using AI to understand docs naturally instead of scraping
-- **Modern MCP Server Architecture** with TypeScript and ES modules
-- **Production-Ready Testing** with unit, integration, and E2E coverage
-- **Hybrid Embedding Strategies** for maximum flexibility and resilience
-- **Scalable RAG Implementation** with vector search and semantic retrieval
-- **Claude Code Integration** with proper permissions and debugging
-- **Docker & CI/CD Best Practices** for reliable deployment
-- **Ethical Documentation Processing** - Respecting rate limits and terms of service
+## Key Features
 
-## 📈 What Makes This Special
-
-1. **Revolutionary Ingestion Approach** - Claude reads and understands documentation like a human
-2. **Complete End-to-End System** - From development to production
-3. **Enhanced Metadata Extraction** - Key concepts, relationships, and implicit knowledge
-4. **Comprehensive Testing Strategy** - Every component thoroughly tested
-5. **Hybrid Architecture** - Multiple embedding providers with fallbacks
-6. **Production Hardened** - Error handling, monitoring, and security
-7. **Developer Experience** - Hot reloading, debugging, and tooling
-8. **Documentation Driven** - Every pattern and decision documented
-9. **Ethical & Legal Compliance** - Uses Claude Code for its intended purpose
-
-## 🚀 The Innovation: Claude-Driven Ingestion
-
-Traditional documentation scrapers extract text mechanically. Our approach uses Claude Code to:
-- **Understand Context** - Grasps relationships between concepts
-- **Extract Implicit Knowledge** - Identifies patterns and best practices
-- **Preserve Code Examples** - Intelligently categorizes and indexes code
-- **Generate Rich Metadata** - Key concepts, warnings, prerequisites, and more
-- **Respect Infrastructure** - Natural rate limiting through interactive use
-
-This results in dramatically better search results and knowledge retrieval compared to traditional approaches.
+- **Natural Understanding**: Claude reads docs like a human would
+- **Rich Metadata**: Extracts concepts, relationships, best practices
+- **Flexible Storage**: Supports Ollama (local) or OpenAI embeddings
+- **Smart Caching**: 7-day TTL prevents redundant API calls
 
 ---
 
-*Built with ❤️ using Claude Code, TypeScript, Qdrant, and modern development practices. Pioneering the use of AI for intelligent documentation understanding.*
+For the main project overview, see [../README.md](../README.md)

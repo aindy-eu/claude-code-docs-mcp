@@ -23,7 +23,7 @@ For each major section:
 - Note best practices
 - Highlight important warnings
 - List related features or sections`,
-    
+
     outputInstructions: `Output as JSON matching this structure:
 {
   "source": "URL or identifier",
@@ -71,7 +71,7 @@ For each tutorial section:
 - Note expected outcomes
 - Highlight troubleshooting tips
 - Identify prerequisite knowledge`,
-    
+
     outputInstructions: `Output as JSON with the same structure as above, but ensure:
 - Sections follow the tutorial flow
 - Code examples include full context
@@ -98,7 +98,7 @@ For each API or configuration:
 - Note default values
 - List possible errors
 - Include related APIs`,
-    
+
     outputInstructions: `Output as JSON with emphasis on:
 - Complete parameter documentation
 - Multiple code examples per feature
@@ -126,7 +126,7 @@ For each topic:
 - Note trade-offs
 - Highlight expert tips
 - Connect to other features`,
-    
+
     outputInstructions: `Output as JSON focusing on:
 - Practical, actionable content
 - Real-world code examples
@@ -154,7 +154,7 @@ For each issue:
 - Provide solutions
 - Include code fixes
 - Note prevention tips`,
-    
+
     outputInstructions: `Output as JSON with:
 - Clear problem descriptions
 - Step-by-step solutions
@@ -175,12 +175,9 @@ export function getIngestionPrompt(docType: string): IngestionPromptTemplate {
 /**
  * Create a complete prompt for Claude including the template and instructions
  */
-export function createIngestionPrompt(
-  docType: string, 
-  additionalContext?: string
-): string {
+export function createIngestionPrompt(docType: string, additionalContext?: string): string {
   const template = getIngestionPrompt(docType);
-  
+
   const parts = [
     template.template,
     '',
@@ -198,10 +195,7 @@ export function createIngestionPrompt(
 /**
  * Create a prompt for checking documentation updates
  */
-export function createUpdateCheckPrompt(
-  documentList: string[],
-  lastCheckDate: string
-): string {
+export function createUpdateCheckPrompt(documentList: string[], lastCheckDate: string): string {
   return `Please help me identify which Claude Code documentation pages may have been updated since ${lastCheckDate}.
 
 Documentation pages to check:
@@ -227,10 +221,7 @@ Output as JSON:
 /**
  * Create a prompt for validating ingested content
  */
-export function createValidationPrompt(
-  ingestedContent: any,
-  originalUrl: string
-): string {
+export function createValidationPrompt(ingestedContent: any, originalUrl: string): string {
   return `Please validate this ingested documentation content for quality and completeness.
 
 Original source: ${originalUrl}

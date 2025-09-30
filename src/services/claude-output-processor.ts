@@ -6,14 +6,19 @@
 
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { v4 as uuidv4 } from 'uuid';
-import { 
-  ClaudeDocOutput, 
-  ClaudeDocSection, 
-  ProcessedDocument, 
+import {
+  ClaudeDocOutput,
+  ClaudeDocSection,
+  ProcessedDocument,
   IngestionResult,
-  CodeExample 
+  CodeExample
 } from '../types/claude-ingestion.js';
-import { generateEmbedding, EmbeddingProvider, getCollectionName, EMBEDDING_CONFIGS } from './hybrid-embeddings.js';
+import {
+  generateEmbedding,
+  EmbeddingProvider,
+  getCollectionName,
+  EMBEDDING_CONFIGS
+} from './hybrid-embeddings.js';
 import { logger } from '../utils/logger.js';
 
 export class ClaudeOutputProcessor {
@@ -50,10 +55,12 @@ export class ClaudeOutputProcessor {
       const documents = this.extractDocuments(output);
       result.stats.totalSections = output.sections.length;
       result.stats.totalCodeExamples = output.sections.reduce(
-        (sum, section) => sum + section.codeExamples.length, 0
+        (sum, section) => sum + (section.codeExamples?.length || 0),
+        0
       );
       result.stats.totalConcepts = output.sections.reduce(
-        (sum, section) => sum + section.keyConcepts.length, 0
+        (sum, section) => sum + (section.keyConcepts?.length || 0),
+        0
       );
 
       // Generate embeddings and store
@@ -64,7 +71,7 @@ export class ClaudeOutputProcessor {
       for (const doc of documents) {
         try {
           const embedding = await generateEmbedding(doc.content, provider);
-          
+
           points.push({
             id: doc.id,
             vector: embedding,
@@ -102,8 +109,9 @@ export class ClaudeOutputProcessor {
       }
 
       result.stats.processingTimeMs = Date.now() - startTime;
-      logger.info(`Processed ${result.documentsProcessed} documents in ${result.stats.processingTimeMs}ms`);
-
+      logger.info(
+        `Processed ${result.documentsProcessed} documents in ${result.stats.processingTimeMs}ms`
+      );
     } catch (error: any) {
       logger.error('Error processing Claude output:', error);
       result.errors = [error.message];
@@ -140,7 +148,8 @@ export class ClaudeOutputProcessor {
     for (const section of output.sections) {
       // Main section document
       const sectionContent = this.formatSectionContent(section);
-      if (sectionContent.length > 100) { // Only store meaningful chunks
+      if (sectionContent.length > 100) {
+        // Only store meaningful chunks
         documents.push({
           id: uuidv4(),
           source: output.source,
@@ -148,8 +157,8 @@ export class ClaudeOutputProcessor {
           content: sectionContent,
           metadata: {
             section: section.title,
-            codeExamples: section.codeExamples.map(ex => ex.code),
-            keyConcepts: section.keyConcepts,
+            codeExamples: section.codeExamples?.map(ex => ex.code) || [],
+            keyConcepts: section.keyConcepts || [],
             lastUpdated: output.metadata.extractedAt,
             provider: 'claude-extracted',
             extractionMethod: 'claude-driven'
@@ -158,8 +167,9 @@ export class ClaudeOutputProcessor {
       }
 
       // Create separate documents for significant code examples
-      for (const example of section.codeExamples) {
-        if (example.code.length > 50) { // Only store substantial code examples
+      for (const example of section.codeExamples || []) {
+        if (example.code.length > 50) {
+          // Only store substantial code examples
           documents.push({
             id: uuidv4(),
             source: output.source,
@@ -185,12 +195,7 @@ export class ClaudeOutputProcessor {
    * Format main content for embedding
    */
   private formatMainContent(output: ClaudeDocOutput): string {
-    const parts = [
-      `# ${output.pageTitle}`,
-      '',
-      output.summary,
-      ''
-    ];
+    const parts = [`# ${output.pageTitle}`, '', output.summary, ''];
 
     if (output.prerequisites && output.prerequisites.length > 0) {
       parts.push('## Prerequisites');
@@ -211,14 +216,9 @@ export class ClaudeOutputProcessor {
    * Format section content for embedding
    */
   private formatSectionContent(section: ClaudeDocSection): string {
-    const parts = [
-      `## ${section.title}`,
-      '',
-      section.content,
-      ''
-    ];
+    const parts = [`## ${section.title}`, '', section.content, ''];
 
-    if (section.keyConcepts.length > 0) {
+    if (section.keyConcepts && section.keyConcepts.length > 0) {
       parts.push(`Key concepts: ${section.keyConcepts.join(', ')}`);
       parts.push('');
     }
@@ -271,9 +271,9 @@ export class ClaudeOutputProcessor {
    */
   private extractAllConcepts(output: ClaudeDocOutput): string[] {
     const concepts = new Set<string>();
-    
+
     for (const section of output.sections) {
-      section.keyConcepts.forEach(concept => concepts.add(concept));
+      section.keyConcepts?.forEach(concept => concepts.add(concept));
     }
 
     return Array.from(concepts);
@@ -282,7 +282,10 @@ export class ClaudeOutputProcessor {
   /**
    * Ensure collection exists with proper configuration
    */
-  private async ensureCollection(collectionName: string, provider: EmbeddingProvider): Promise<void> {
+  private async ensureCollection(
+    collectionName: string,
+    provider: EmbeddingProvider
+  ): Promise<void> {
     try {
       await this.qdrantClient.getCollection(collectionName);
     } catch (error: any) {
@@ -304,7 +307,7 @@ export class ClaudeOutputProcessor {
   async processRawClaudeResponse(jsonString: string, source: string): Promise<IngestionResult> {
     try {
       const output: ClaudeDocOutput = JSON.parse(jsonString);
-      
+
       // Add source if not present
       if (!output.source) {
         output.source = source;

@@ -23,34 +23,51 @@ This project uses Claude Code to read and understand documentation naturally, ex
 
 ### 3. Processing Pipeline
 ```
-Claude reads → JSON output → Clean if needed → Process → Embed → Store in Qdrant
+Claude reads → JSON output → Clean if needed → Process → Embed → Store in Qdrant → Track ingestion
 ```
-Don't skip steps or combine them - each serves a purpose.
+Each step serves a purpose - never skip or combine them.
 
 ## Critical Patterns
 
-### JSON Handling
-- Claude often wraps output in ```json``` blocks
-- Always clean before processing
-- Use the clean-claude-json.sh utility when possible
+### Architectural Rules
+- **JSON**: Always clean Claude's output before processing (may have markdown wrappers)
+- **Errors**: Never let one failure stop batch processing
+- **Tracking**: 7-day TTL prevents unnecessary API calls
+- **Metadata**: Rich metadata is our competitive advantage - preserve it
 
-### Error Handling
-- Never let one failed document stop batch processing
-- Log errors but continue with remaining documents
-- Provide clear feedback about what failed and why
+## Command Usage Guidelines
 
-### Search Enhancement
-- Always preserve Claude's extracted metadata (key concepts, relationships)
-- Display extraction method in results (claude-driven vs traditional)
-- Rich metadata improves search quality significantly
+### Destructive Operations - Always Ask First
+Even though these commands are allowed, **ALWAYS** ask the user before executing:
+
+1. **File Deletion (`rm`)**
+   - Explain what will be deleted and why
+   - Show the exact command you'll run
+   - Wait for explicit confirmation
+   - Example: "I need to clean up temporary files: `rm check-single-ingestion-temp.js`. May I proceed?"
+
+2. **Permission Changes (`chmod +x`)**
+   - Explain why the file needs to be executable
+   - Show which file permissions will change
+   - Wait for confirmation
+   - Example: "The script needs execute permissions: `chmod +x tools/ingest`. OK to proceed?"
+
+3. **File Overwrites**
+   - When using `>` redirection that overwrites files
+   - When using `mv` that replaces existing files
+   - Always mention what will be overwritten
+
+### Safe by Default
+- Prefer non-destructive alternatives when possible
+- Use `mv` to backup before deleting
+- Show file contents before removing
+- Batch similar operations for single approval
 
 ## Development Guidelines
 
-### Testing Changes
-Before modifying core functionality:
-1. Process the example: `npm run process-claude examples/claude-output-example.json`
-2. Verify search works: `npm run search "slash commands"`
-3. Only then test with real Claude ingestion
+### Testing Order
+1. Process example first: `npm run process-claude docs/ingestion/claude-output-example.json`
+2. Verify search works before real ingestion
 
 ### Adding Features
 - New features should enhance, not replace, Claude-driven approach
@@ -69,6 +86,12 @@ Before modifying core functionality:
 ```bash
 # Quick health check
 npm test
+
+# Code quality & formatting
+npm run lint         # Check for linting issues
+npm run lint:fix     # Auto-fix linting issues
+npm run format       # Format code with Prettier
+npm run format:check # Check if formatting is correct
 
 # Process with specific provider
 npm run process-claude file.json -- --provider openai

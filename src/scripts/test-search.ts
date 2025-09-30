@@ -2,7 +2,7 @@
 /**
  * Test Search Script
  * Quick command-line search tool for testing the enhanced documentation search
- * 
+ *
  * Usage:
  *   npm run search "your query"
  *   npm run search "your query" -- --provider openai
@@ -15,7 +15,7 @@ import { EmbeddingProvider } from '../services/hybrid-embeddings.js';
 
 async function main() {
   const args = process.argv.slice(2);
-  
+
   if (args.length === 0) {
     console.error('Usage: npm run search "your query" [-- --provider ollama|openai] [--limit N]');
     process.exit(1);
@@ -25,14 +25,14 @@ async function main() {
   let query = '';
   let provider: EmbeddingProvider = 'ollama';
   let limit = 3;
-  let dashDashIndex = args.indexOf('--');
+  const dashDashIndex = args.indexOf('--');
 
   if (dashDashIndex === -1) {
     query = args.join(' ');
   } else {
     query = args.slice(0, dashDashIndex).join(' ');
     const options = args.slice(dashDashIndex + 1);
-    
+
     for (let i = 0; i < options.length; i++) {
       if (options[i] === '--provider' && options[i + 1]) {
         provider = options[i + 1] as EmbeddingProvider;
@@ -72,7 +72,6 @@ async function main() {
       const hasClaudeDriven = results.some(r => r.extractionMethod === 'claude-driven');
       console.log(`✓ Extraction method: Claude-driven`);
     }
-
   } catch (error: any) {
     console.error('\n❌ Search failed:', error.message);
     process.exit(1);

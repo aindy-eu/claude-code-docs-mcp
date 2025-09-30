@@ -1,9 +1,11 @@
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { generateEmbedding, getCollectionName, EmbeddingProvider } from '../../src/services/hybrid-embeddings.js';
+import { getDocUrl } from '../../src/config/documentation-urls.js';
+import { v4 as uuidv4 } from 'uuid';
 
-describe('Qdrant Integration Tests', () => {
+describe('Qdrant Integration Tests (requires Qdrant)', () => {
   let qdrant: QdrantClient;
-  const testCollectionName = 'test-claude-docs-ollama';
+  const testCollectionName = 'test-qdrant-integration';
 
   beforeAll(async () => {
     qdrant = new QdrantClient({
@@ -28,17 +30,9 @@ describe('Qdrant Integration Tests', () => {
     }
   });
 
-  beforeEach(async () => {
-    // Clean up any existing test collection
-    try {
-      await qdrant.deleteCollection(testCollectionName);
-    } catch (error) {
-      // Collection might not exist, which is fine
-    }
-  });
-
-  afterEach(async () => {
-    // Clean up test collection
+  // Global cleanup - only after all tests
+  afterAll(async () => {
+    // Final cleanup of test collection
     try {
       await qdrant.deleteCollection(testCollectionName);
     } catch (error) {
@@ -47,10 +41,28 @@ describe('Qdrant Integration Tests', () => {
   });
 
   describe('Collection Management', () => {
+    beforeEach(async () => {
+      // Clean up before each test in this suite
+      try {
+        await qdrant.deleteCollection(testCollectionName);
+      } catch (error) {
+        // Collection might not exist
+      }
+    });
+
+    afterEach(async () => {
+      // Clean up after each test in this suite
+      try {
+        await qdrant.deleteCollection(testCollectionName);
+      } catch (error) {
+        // Collection might not exist
+      }
+    });
+
     it('should create a collection successfully', async () => {
       await qdrant.createCollection(testCollectionName, {
         vectors: {
-          size: 384,
+          size: 768,
           distance: 'Cosine'
         }
       });
@@ -63,14 +75,14 @@ describe('Qdrant Integration Tests', () => {
     it('should get collection info', async () => {
       await qdrant.createCollection(testCollectionName, {
         vectors: {
-          size: 384,
+          size: 768,
           distance: 'Cosine'
         }
       });
 
       const info = await qdrant.getCollection(testCollectionName);
       expect(info.points_count).toBe(0);
-      expect(info.config?.params?.vectors?.size).toBe(384);
+      expect(info.config?.params?.vectors?.size).toBe(768);
     });
 
     it('should handle collection that does not exist', async () => {
@@ -82,40 +94,57 @@ describe('Qdrant Integration Tests', () => {
 
   describe('Document Operations', () => {
     beforeEach(async () => {
+      // Clean up first
+      try {
+        await qdrant.deleteCollection(testCollectionName);
+      } catch (error) {
+        // Collection might not exist
+      }
+
+      // Then create fresh collection
       await qdrant.createCollection(testCollectionName, {
         vectors: {
-          size: 384,
+          size: 768,
           distance: 'Cosine'
         }
       });
     });
 
+    afterEach(async () => {
+      // Clean up after each test
+      try {
+        await qdrant.deleteCollection(testCollectionName);
+      } catch (error) {
+        // Collection might not exist
+      }
+    });
+
     it('should upsert and query documents', async () => {
-      const mockEmbedding = new Array(384).fill(0).map(() => Math.random());
+      const mockEmbedding = new Array(768).fill(0).map(() => Math.random());
       
       // Upsert test documents
       await qdrant.upsert(testCollectionName, {
         points: [
           {
-            id: 'test-1',
+            id: uuidv4(),
             vector: mockEmbedding,
             payload: {
               content: 'Claude Code supports slash commands for quick actions.',
               title: 'Slash Commands',
               section: 'Getting Started',
-              url: 'https://docs.anthropic.com/claude-code/slash-commands',
+              url: getDocUrl('slashCommands'),
               codeExamples: ['/help', '/settings']
             }
           },
           {
-            id: 'test-2',
+            id: uuidv4(),
             vector: mockEmbedding.map(x => x * 0.9), // Slightly different vector
             payload: {
               content: 'MCP allows Claude Code to connect to external tools.',
               title: 'MCP Integration',
               section: 'Advanced',
-              url: 'https://docs.anthropic.com/claude-code/mcp',
-              codeExamples: ['claude --mcp-server ./server.js']
+              url: getDocUrl('mcp'),
+              codeExamples: ['claude mcp add test node ./server.js']
             }
           }
         ]
@@ -140,12 +169,12 @@ describe('Qdrant Integration Tests', () => {
     });
 
     it('should filter results by score threshold', async () => {
-      const mockEmbedding = new Array(384).fill(0).map(() => Math.random());
+      const mockEmbedding = new Array(768).fill(0).map(() => Math.random());
       
       await qdrant.upsert(testCollectionName, {
         points: [
           {
-            id: 'test-1',
+            id: uuidv4(),
             vector: mockEmbedding,
             payload: { title: 'Test Document 1' }
           }
@@ -154,7 +183,7 @@ describe('Qdrant Integration Tests', () => {
 
       // Query with high score threshold (should return no results)
       const strictResults = await qdrant.query(testCollectionName, {
-        query: new Array(384).fill(0).map(() => Math.random()), // Random vector
+        query: new Array(768).fill(0).map(() => Math.random()), // Random vector
         limit: 10,
         with_payload: true,
         score_threshold: 0.99
@@ -176,28 +205,45 @@ describe('Qdrant Integration Tests', () => {
 
   describe('Real Embedding Integration', () => {
     beforeEach(async () => {
+      // Clean up first
+      try {
+        await qdrant.deleteCollection(testCollectionName);
+      } catch (error) {
+        // Collection might not exist
+      }
+
+      // Then create fresh collection
       await qdrant.createCollection(testCollectionName, {
         vectors: {
-          size: 384,
+          size: 768,
           distance: 'Cosine'
         }
       });
     });
 
+    afterEach(async () => {
+      // Clean up after each test
+      try {
+        await qdrant.deleteCollection(testCollectionName);
+      } catch (error) {
+        // Collection might not exist
+      }
+    });
+
     it('should work with real embeddings from ollama', async () => {
       // This test requires ollama to be running with nomic-embed-text model
       const testQuery = 'slash commands in Claude Code';
-      
+
       try {
         const embedding = await generateEmbedding(testQuery, 'ollama');
-        expect(embedding).toHaveLength(384);
+        expect(embedding).toHaveLength(768);
         expect(embedding.every(x => typeof x === 'number')).toBe(true);
 
         // Test that we can use this embedding with Qdrant
         await qdrant.upsert(testCollectionName, {
           points: [
             {
-              id: 'real-embedding-test',
+              id: uuidv4(),
               vector: embedding,
               payload: {
                 content: 'Test document with real embedding',
@@ -225,15 +271,22 @@ describe('Qdrant Integration Tests', () => {
 
   describe('Collection Name Generation', () => {
     it('should generate correct collection names', () => {
-      expect(getCollectionName('ollama')).toBe('claude-docs-ollama');
-      expect(getCollectionName('openai')).toBe('claude-docs-openai');
+      expect(getCollectionName('ollama')).toBe('claude_code_docs_ollama');
+      expect(getCollectionName('openai')).toBe('claude_code_docs_openai');
     });
 
     it('should use generated collection names with Qdrant', async () => {
       const collectionName = getCollectionName('ollama');
-      
+
+      // First delete if it exists from previous test run
+      try {
+        await qdrant.deleteCollection(collectionName);
+      } catch (error) {
+        // Collection might not exist
+      }
+
       await qdrant.createCollection(collectionName, {
-        vectors: { size: 384, distance: 'Cosine' }
+        vectors: { size: 768, distance: 'Cosine' }
       });
 
       const collections = await qdrant.getCollections();

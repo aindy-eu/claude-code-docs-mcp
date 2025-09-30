@@ -1,11 +1,12 @@
 import { SearchResult } from '../../src/types/index.js';
+import { getDocUrl } from '../../src/config/documentation-urls.js';
 
 export const mockSearchResults: SearchResult[] = [
   {
     content: 'Claude Code supports slash commands for quick actions. Use /help to see available commands.',
     title: 'Slash Commands Overview',
     section: 'Getting Started',
-    url: 'https://docs.anthropic.com/en/docs/claude-code/slash-commands',
+    url: getDocUrl('slashCommands'),
     score: 0.95,
     codeExamples: [
       '/help',
@@ -18,10 +19,10 @@ export const mockSearchResults: SearchResult[] = [
     content: 'MCP (Model Context Protocol) allows Claude Code to connect to external data sources and tools.',
     title: 'MCP Integration Guide',
     section: 'Advanced Features',
-    url: 'https://docs.anthropic.com/en/docs/claude-code/mcp',
+    url: getDocUrl('mcp'),
     score: 0.87,
     codeExamples: [
-      'claude --mcp-server ./my-server.js',
+      'claude mcp add my-server node ./my-server.js',
       'mcp.tools.search("query")'
     ],
     provider: 'ollama'
@@ -30,7 +31,7 @@ export const mockSearchResults: SearchResult[] = [
     content: 'Hooks allow you to run custom commands when certain events occur in Claude Code.',
     title: 'Using Hooks',
     section: 'Configuration',
-    url: 'https://docs.anthropic.com/en/docs/claude-code/hooks',
+    url: getDocUrl('hooks'),
     score: 0.82,
     codeExamples: [
       '{"hooks": {"pre-commit": "npm test"}}',
@@ -67,4 +68,4 @@ export const mockQdrantResponse = {
   ]
 };
 
-export const mockEmbedding = new Array(384).fill(0).map(() => Math.random());
+export const mockEmbedding = new Array(768).fill(0).map(() => Math.random());

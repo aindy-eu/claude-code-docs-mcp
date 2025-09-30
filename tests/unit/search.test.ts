@@ -1,24 +1,27 @@
-import { formatSearchResults, searchDocumentation } from '../../src/tools/search.js';
-import { SearchResult, SearchParams } from '../../src/types/index.js';
-import { MockQdrantClient } from '../mocks/qdrantClient.js';
-import { mockSearchResults, mockEmbedding } from '../fixtures/mockSearchResults.js';
+// Create a mock embedding before importing anything else
+const mockEmbedding = new Array(768).fill(0).map(() => Math.random());
 
-// Mock the embedding service
+// Mock the embedding service before any imports that might use it
 jest.mock('../../src/services/hybrid-embeddings.js', () => ({
   generateEmbedding: jest.fn().mockResolvedValue(mockEmbedding),
   getCollectionName: jest.fn().mockReturnValue('test-collection'),
   EMBEDDING_CONFIGS: {
-    ollama: { dimensions: 384, model: 'nomic-embed-text' },
-    openai: { dimensions: 1536, model: 'text-embedding-3-small' }
+    ollama: { dimensions: 768, model: 'nomic-embed-text' },
+    openai: { dimensions: 1536, model: 'text-embedding-ada-002' }
   }
 }));
+
+import { formatSearchResults, searchDocumentation } from '../../src/tools/search.js';
+import { SearchResult, SearchParams } from '../../src/types/index.js';
+import { MockQdrantClient } from '../mocks/qdrantClient.js';
+import { mockSearchResults } from '../fixtures/mockSearchResults.js';
 
 describe('Search Functionality', () => {
   let mockQdrant: MockQdrantClient;
 
   beforeEach(() => {
     mockQdrant = new MockQdrantClient();
-    mockQdrant.createCollection('test-collection', { vectors: { size: 384 } });
+    mockQdrant.createCollection('test-collection', { vectors: { size: 768 } });
   });
 
   afterEach(() => {

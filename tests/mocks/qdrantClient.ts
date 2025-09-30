@@ -28,7 +28,7 @@ export class MockQdrantClient {
       config: {
         params: {
           vectors: {
-            size: 384
+            size: 768
           }
         }
       }
