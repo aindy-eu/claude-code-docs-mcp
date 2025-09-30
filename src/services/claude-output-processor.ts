@@ -72,6 +72,9 @@ export class ClaudeOutputProcessor {
         try {
           const embedding = await generateEmbedding(doc.content, provider);
 
+          // Extract searchKeywords and aliases from the corresponding section
+          const sourceSection = output.sections.find(s => s.title === doc.metadata.section);
+
           points.push({
             id: doc.id,
             vector: embedding,
@@ -82,6 +85,8 @@ export class ClaudeOutputProcessor {
               url: doc.source,
               codeExamples: doc.metadata.codeExamples,
               keyConcepts: doc.metadata.keyConcepts,
+              searchKeywords: sourceSection?.searchKeywords || [],
+              aliases: sourceSection?.aliases || [],
               provider: provider,
               lastUpdated: doc.metadata.lastUpdated,
               extractionMethod: 'claude-driven',
@@ -213,10 +218,24 @@ export class ClaudeOutputProcessor {
   }
 
   /**
-   * Format section content for embedding
+   * Format section content for embedding with enhanced metadata
    */
   private formatSectionContent(section: ClaudeDocSection): string {
-    const parts = [`## ${section.title}`, '', section.content, ''];
+    const parts = [`## ${section.title}`, ''];
+
+    // Add search metadata at the top for better semantic matching
+    if (section.searchKeywords && section.searchKeywords.length > 0) {
+      parts.push(`SEARCH TERMS: ${section.searchKeywords.join(', ')}`);
+      parts.push('');
+    }
+
+    if (section.aliases && section.aliases.length > 0) {
+      parts.push(`ALSO KNOWN AS: ${section.aliases.join(', ')}`);
+      parts.push('');
+    }
+
+    parts.push(section.content);
+    parts.push('');
 
     if (section.keyConcepts && section.keyConcepts.length > 0) {
       parts.push(`Key concepts: ${section.keyConcepts.join(', ')}`);

@@ -76,7 +76,7 @@ export async function searchDocumentation(
         query: queryEmbedding,
         limit: Math.ceil(limit / providersToSearch.length),
         with_payload: true,
-        score_threshold: 0.7 // Only return reasonably relevant results
+        score_threshold: 0.5 // Lowered threshold to capture more results (was 0.7)
       });
 
       // Format results

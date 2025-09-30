@@ -30,6 +30,8 @@ Please read this Claude Code documentation page and extract structured informati
 
 For each major section:
 - Extract the main content
+- **Generate searchKeywords**: Include the main term, common misspellings, abbreviations, and related terminology (e.g., for "Hooks" → ["hooks", "hook", "event handlers", "PreToolUse", "PostToolUse"])
+- **Generate aliases**: Alternative names or ways users might refer to this feature
 - Identify ALL code examples with their purpose
 - Note best practices AND anti-patterns
 - Highlight important warnings and edge cases
@@ -49,6 +51,8 @@ For each major section:
     "title": "Section heading",
     "content": "Main text content",
     "confidence": "explicit/strongly-implied/inferred",
+    "searchKeywords": ["primary-term", "alternate-spelling", "common-abbreviation"],
+    "aliases": ["alternative names for this feature"],
     "codeExamples": [{
       "language": "typescript/bash/etc",
       "code": "actual code",

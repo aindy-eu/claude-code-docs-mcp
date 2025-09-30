@@ -11,6 +11,12 @@ export interface ClaudeDocSection {
   /** Main content of the section */
   content: string;
 
+  /** Search keywords for better discoverability (includes abbreviations, alternate spellings, related terms) */
+  searchKeywords?: string[];
+
+  /** Alternative names or ways to refer to this feature */
+  aliases?: string[];
+
   /** Code examples found in this section */
   codeExamples?: CodeExample[];
 
