@@ -39,7 +39,7 @@ export class MockQdrantClient {
     if (!this.collections.has(collectionName)) {
       throw new Error(`Collection ${collectionName} not found`);
     }
-    
+
     // Return mock results for testing
     return mockQdrantResponse;
   }
@@ -48,7 +48,7 @@ export class MockQdrantClient {
     if (!this.collections.has(collectionName)) {
       throw new Error(`Collection ${collectionName} not found`);
     }
-    
+
     const points = this.points.get(collectionName) || [];
     points.push(...data.points);
     this.points.set(collectionName, points);

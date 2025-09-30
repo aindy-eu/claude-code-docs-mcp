@@ -36,12 +36,16 @@ describe('URL Configuration Service', () => {
 
   describe('URL Migration', () => {
     it('should identify legacy URLs', () => {
-      const isLegacy = docUrlService.isLegacyUrl('https://docs.anthropic.com/en/docs/claude-code/overview');
+      const isLegacy = docUrlService.isLegacyUrl(
+        'https://docs.anthropic.com/en/docs/claude-code/overview'
+      );
       expect(isLegacy).toBe(true);
     });
 
     it('should not identify current URLs as legacy', () => {
-      const isLegacy = docUrlService.isLegacyUrl('https://docs.claude.com/en/docs/claude-code/overview');
+      const isLegacy = docUrlService.isLegacyUrl(
+        'https://docs.claude.com/en/docs/claude-code/overview'
+      );
       expect(isLegacy).toBe(false);
     });
 
@@ -73,12 +77,16 @@ describe('URL Configuration Service', () => {
 
   describe('URL Validation', () => {
     it('should validate correct documentation URLs', () => {
-      const isValid = docUrlService.isValidDocumentationUrl('https://docs.claude.com/en/docs/claude-code/overview');
+      const isValid = docUrlService.isValidDocumentationUrl(
+        'https://docs.claude.com/en/docs/claude-code/overview'
+      );
       expect(isValid).toBe(true);
     });
 
     it('should validate legacy documentation URLs', () => {
-      const isValid = docUrlService.isValidDocumentationUrl('https://docs.anthropic.com/en/docs/claude-code/settings');
+      const isValid = docUrlService.isValidDocumentationUrl(
+        'https://docs.anthropic.com/en/docs/claude-code/settings'
+      );
       expect(isValid).toBe(true);
     });
 
@@ -88,19 +96,25 @@ describe('URL Configuration Service', () => {
     });
 
     it('should reject URLs with wrong path structure', () => {
-      const isValid = docUrlService.isValidDocumentationUrl('https://docs.claude.com/wrong/path/structure');
+      const isValid = docUrlService.isValidDocumentationUrl(
+        'https://docs.claude.com/wrong/path/structure'
+      );
       expect(isValid).toBe(false);
     });
   });
 
   describe('Page Key Extraction', () => {
     it('should extract page key from URL', () => {
-      const key = docUrlService.getPageKeyFromUrl('https://docs.claude.com/en/docs/claude-code/slash-commands');
+      const key = docUrlService.getPageKeyFromUrl(
+        'https://docs.claude.com/en/docs/claude-code/slash-commands'
+      );
       expect(key).toBe('slashCommands');
     });
 
     it('should extract page key from legacy URL', () => {
-      const key = docUrlService.getPageKeyFromUrl('https://docs.anthropic.com/en/docs/claude-code/hooks');
+      const key = docUrlService.getPageKeyFromUrl(
+        'https://docs.anthropic.com/en/docs/claude-code/hooks'
+      );
       expect(key).toBe('hooks');
     });
 

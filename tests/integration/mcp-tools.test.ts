@@ -1,10 +1,7 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { registerTools } from '../../src/tools/index.js';
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema
-} from '@modelcontextprotocol/sdk/types.js';
+import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { getDocUrl } from '../../src/config/documentation-urls.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -38,7 +35,9 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
     const isAvailable = await checkQdrantAvailable();
     if (!isAvailable) {
       console.log('⚠️  Qdrant is not running - skipping integration tests');
-      console.log('   To run these tests, start Qdrant with: docker run -p 6333:6333 qdrant/qdrant');
+      console.log(
+        '   To run these tests, start Qdrant with: docker run -p 6333:6333 qdrant/qdrant'
+      );
       return;
     }
 
@@ -49,10 +48,7 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
     }));
 
     // Create test server
-    server = new Server(
-      { name: 'test-server', version: '1.0.0' },
-      { capabilities: { tools: {} } }
-    );
+    server = new Server({ name: 'test-server', version: '1.0.0' }, { capabilities: { tools: {} } });
 
     // Create Qdrant client
     qdrant = new QdrantClient({
@@ -369,7 +365,9 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
       // Call the list tools handler to get the tool schemas
       if (listToolsHandler) {
         const response = await listToolsHandler({ method: 'tools/list', params: {} });
-        const searchTool = response.tools.find((tool: any) => tool.name === 'search_claude_code_docs');
+        const searchTool = response.tools.find(
+          (tool: any) => tool.name === 'search_claude_code_docs'
+        );
 
         expect(searchTool).toBeDefined();
         expect(searchTool?.inputSchema).toHaveProperty('type', 'object');

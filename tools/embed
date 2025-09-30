@@ -1,0 +1,188 @@
+#!/bin/bash
+# Embed stage of the pipeline - Generate embeddings and store in Qdrant
+#
+# Usage: ./tools/embed <json-file> [options]
+# Options:
+#   --provider PROVIDER  Embedding provider (ollama|openai|both, default: ollama)
+#   --force             Re-embed even if already exists
+#   --batch DIR         Process all JSON files in directory
+#   --quiet             Suppress info messages
+
+set -e
+
+# Configuration
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Default options
+JSON_FILE=""
+PROVIDER="${EMBEDDING_PROVIDER:-ollama}"
+FORCE=false
+BATCH_DIR=""
+QUIET=false
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --provider)
+      PROVIDER="$2"
+      shift 2
+      ;;
+    --force)
+      FORCE=true
+      shift
+      ;;
+    --batch)
+      BATCH_DIR="$2"
+      shift 2
+      ;;
+    --quiet)
+      QUIET=true
+      shift
+      ;;
+    *)
+      JSON_FILE="$1"
+      shift
+      ;;
+  esac
+done
+
+# Helper functions
+log_info() {
+  if [ "$QUIET" = false ]; then
+    echo "[EMBED] $1" >&2
+  fi
+}
+
+log_error() {
+  echo "[ERROR] $1" >&2
+}
+
+# Validate input
+if [ -z "$JSON_FILE" ] && [ -z "$BATCH_DIR" ]; then
+  echo "Error: JSON file or batch directory required"
+  echo "Usage: $0 <json-file> [--provider PROVIDER] [--force]"
+  echo "       $0 --batch <directory> [--provider PROVIDER] [--force]"
+  exit 1
+fi
+
+# Function to process a single JSON file
+process_json() {
+  local json_file="$1"
+
+  if [ ! -f "$json_file" ]; then
+    log_error "File not found: $json_file"
+    return 1
+  fi
+
+  # Validate JSON
+  if ! jq . "$json_file" > /dev/null 2>&1; then
+    log_error "Invalid JSON: $json_file"
+    return 1
+  fi
+
+  log_info "Processing: $json_file"
+
+  # Extract URL from JSON if available
+  URL=$(jq -r '.source // .url // ""' "$json_file" 2>/dev/null)
+
+  if [ -z "$URL" ]; then
+    log_info "No URL found in JSON, using filename as identifier"
+    URL="file://$(basename "$json_file")"
+  fi
+
+  # Check if already embedded (unless forced)
+  if [ "$FORCE" = false ]; then
+    # Check manifest in new location
+    DOMAIN=$(echo "$URL" | sed -E 's|https?://([^/]+).*|\1|')
+    MANIFEST="$PROJECT_ROOT/.data/$DOMAIN/manifest.json"
+
+    # Also check old manifest for compatibility
+    OLD_MANIFEST="$PROJECT_ROOT/claude-outputs/ingestion-manifest.json"
+
+    if [ -f "$MANIFEST" ]; then
+      EXISTING=$(jq -r --arg url "$URL" '.records[$url] // null' "$MANIFEST")
+    elif [ -f "$OLD_MANIFEST" ]; then
+      EXISTING=$(jq -r --arg url "$URL" '.records[$url] // null' "$OLD_MANIFEST")
+    else
+      EXISTING="null"
+    fi
+
+    if [ "$EXISTING" != "null" ]; then
+      STATUS=$(echo "$EXISTING" | jq -r '.status')
+      PROVIDER_USED=$(echo "$EXISTING" | jq -r '.embeddingProvider')
+
+      if [ "$STATUS" = "success" ]; then
+        if [ "$PROVIDER" = "both" ] || [ "$PROVIDER" = "$PROVIDER_USED" ]; then
+          log_info "Already embedded with $PROVIDER_USED provider, skipping"
+          return 0
+        fi
+      fi
+    fi
+  fi
+
+  # Run the embedding process
+  log_info "Generating embeddings with $PROVIDER..."
+
+  cd "$PROJECT_ROOT"
+
+  # Use npm script with provider flag
+  if [ "$PROVIDER" = "both" ]; then
+    # Process with both providers
+    npm run process-claude "$json_file" -- --provider ollama 2>&1 | \
+      ([ "$QUIET" = true ] && cat > /dev/null || cat) || {
+      log_error "Ollama embedding failed for $json_file"
+    }
+
+    npm run process-claude "$json_file" -- --provider openai 2>&1 | \
+      ([ "$QUIET" = true ] && cat > /dev/null || cat) || {
+      log_error "OpenAI embedding failed for $json_file"
+    }
+  else
+    # Process with specified provider
+    npm run process-claude "$json_file" -- --provider "$PROVIDER" 2>&1 | \
+      ([ "$QUIET" = true ] && cat > /dev/null || cat) || {
+      log_error "Embedding failed for $json_file"
+      return 1
+    }
+  fi
+
+  log_info "Successfully embedded: $(basename "$json_file")"
+
+  # Update manifest
+  "$SCRIPT_DIR/update-manifest" "$json_file" "success" --provider "$PROVIDER"
+}
+
+# Main execution
+if [ -n "$BATCH_DIR" ]; then
+  # Batch processing
+  if [ ! -d "$BATCH_DIR" ]; then
+    log_error "Directory not found: $BATCH_DIR"
+    exit 1
+  fi
+
+  log_info "Batch processing JSON files in: $BATCH_DIR"
+
+  SUCCESS_COUNT=0
+  FAIL_COUNT=0
+
+  # Process all JSON files (including subdirectories for outputs structure)
+  for json_file in "$BATCH_DIR"/**/*.json "$BATCH_DIR"/*.json; do
+    if [ -f "$json_file" ]; then
+      if process_json "$json_file"; then
+        SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+      else
+        FAIL_COUNT=$((FAIL_COUNT + 1))
+      fi
+    fi
+  done
+
+  log_info "Batch complete: $SUCCESS_COUNT succeeded, $FAIL_COUNT failed"
+
+  if [ $FAIL_COUNT -gt 0 ]; then
+    exit 1
+  fi
+else
+  # Single file processing
+  process_json "$JSON_FILE"
+fi

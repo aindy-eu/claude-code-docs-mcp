@@ -16,12 +16,16 @@ jest.mock('openai', () => ({
   default: class MockOpenAI {
     embeddings = {
       create: mockOpenAICreate
-    }
+    };
   }
 }));
 
 // Import the module we're testing
-import { generateEmbedding, getCollectionName, EMBEDDING_CONFIGS } from '../../src/services/hybrid-embeddings.js';
+import {
+  generateEmbedding,
+  getCollectionName,
+  EMBEDDING_CONFIGS
+} from '../../src/services/hybrid-embeddings.js';
 
 describe('Embedding Service', () => {
   beforeEach(() => {
@@ -76,13 +80,11 @@ describe('Embedding Service', () => {
       });
 
       it('should handle ollama errors', async () => {
-        mockOllamaEmbeddings.mockRejectedValue(
-          new Error('Ollama connection failed')
-        );
+        mockOllamaEmbeddings.mockRejectedValue(new Error('Ollama connection failed'));
 
-        await expect(generateEmbedding('test text', 'ollama'))
-          .rejects
-          .toThrow('Ollama connection failed');
+        await expect(generateEmbedding('test text', 'ollama')).rejects.toThrow(
+          'Ollama connection failed'
+        );
       });
 
       it('should handle empty embeddings response', async () => {
@@ -114,13 +116,9 @@ describe('Embedding Service', () => {
       });
 
       it('should handle OpenAI errors', async () => {
-        mockOpenAICreate.mockRejectedValue(
-          new Error('OpenAI API error')
-        );
+        mockOpenAICreate.mockRejectedValue(new Error('OpenAI API error'));
 
-        await expect(generateEmbedding('test text', 'openai'))
-          .rejects
-          .toThrow('OpenAI API error');
+        await expect(generateEmbedding('test text', 'openai')).rejects.toThrow('OpenAI API error');
       });
 
       it('should handle empty OpenAI response', async () => {
@@ -129,9 +127,7 @@ describe('Embedding Service', () => {
         });
 
         // The actual implementation will throw when trying to access data[0]
-        await expect(generateEmbedding('test text', 'openai'))
-          .rejects
-          .toThrow();
+        await expect(generateEmbedding('test text', 'openai')).rejects.toThrow();
       });
 
       it('should handle missing embedding data', async () => {
@@ -152,9 +148,9 @@ describe('Embedding Service', () => {
         // and fail because no API key is set for unsupported provider
         delete process.env.OPENAI_API_KEY;
 
-        await expect(generateEmbedding('test', 'unsupported' as any))
-          .rejects
-          .toThrow('OPENAI_API_KEY is required for OpenAI embeddings');
+        await expect(generateEmbedding('test', 'unsupported' as any)).rejects.toThrow(
+          'OPENAI_API_KEY is required for OpenAI embeddings'
+        );
       });
     });
   });
@@ -233,9 +229,8 @@ describe('Embedding Service', () => {
         new Array(768).fill(0).map(() => Math.random())
       );
 
-      mockEmbeddings.forEach((emb, i) => {
-        mockOllamaEmbeddings
-          .mockResolvedValueOnce({ embedding: emb });
+      mockEmbeddings.forEach((emb, _i) => {
+        mockOllamaEmbeddings.mockResolvedValueOnce({ embedding: emb });
       });
 
       const promises = Array.from({ length: 5 }, (_, i) =>

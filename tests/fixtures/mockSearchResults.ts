@@ -3,28 +3,23 @@ import { getDocUrl } from '../../src/config/documentation-urls.js';
 
 export const mockSearchResults: SearchResult[] = [
   {
-    content: 'Claude Code supports slash commands for quick actions. Use /help to see available commands.',
+    content:
+      'Claude Code supports slash commands for quick actions. Use /help to see available commands.',
     title: 'Slash Commands Overview',
     section: 'Getting Started',
     url: getDocUrl('slashCommands'),
     score: 0.95,
-    codeExamples: [
-      '/help',
-      '/settings',
-      '/memory clear'
-    ],
+    codeExamples: ['/help', '/settings', '/memory clear'],
     provider: 'ollama'
   },
   {
-    content: 'MCP (Model Context Protocol) allows Claude Code to connect to external data sources and tools.',
+    content:
+      'MCP (Model Context Protocol) allows Claude Code to connect to external data sources and tools.',
     title: 'MCP Integration Guide',
     section: 'Advanced Features',
     url: getDocUrl('mcp'),
     score: 0.87,
-    codeExamples: [
-      'claude mcp add my-server node ./my-server.js',
-      'mcp.tools.search("query")'
-    ],
+    codeExamples: ['claude mcp add my-server node ./my-server.js', 'mcp.tools.search("query")'],
     provider: 'ollama'
   },
   {
@@ -55,7 +50,7 @@ export const mockQdrantResponse = {
       }
     },
     {
-      id: '2', 
+      id: '2',
       score: 0.87,
       payload: {
         content: mockSearchResults[1].content,

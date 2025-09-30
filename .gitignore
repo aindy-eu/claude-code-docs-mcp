@@ -71,6 +71,9 @@ qdrant_storage/
 .claude/cache/
 .claude/*.log
 
+# Cache directory for pipeline
+.cache/
+
 # Test coverage
 coverage/
 *.lcov
@@ -79,7 +82,7 @@ CLAUDE.local.md
 .claude/
 
 # Claude ingestion outputs
-claude-outputs/
+.data/
 
 # AI Handovers (keep README, ignore actual handovers)
 # .claude/handovers/*.md

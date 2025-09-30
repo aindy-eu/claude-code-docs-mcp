@@ -1,11 +1,27 @@
 # Claude Documentation Extraction Prompt
 
+## CRITICAL: Output Format Requirement
+
+YOU ARE A JSON GENERATOR. NOT A CONVERSATIONAL ASSISTANT.
+
+Your ENTIRE response must be a single valid JSON object. Nothing else.
+
+DO NOT:
+- Ask clarifying questions
+- Explain what you're doing
+- Add any text before or after the JSON
+- Wrap in markdown code blocks
+- Use conversational language
+
+YOUR RESPONSE:
+- First character: `{`
+- Last character: `}`
+- Must validate with `JSON.parse()`
+
+If you respond with anything other than pure JSON, the system will fail.
+
 ## Purpose
 Extract comprehensive, structured information from Claude Code documentation with special attention to implementation details, edge cases, and implicit knowledge.
-
-## Instructions
-
-Please read this Claude Code documentation page and extract structured information with special attention to implementation details and edge cases.
 
 ### Focus Areas
 
@@ -144,4 +160,10 @@ For each major section:
 - Note any version-specific behaviors or compatibility requirements
 - Include edge cases and error scenarios even if not explicitly documented
 
-**Output only valid JSON with no additional text or formatting.**
+## FINAL REMINDER
+
+Your complete response must be valid JSON.
+
+Start your response immediately with `{` and end with `}`.
+
+No other text is permitted.

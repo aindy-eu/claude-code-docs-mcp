@@ -1,0 +1,238 @@
+#!/bin/bash
+# Update manifest for embedded documents
+#
+# Usage: ./tools/update-manifest <json-file> <status> [options]
+# Options:
+#   --provider PROVIDER   Embedding provider used (ollama/openai/both)
+#   --model MODEL         Claude model used for extraction
+#   --domain DOMAIN       Override domain detection
+
+set -e
+
+# Configuration
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Default options
+JSON_FILE=""
+STATUS=""
+PROVIDER="ollama"
+MODEL=""
+DOMAIN=""
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --url)
+      JSON_FILE="--url"
+      URL_ARG="$2"
+      shift 2
+      ;;
+    --provider)
+      PROVIDER="$2"
+      shift 2
+      ;;
+    --model)
+      MODEL="$2"
+      shift 2
+      ;;
+    --domain)
+      DOMAIN="$2"
+      shift 2
+      ;;
+    *)
+      if [ -z "$JSON_FILE" ]; then
+        JSON_FILE="$1"
+      elif [ -z "$STATUS" ]; then
+        STATUS="$1"
+      fi
+      shift
+      ;;
+  esac
+done
+
+# Helper function
+update_manifest() {
+  local json_file="$1"
+  local status="$2"
+  local provider="$3"
+  local model="$4"
+  local extra_param="$5"  # For URL mode
+
+  # Handle different input types
+  if [ "$json_file" = "--url" ]; then
+    # Direct URL provided (for fetch/extract stage)
+    # When called with --url mode: function params are ($1=--url, $2=URL, $3=status, $4=provider, $5=model)
+    URL="$status"          # $2
+    status="$provider"     # $3
+    provider="$model"      # $4
+    model="$extra_param"   # $5
+    json_file="/dev/null"
+  elif [ -f "$json_file" ]; then
+    # Extract URL from JSON file
+    URL=$(jq -r '.source // .url // ""' "$json_file" 2>/dev/null)
+  else
+    echo "[ERROR] Invalid input: $json_file"
+    return 1
+  fi
+
+  if [ -z "$URL" ]; then
+    echo "[ERROR] No source URL found"
+    return 1
+  fi
+
+  # Extract domain if not provided
+  if [ -z "$DOMAIN" ]; then
+    DOMAIN=$(echo "$URL" | sed -E 's|https?://([^/]+).*|\1|')
+  fi
+
+  # Manifest path
+  MANIFEST_PATH="$PROJECT_ROOT/.data/$DOMAIN/manifest.json"
+  mkdir -p "$(dirname "$MANIFEST_PATH")"
+
+  # Initialize manifest if it doesn't exist or is empty/invalid
+  if [ ! -f "$MANIFEST_PATH" ] || [ ! -s "$MANIFEST_PATH" ] || ! jq -e '.version' "$MANIFEST_PATH" >/dev/null 2>&1; then
+    cat > "$MANIFEST_PATH" << EOF
+{
+  "version": "2.0",
+  "domain": "$DOMAIN",
+  "createdAt": "$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)",
+  "lastUpdatedAt": "$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)",
+  "defaultTTLDays": 7,
+  "records": {}
+}
+EOF
+  fi
+
+  # Get existing record if it exists (without -r to keep as JSON)
+  EXISTING=$(jq --arg url "$URL" '.records[$url] // {}' "$MANIFEST_PATH")
+
+  # Create record entry based on status
+  case "$status" in
+    fetched)
+      RECORD=$(echo "$EXISTING" | jq --arg url "$URL" --arg status "$status" \
+        '. + {url: $url, lastFetchedAt: (now | todate), status: $status}')
+      ;;
+
+    extracted)
+      RAW_SIZE=$(wc -c < "$json_file" 2>/dev/null || echo 0)
+      if [ -n "$model" ]; then
+        RECORD=$(echo "$EXISTING" | jq --arg url "$URL" --arg status "$status" --arg size "$RAW_SIZE" --arg model "$model" \
+          '. + {url: $url, lastExtractedAt: (now | todate), status: $status, rawResponseSize: ($size | tonumber), extractionModel: $model}')
+      else
+        # Don't set extractionModel if not provided - let existing value persist or omit field
+        RECORD=$(echo "$EXISTING" | jq --arg url "$URL" --arg status "$status" --arg size "$RAW_SIZE" \
+          '. + {url: $url, lastExtractedAt: (now | todate), status: $status, rawResponseSize: ($size | tonumber)}')
+      fi
+      ;;
+
+    formatted)
+      SECTION_COUNT=$(jq '.sections | length' "$json_file" 2>/dev/null || echo 0)
+      CODE_COUNT=$(jq '[.sections[]?.codeExamples? | length] | add' "$json_file" 2>/dev/null || echo 0)
+      OUTPUT_SIZE=$(wc -c < "$json_file")
+
+      # Preserve extractionModel if it exists from previous extraction
+      RECORD=$(echo "$EXISTING" | jq \
+        --arg url "$URL" \
+        --arg status "$status" \
+        --arg sections "$SECTION_COUNT" \
+        --arg codes "$CODE_COUNT" \
+        --arg size "$OUTPUT_SIZE" \
+        '. + {
+          url: $url,
+          lastFormattedAt: (now | todate),
+          status: $status,
+          outputSize: ($size | tonumber),
+          sectionCount: ($sections | tonumber),
+          codeExampleCount: ($codes | tonumber)
+        } | if .extractionModel then . else . end')
+      ;;
+
+    embedded|success)
+      SECTION_COUNT=$(jq '.sections | length' "$json_file" 2>/dev/null || echo 0)
+      CODE_COUNT=$(jq '[.sections[]?.codeExamples? | length] | add' "$json_file" 2>/dev/null || echo 0)
+      OUTPUT_SIZE=$(wc -c < "$json_file")
+
+      RECORD=$(echo "$EXISTING" | jq \
+        --arg url "$URL" \
+        --arg status "embedded" \
+        --arg provider "$provider" \
+        --arg sections "$SECTION_COUNT" \
+        --arg codes "$CODE_COUNT" \
+        --arg size "$OUTPUT_SIZE" \
+        '. + {
+          url: $url,
+          lastEmbeddedAt: (now | todate),
+          lastIngestedAt: (now | todate),
+          status: $status,
+          outputSize: ($size | tonumber),
+          sectionCount: ($sections | tonumber),
+          codeExampleCount: ($codes | tonumber),
+          embeddingProvider: $provider
+        }')
+      ;;
+
+    failed)
+      ERROR_MSG="${3:-Unknown error}"
+      RECORD=$(echo "$EXISTING" | jq --arg url "$URL" --arg status "$status" --arg error "$ERROR_MSG" \
+        '. + {url: $url, lastFailedAt: (now | todate), status: $status, lastError: $error}')
+      ;;
+
+    *)
+      echo "[ERROR] Unknown status: $status"
+      echo "Valid statuses: fetched, extracted, formatted, embedded, success, failed"
+      exit 1
+      ;;
+  esac
+
+  # Update manifest (suppress error if RECORD is somehow invalid, but still update)
+  if echo "$RECORD" | jq -e . >/dev/null 2>&1; then
+    jq --arg url "$URL" \
+       --argjson record "$RECORD" \
+       '.records[$url] = $record | .lastUpdatedAt = (now | todate)' \
+       "$MANIFEST_PATH" > "$MANIFEST_PATH.tmp" && mv "$MANIFEST_PATH.tmp" "$MANIFEST_PATH"
+  else
+    echo "[ERROR] Invalid JSON record generated"
+    return 1
+  fi
+
+  echo "[MANIFEST] Updated: $MANIFEST_PATH"
+
+  # Show additional info based on status
+  case "$status" in
+    embedded|success)
+      echo "[MANIFEST] Record: $URL -> $status ($provider)"
+      ;;
+    extracted)
+      if [ -n "$model" ]; then
+        echo "[MANIFEST] Record: $URL -> $status (model: $model)"
+      else
+        echo "[MANIFEST] Record: $URL -> $status"
+      fi
+      ;;
+    *)
+      echo "[MANIFEST] Record: $URL -> $status"
+      ;;
+  esac
+}
+
+# Main execution
+if [ -n "$JSON_FILE" ]; then
+  if [ "$JSON_FILE" = "--url" ] && [ -n "$URL_ARG" ] && [ -n "$STATUS" ]; then
+    # URL mode - pass model as 4th parameter
+    update_manifest --url "$URL_ARG" "$STATUS" "$PROVIDER" "$MODEL"
+  elif [ -n "$STATUS" ]; then
+    # File mode
+    update_manifest "$JSON_FILE" "$STATUS" "$PROVIDER" "$MODEL"
+  else
+    echo "Usage: $0 <json-file> <status> [--provider PROVIDER] [--model MODEL] [--domain DOMAIN]"
+    echo "       $0 --url <url> <status>"
+    echo "Status: fetched|extracted|formatted|embedded|success|failed"
+    exit 1
+  fi
+else
+  echo "Usage: $0 <json-file> <status> [--provider PROVIDER] [--model MODEL] [--domain DOMAIN]"
+  echo "       $0 --url <url> <status>"
+  echo "Status: fetched|extracted|formatted|embedded|success|failed"
+  exit 1
+fi

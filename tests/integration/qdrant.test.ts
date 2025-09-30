@@ -1,5 +1,9 @@
 import { QdrantClient } from '@qdrant/js-client-rest';
-import { generateEmbedding, getCollectionName, EmbeddingProvider } from '../../src/services/hybrid-embeddings.js';
+import {
+  generateEmbedding,
+  getCollectionName,
+  EmbeddingProvider
+} from '../../src/services/hybrid-embeddings.js';
 import { getDocUrl } from '../../src/config/documentation-urls.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -86,9 +90,7 @@ describe('Qdrant Integration Tests (requires Qdrant)', () => {
     });
 
     it('should handle collection that does not exist', async () => {
-      await expect(qdrant.getCollection('non-existent-collection'))
-        .rejects
-        .toThrow();
+      await expect(qdrant.getCollection('non-existent-collection')).rejects.toThrow();
     });
   });
 
@@ -121,7 +123,7 @@ describe('Qdrant Integration Tests (requires Qdrant)', () => {
 
     it('should upsert and query documents', async () => {
       const mockEmbedding = new Array(768).fill(0).map(() => Math.random());
-      
+
       // Upsert test documents
       await qdrant.upsert(testCollectionName, {
         points: [
@@ -170,7 +172,7 @@ describe('Qdrant Integration Tests (requires Qdrant)', () => {
 
     it('should filter results by score threshold', async () => {
       const mockEmbedding = new Array(768).fill(0).map(() => Math.random());
-      
+
       await qdrant.upsert(testCollectionName, {
         points: [
           {

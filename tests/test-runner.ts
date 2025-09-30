@@ -43,7 +43,7 @@ async function runTests() {
   // Determine which tests to run
   const runUnit = ['all', 'unit'].includes(testType);
   const runIntegration = ['all', 'integration'].includes(testType) && qdrantHealthy;
-  
+
   if (testType === 'integration' && !qdrantHealthy) {
     console.log('⚠️  Skipping integration tests - Qdrant not available');
     console.log('💡 Start Qdrant with: docker run -p 6333:6333 qdrant/qdrant');
@@ -73,11 +73,13 @@ async function runTests() {
     }
 
     console.log('🎉 All tests completed successfully!');
-    
+
     // Show next steps
     console.log('\n💡 Next steps:');
     if (!qdrantHealthy) {
-      console.log('  • Start Qdrant to run integration tests: docker run -p 6333:6333 qdrant/qdrant');
+      console.log(
+        '  • Start Qdrant to run integration tests: docker run -p 6333:6333 qdrant/qdrant'
+      );
     }
     if (!ollamaHealthy) {
       console.log('  • Install Ollama for real embedding tests: https://ollama.ai');
@@ -86,7 +88,6 @@ async function runTests() {
     console.log('  • Run tests with: npm test');
     console.log('  • Watch tests: npm run test:watch');
     console.log('  • Coverage report: npm run test:coverage');
-
   } catch (error) {
     console.error('❌ Tests failed:', error);
     process.exit(1);

@@ -103,6 +103,16 @@ The MCP server provides a `search_claude_code_docs` tool that Claude can use to 
 - [Testing](docs/testing.md) - How to test the RAG System
 
 
+## 🚀 Performance & Caching
+
+The ingestion pipeline uses intelligent caching to make re-processing 10x faster:
+
+- **HTML Cache**: Stores fetched content with TTL-based expiration (7 days default)
+- **Content Normalization**: Ignores timestamps and tracking scripts when detecting changes
+- **Structure Detection**: Identifies meaningful DOM changes vs cosmetic updates
+
+Cache is automatically used - no configuration needed. First run takes ~2 minutes per page, subsequent runs take <5 seconds.
+
 ## 🛠️ Commands
 
 ### Ingestion
@@ -141,6 +151,12 @@ QDRANT_PORT=6333
 ├── tools/                # Ingestion scripts
 │   ├── ingest           # Single page ingestion
 │   └── batch-ingest     # Batch ingestion (all pages)
+├── .cache/              # Pipeline cache (git-ignored)
+│   ├── html/            # Cached HTML content
+│   └── json/            # Cached extractions
+├── .claude/             # Planning and architecture
+│   ├── plans/           # Roadmaps and vision docs
+│   └── archive/         # Historical planning docs
 ├── docs/
 │   └── ingestion/       # Documentation for the ingestion system
 │       ├── README.md    # How it works
@@ -148,7 +164,7 @@ QDRANT_PORT=6333
 │       └── *.md         # Guides and troubleshooting
 ├── src/
 │   ├── config/          # URL configuration
-│   ├── services/        # Core services
+│   ├── services/        # Core services (including HTMLCache)
 │   ├── scripts/         # CLI tools
 │   └── index.ts         # MCP server entry point
 └── claude-outputs/      # Ingestion outputs (git-ignored)

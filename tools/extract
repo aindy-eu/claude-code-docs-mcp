@@ -1,0 +1,295 @@
+#!/bin/bash
+# Extract structured information from cached clean content using Claude
+#
+# Usage: ./tools/extract <url> [options]
+# Options:
+#   --force             Re-extract even if cached JSON exists
+#   --model MODEL       Claude model to use (e.g., 'opus', 'sonnet', 'claude-opus-4-20250514')
+#   --output FILE       Save JSON to specific file (default: outputs/{domain}/...)
+#   --quiet             Suppress info messages
+
+set -e
+
+# Configuration
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+OUTPUTS_BASE="$PROJECT_ROOT/outputs"
+
+# Default options
+URL=""
+FORCE=false
+MODEL="claude-sonnet-4-5-20250929"  # Default to Sonnet 4.5 for extraction
+OUTPUT_FILE=""
+QUIET=false
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --force)
+      FORCE=true
+      shift
+      ;;
+    --model)
+      MODEL="$2"
+      shift 2
+      ;;
+    --output)
+      OUTPUT_FILE="$2"
+      shift 2
+      ;;
+    --quiet)
+      QUIET=true
+      shift
+      ;;
+    *)
+      URL="$1"
+      shift
+      ;;
+  esac
+done
+
+# Validate input
+if [ -z "$URL" ]; then
+  echo "Error: URL is required"
+  echo "Usage: $0 <url> [--force] [--output FILE]"
+  exit 1
+fi
+
+# Helper functions
+log_info() {
+  if [ "$QUIET" = false ]; then
+    echo "[EXTRACT-CLEAN] $1" >&2
+  fi
+}
+
+log_error() {
+  echo "[ERROR] $1" >&2
+}
+
+# Build if necessary
+cd "$PROJECT_ROOT"
+if [ ! -f "build/services/structured-cache.js" ]; then
+  log_info "Building TypeScript files..."
+  npm run build >/dev/null 2>&1
+fi
+
+# Check cache using Node.js
+log_info "Checking cache for $URL..."
+
+CACHE_CHECK=$(node --no-warnings --input-type=module -e "
+import { StructuredCache } from './build/services/structured-cache.js';
+import { readFileSync, existsSync } from 'fs';
+
+const url = process.argv[1];
+const force = process.argv[2] === 'true';
+
+const cache = new StructuredCache(url);
+const paths = cache.getCachePaths(url);
+const contentPath = paths.htmlPath.replace('index.html', 'content.html');
+
+// Check if JSON exists and is recent
+if (!force && existsSync(paths.jsonPath)) {
+  const meta = JSON.parse(readFileSync(paths.metaPath, 'utf-8'));
+  if (meta.extractedAt) {
+    const extractedDate = new Date(meta.extractedAt);
+    const ageDays = Math.floor((new Date() - extractedDate) / (1000 * 60 * 60 * 24));
+
+    if (ageDays < 7) { // JSON cache TTL
+      console.log(JSON.stringify({
+        status: 'cached',
+        ageDays: ageDays,
+        jsonPath: paths.jsonPath
+      }));
+      process.exit(0);
+    }
+  }
+}
+
+// Check if clean content exists
+if (!existsSync(contentPath)) {
+  console.log(JSON.stringify({
+    status: 'no-content',
+    error: 'Clean content not in cache. Run fetch-clean first.'
+  }));
+  process.exit(1);
+}
+
+// Return paths for extraction
+console.log(JSON.stringify({
+  status: 'needs-extraction',
+  contentPath: contentPath,
+  jsonPath: paths.jsonPath,
+  cachePath: cache.urlToPath(url)
+}));
+" "$URL" "$FORCE")
+
+# Parse cache check result
+CACHE_STATUS=$(echo "$CACHE_CHECK" | jq -r '.status' 2>/dev/null || echo "error")
+
+if [ "$CACHE_STATUS" = "cached" ]; then
+  AGE_DAYS=$(echo "$CACHE_CHECK" | jq -r '.ageDays')
+  JSON_PATH=$(echo "$CACHE_CHECK" | jq -r '.jsonPath')
+
+  log_info "Using cached extraction ($AGE_DAYS days old)"
+
+  # Determine output file
+  if [ -z "$OUTPUT_FILE" ]; then
+    DOMAIN=$(echo "$URL" | sed -E 's|https?://([^/]+).*|\1|')
+    URL_PATH=$(echo "$URL" | sed -E 's|https?://[^/]+/?(.*)|/\1|' | sed 's|/$||')
+    OUTPUT_NAME=$(basename "$URL_PATH" | sed 's|[^a-zA-Z0-9-]|_|g')
+    [ -z "$OUTPUT_NAME" ] && OUTPUT_NAME="index"
+
+    OUTPUT_DIR="$OUTPUTS_BASE/$DOMAIN"
+    mkdir -p "$OUTPUT_DIR"
+    OUTPUT_FILE="$OUTPUT_DIR/${OUTPUT_NAME}.json"
+  fi
+
+  cp "$JSON_PATH" "$OUTPUT_FILE"
+  log_info "Output saved to $OUTPUT_FILE"
+  exit 0
+fi
+
+if [ "$CACHE_STATUS" = "no-content" ]; then
+  log_error "Clean content not in cache. Run fetch-clean first."
+  exit 1
+fi
+
+# Get the content path
+CONTENT_PATH=$(echo "$CACHE_CHECK" | jq -r '.contentPath')
+CACHE_PATH=$(echo "$CACHE_CHECK" | jq -r '.cachePath')
+
+# Build the full cache directory path
+FULL_CACHE_PATH="$PROJECT_ROOT/.data/docs.claude.com/cache/${CACHE_PATH}"
+
+log_info "Clean content found at: ${CACHE_PATH}content.html"
+
+# Check content size
+CONTENT_SIZE=$(wc -c < "$CONTENT_PATH")
+log_info "Content size: $(($CONTENT_SIZE / 1024))KB"
+
+# Load the prompt
+PROMPT_FILE="$PROJECT_ROOT/docs/ingestion/prompts/claude-docs.prompt.md"
+if [ ! -f "$PROMPT_FILE" ]; then
+  PROMPT="Please read this documentation page and extract structured information as JSON. Include sections, code examples, key concepts, and best practices. Output only valid JSON."
+  log_info "Using default prompt"
+else
+  PROMPT=$(cat "$PROMPT_FILE")
+  log_info "Using enhanced documentation prompt"
+fi
+
+# Extract with Claude
+if [ -n "$MODEL" ]; then
+  log_info "Extracting with Claude (model: $MODEL, timeout: 300s)..."
+else
+  log_info "Extracting with Claude (default model, timeout: 300s)..."
+fi
+START_TIME=$(date +%s)
+
+# Create prompt file
+PROMPT_FILE=$(mktemp)
+cat > "$PROMPT_FILE" << EOF
+$PROMPT
+
+URL: $URL
+
+Please read the following HTML content and extract structured information:
+
+$(cat "$CONTENT_PATH")
+EOF
+
+# Call Claude (unset CLAUDECODE to avoid recursion detection)
+RAW_OUTPUT=$(mktemp)
+CLAUDE_CMD="claude"
+if [ -n "$MODEL" ]; then
+  CLAUDE_CMD="claude --model $MODEL"
+fi
+
+(unset CLAUDECODE CLAUDE_CODE_ENTRYPOINT CLAUDE_CODE_SSE_PORT; cat "$PROMPT_FILE" | $CLAUDE_CMD) > "$RAW_OUTPUT" 2>&1 || {
+  log_error "Claude extraction failed"
+  cat "$RAW_OUTPUT" >&2
+  rm -f "$PROMPT_FILE" "$RAW_OUTPUT"
+  exit 1
+}
+
+rm -f "$PROMPT_FILE"
+
+# Calculate duration
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
+log_info "Claude extraction took ${DURATION} seconds"
+
+# Save raw response for debugging/reprocessing
+RAW_RESPONSE_PATH="${FULL_CACHE_PATH}raw-response.txt"
+cp "$RAW_OUTPUT" "$RAW_RESPONSE_PATH"
+log_info "Raw response saved to: ${RAW_RESPONSE_PATH}"
+
+# Update manifest - extraction complete
+"$SCRIPT_DIR/update-manifest" --url "$URL" extracted --model "$MODEL"
+
+# Now format the response
+log_info "Formatting response..."
+FORMATTED_JSON=$(mktemp)
+"$SCRIPT_DIR/format-response" "$RAW_RESPONSE_PATH" --output "$FORMATTED_JSON" --quiet || {
+  log_error "Failed to format JSON response"
+  log_info "Raw response saved at: $RAW_RESPONSE_PATH"
+  rm -f "$RAW_OUTPUT" "$FORMATTED_JSON"
+  exit 1
+}
+
+# Add source URL and model info
+if [ -n "$MODEL" ]; then
+  jq --arg url "$URL" --arg model "$MODEL" '. + {source: $url} | .metadata.modelUsed = $model' "$FORMATTED_JSON" > "$FORMATTED_JSON.tmp" && mv "$FORMATTED_JSON.tmp" "$FORMATTED_JSON"
+else
+  jq --arg url "$URL" '. + {source: $url}' "$FORMATTED_JSON" > "$FORMATTED_JSON.tmp" && mv "$FORMATTED_JSON.tmp" "$FORMATTED_JSON"
+fi
+
+# Save to structured cache
+log_info "Saving to cache..."
+node --no-warnings --input-type=module -e "
+import { StructuredCache } from './build/services/structured-cache.js';
+import { readFileSync, writeFileSync } from 'fs';
+
+const url = process.argv[1];
+const json = JSON.parse(readFileSync(process.argv[2], 'utf-8'));
+
+const cache = new StructuredCache(url);
+const paths = cache.getCachePaths(url);
+
+// Save JSON
+writeFileSync(paths.jsonPath, JSON.stringify(json, null, 2), 'utf-8');
+
+// Update metadata
+const meta = JSON.parse(readFileSync(paths.metaPath, 'utf-8'));
+meta.extractedAt = new Date().toISOString();
+writeFileSync(paths.metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+
+console.log('Cached successfully');
+" "$URL" "$FORMATTED_JSON"
+
+# Update manifest - formatting complete
+"$SCRIPT_DIR/update-manifest" "$FORMATTED_JSON" formatted
+
+# Cleanup temp files but keep raw response for debugging
+rm -f "$RAW_OUTPUT" "$FORMATTED_JSON"
+
+# Get the JSON path from cache
+JSON_PATH="$PROJECT_ROOT/.data/docs.claude.com/extracted/$(basename "$URL").json"
+
+# Show summary
+if [ "$QUIET" = false ]; then
+  if [ -f "$JSON_PATH" ]; then
+    SECTIONS=$(jq '.sections | length' "$JSON_PATH" 2>/dev/null || echo 0)
+    CODE_EXAMPLES=$(jq '[.sections[]?.codeExamples? | length] | add' "$JSON_PATH" 2>/dev/null || echo 0)
+    KEY_CONCEPTS=$(jq '[.sections[]?.keyConcepts? | length] | add' "$JSON_PATH" 2>/dev/null || echo 0)
+
+    log_info "Extraction complete:"
+    log_info "  - Sections: $SECTIONS"
+    log_info "  - Code examples: $CODE_EXAMPLES"
+    log_info "  - Key concepts: $KEY_CONCEPTS"
+    log_info "  - Raw response: $RAW_RESPONSE_PATH"
+    log_info "  - Extracted JSON: $JSON_PATH"
+  else
+    log_info "Extraction complete. JSON saved to cache."
+    log_info "Raw response: $RAW_RESPONSE_PATH"
+  fi
+fi

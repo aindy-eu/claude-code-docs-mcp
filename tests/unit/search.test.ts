@@ -32,7 +32,7 @@ describe('Search Functionality', () => {
   describe('formatSearchResults', () => {
     it('should format search results correctly', () => {
       const formatted = formatSearchResults(mockSearchResults);
-      
+
       expect(formatted).toContain('## Claude Code Documentation Search Results');
       expect(formatted).toContain('### 1. Slash Commands Overview');
       expect(formatted).toContain('**Section:** Getting Started');
@@ -52,7 +52,7 @@ describe('Search Functionality', () => {
         ...mockSearchResults[0],
         content: 'A'.repeat(1000)
       };
-      
+
       const formatted = formatSearchResults([longResult]);
       expect(formatted).toContain('A'.repeat(800) + '...');
     });
@@ -62,7 +62,7 @@ describe('Search Functionality', () => {
         ...mockSearchResults[0],
         codeExamples: ['/cmd1', '/cmd2', '/cmd3', '/cmd4', '/cmd5']
       };
-      
+
       const formatted = formatSearchResults([resultWithManyExamples]);
       const codeBlocks = formatted.match(/```/g);
       expect(codeBlocks).toHaveLength(4); // 2 examples × 2 backticks each
@@ -78,7 +78,7 @@ describe('Search Functionality', () => {
       };
 
       const results = await searchDocumentation(mockQdrant as any, params);
-      
+
       expect(results).toHaveLength(2);
       expect(results[0].provider).toBe('ollama');
       expect(results[0].score).toBe(0.95);
@@ -93,7 +93,7 @@ describe('Search Functionality', () => {
       };
 
       const results = await searchDocumentation(mockQdrant as any, params);
-      
+
       expect(results).toHaveLength(2);
     });
 
@@ -105,7 +105,7 @@ describe('Search Functionality', () => {
       };
 
       const results = await searchDocumentation(mockQdrant as any, params);
-      
+
       expect(results).toHaveLength(4); // 2 results × 2 providers
     });
 
@@ -115,7 +115,7 @@ describe('Search Functionality', () => {
       };
 
       const results = await searchDocumentation(mockQdrant as any, params);
-      
+
       expect(results).toHaveLength(2);
     });
 
@@ -129,14 +129,15 @@ describe('Search Functionality', () => {
         provider: 'ollama'
       };
 
-      await expect(searchDocumentation(badQdrant as any, params))
-        .rejects
-        .toThrow('Connection failed');
+      await expect(searchDocumentation(badQdrant as any, params)).rejects.toThrow(
+        'Connection failed'
+      );
     });
 
     it('should continue with other providers if one fails', async () => {
       const partiallyFailingQdrant = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce(mockQdrant.query('test-collection', {}))
           .mockRejectedValueOnce(new Error('Provider failed'))
       };
@@ -147,7 +148,7 @@ describe('Search Functionality', () => {
       };
 
       const results = await searchDocumentation(partiallyFailingQdrant as any, params);
-      
+
       expect(results).toHaveLength(2); // Only successful provider results
     });
 
@@ -158,7 +159,7 @@ describe('Search Functionality', () => {
       };
 
       const results = await searchDocumentation(mockQdrant as any, params);
-      
+
       expect(results).toHaveLength(1);
       expect(results[0].score).toBe(0.95); // Should be the highest scoring result
     });
@@ -167,6 +168,7 @@ describe('Search Functionality', () => {
 
 // Custom Jest matcher for sorting
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
     interface Matchers<R> {
       toBeSortedBy(key: string, options?: { descending?: boolean }): R;
@@ -177,22 +179,24 @@ declare global {
 expect.extend({
   toBeSortedBy(received: any[], key: string, options: { descending?: boolean } = {}) {
     const { descending = false } = options;
-    
+
     for (let i = 1; i < received.length; i++) {
       const current = received[i][key];
       const previous = received[i - 1][key];
-      
+
       if (descending ? current > previous : current < previous) {
         return {
-          message: () => `Expected array to be sorted by ${key} ${descending ? 'descending' : 'ascending'}`,
-          pass: false,
+          message: () =>
+            `Expected array to be sorted by ${key} ${descending ? 'descending' : 'ascending'}`,
+          pass: false
         };
       }
     }
-    
+
     return {
-      message: () => `Expected array not to be sorted by ${key} ${descending ? 'descending' : 'ascending'}`,
-      pass: true,
+      message: () =>
+        `Expected array not to be sorted by ${key} ${descending ? 'descending' : 'ascending'}`,
+      pass: true
     };
-  },
+  }
 });
