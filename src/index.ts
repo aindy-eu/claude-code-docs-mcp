@@ -4,14 +4,21 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { config } from 'dotenv';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { registerTools } from './tools/index.js';
 
 config();
 
+// Read version from package.json
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8'));
+
 const server = new Server(
   {
     name: 'claude-code-docs',
-    version: '1.0.0'
+    version: pkg.version
   },
   {
     capabilities: {
@@ -45,10 +52,7 @@ async function startServer() {
   console.log('\\n📖 Available tools:');
   console.log('  - search_claude_code_docs: Search Claude Code documentation');
   console.log('\\n💡 Usage with Claude Code:');
-  console.log(
-    '  1. Add server: claude mcp add claude-docs node',
-    process.cwd() + '/build/index.js'
-  );
+  console.log('  1. Add server: claude mcp add claude-docs node', process.cwd() + '/build/index.js');
   console.log('  2. Use Claude: claude "How do I implement slash commands?"');
   console.log('\\n✅ Server ready for connections\\n');
 

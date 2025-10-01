@@ -3,6 +3,26 @@ import { config } from 'dotenv';
 // Load test environment variables
 config({ path: '.env.test' });
 
+// Suppress console output in tests (keeps test output clean)
+const originalConsoleLog = console.log;
+const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
+
+global.beforeAll(() => {
+  // Suppress logger output during tests
+  // You can still see test results, but not [INFO]/[ERROR] spam
+  console.log = jest.fn();
+  console.error = jest.fn();
+  console.warn = jest.fn();
+});
+
+global.afterAll(() => {
+  // Restore console after all tests
+  console.log = originalConsoleLog;
+  console.error = originalConsoleError;
+  console.warn = originalConsoleWarn;
+});
+
 // Global test setup
 beforeAll(async () => {
   // Set default test environment variables if not provided

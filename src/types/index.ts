@@ -1,21 +1,6 @@
-export interface SearchResult {
-  content: string;
-  title: string;
-  section: string;
-  url: string;
-  score: number;
-  codeExamples: string[];
-  provider: string;
-  // Enhanced metadata from Claude-driven ingestion
-  keyConcepts?: string[];
-  extractionMethod?: string;
-  pageTitle?: string;
-  summary?: string;
-  lastUpdated?: string;
-}
+/**
+ * Public API Types
+ * Barrel export for external consumers of this MCP server
+ */
 
-export interface SearchParams {
-  query: string;
-  provider?: 'ollama' | 'openai' | 'both';
-  limit?: number;
-}
+export * from './search.types.js';

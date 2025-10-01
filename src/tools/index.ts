@@ -60,7 +60,7 @@ export function registerTools(server: Server, qdrant: QdrantClient) {
           content: [
             {
               type: 'text',
-              text: `Error searching Claude Code documentation: ${error.message}\\n\\nMake sure:\\n1. Qdrant is running (docker run -p 6333:6333 qdrant/qdrant)\\n2. Documentation is indexed (./tools/batch-ingest)\\n3. The specified provider (${provider}) is available`
+              text: `Error searching Claude Code documentation: ${error.message}\\n\\nMake sure:\\n1. Qdrant is running (docker run -p 6333:6333 qdrant/qdrant)\\n2. Documentation is indexed (npm run cli -- batch)\\n3. The specified provider (${provider}) is available`
             }
           ]
         };

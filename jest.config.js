@@ -2,6 +2,8 @@ export default {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   extensionsToTreatAsEsm: ['.ts'],
+  silent: false, // Keep false to see test output
+  verbose: false, // Reduce verbosity
   transform: {
     '^.+\\.ts$': ['ts-jest', {
       useESM: true,

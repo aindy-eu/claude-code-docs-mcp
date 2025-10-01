@@ -7,22 +7,7 @@
  * @module config/documentation-urls
  */
 
-export interface DocumentationSource {
-  /** Current base URL for the documentation */
-  current: string;
-  /** Legacy URLs that should redirect to current */
-  legacy: string[];
-  /** Common path prefix for all pages */
-  pathPrefix: string;
-  /** Available documentation pages */
-  pages: Record<string, string>;
-}
-
-export interface UrlMigration {
-  from: string;
-  to: string;
-  migratedAt?: string;
-}
+import { DocumentationSource, UrlMigration } from './documentation-urls.types.js';
 
 /**
  * Main documentation sources configuration
@@ -46,6 +31,18 @@ export const DOCUMENTATION_SOURCES = {
     }
   }
 } as const;
+
+/**
+ * Core documentation pages - essential subset for quick seeding
+ * These 5 pages provide the most value for new users/forks
+ */
+export const CORE_PAGES: Array<keyof typeof DOCUMENTATION_SOURCES.CLAUDE_CODE.pages> = [
+  'overview',      // What is Claude Code?
+  'quickstart',    // Get started fast
+  'hooks',         // Most powerful feature
+  'slashCommands', // Core CLI usage
+  'mcp'            // MCP integration (why they're using this!)
+];
 
 /**
  * Documentation URL service for managing and resolving documentation URLs

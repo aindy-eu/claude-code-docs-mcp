@@ -3,7 +3,7 @@ import {
   generateEmbedding,
   getCollectionName,
   EmbeddingProvider
-} from '../../src/services/hybrid-embeddings.js';
+} from '../../src/utils/embeddings.js';
 import { getDocUrl } from '../../src/config/documentation-urls.js';
 import { v4 as uuidv4 } from 'uuid';
 

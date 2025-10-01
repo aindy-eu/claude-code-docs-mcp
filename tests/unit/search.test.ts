@@ -2,7 +2,7 @@
 const mockEmbedding = new Array(768).fill(0).map(() => Math.random());
 
 // Mock the embedding service before any imports that might use it
-jest.mock('../../src/services/hybrid-embeddings.js', () => ({
+jest.mock('../../src/utils/embeddings.js', () => ({
   generateEmbedding: jest.fn().mockResolvedValue(mockEmbedding),
   getCollectionName: jest.fn().mockReturnValue('test-collection'),
   EMBEDDING_CONFIGS: {

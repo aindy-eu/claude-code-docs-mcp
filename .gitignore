@@ -88,6 +88,24 @@ CLAUDE.local.md
 # .claude/handovers/*.md
 # !.claude/handovers/README.md
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+*.egg
+
 # Project specific
 .local/
 local-resources/

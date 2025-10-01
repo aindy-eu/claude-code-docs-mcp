@@ -3,7 +3,7 @@ import {
   generateEmbedding,
   getCollectionName,
   EmbeddingProvider
-} from '../services/hybrid-embeddings.js';
+} from '../utils/embeddings.js';
 import { SearchResult, SearchParams } from '../types/index.js';
 
 export function formatSearchResults(results: SearchResult[]): string {

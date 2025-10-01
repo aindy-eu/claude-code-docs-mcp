@@ -4,7 +4,7 @@ import {
   EMBEDDING_CONFIGS,
   getCollectionName,
   EmbeddingProvider
-} from '../services/hybrid-embeddings.js';
+} from './embeddings.js';
 
 config();
 
@@ -58,7 +58,7 @@ async function setupAllCollections() {
 
     console.log('\n🎉 All collections setup complete!');
     console.log('\nNext steps:');
-    console.log('1. Use Claude-driven ingestion: ./tools/batch-ingest');
+    console.log('1. Use Claude-driven ingestion: npm run cli -- batch --core');
     console.log('2. Run "npm start" to start the MCP server');
   } catch (error: any) {
     console.error('❌ Setup failed:', error.message);

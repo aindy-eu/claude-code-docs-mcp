@@ -42,8 +42,8 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
     }
 
     // Mock the generateEmbedding function to return our fixed embedding
-    jest.mock('../../src/services/hybrid-embeddings.js', () => ({
-      ...jest.requireActual('../../src/services/hybrid-embeddings.js'),
+    jest.mock('../../src/utils/embeddings.js', () => ({
+      ...jest.requireActual('../../src/utils/embeddings.js'),
       generateEmbedding: jest.fn(() => Promise.resolve(fixedEmbedding))
     }));
 
