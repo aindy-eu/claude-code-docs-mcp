@@ -6,6 +6,8 @@
 export interface FetchResult {
   html: string;
   finalUrl: string;
+  skipPipeline?: boolean;
+  comparison?: ContentComparison;
 }
 
 export interface CacheMetadata {
@@ -20,4 +22,12 @@ export interface CachePaths {
   dir: string;
   htmlPath: string;
   metaPath: string;
+}
+
+export interface ContentComparison {
+  hasChanged: boolean;
+  contentHash: string;
+  previousHash?: string;
+  comparedAt: string;
+  changePercentage?: number;
 }

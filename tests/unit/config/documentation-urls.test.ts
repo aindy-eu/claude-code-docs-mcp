@@ -4,7 +4,7 @@ import {
   getAllDocUrls,
   migrateDocUrl,
   DOCUMENTATION_SOURCES
-} from '../../src/config/documentation-urls.js';
+} from '@/config/documentation-urls.js';
 
 describe('URL Configuration Service', () => {
   describe('getDocUrl', () => {

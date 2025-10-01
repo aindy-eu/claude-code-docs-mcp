@@ -1,4 +1,4 @@
-import { SearchResult, SearchParams } from '../../src/types/index.js';
+import { SearchResult, SearchParams } from '@/mcp-tools/search/search.types.js';
 
 describe('Type Definitions', () => {
   describe('SearchResult', () => {

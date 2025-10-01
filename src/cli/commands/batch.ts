@@ -136,8 +136,16 @@ export class BatchCommand {
   /**
    * Smart ingestion with resume capability
    * Checks manifest status and resumes from appropriate stage
+   * Returns 'unchanged' if content diff skipped pipeline, 'success' otherwise
    */
-  private async smartIngest(url: string, options: BatchOptions): Promise<void> {
+  private async smartIngest(url: string, options: BatchOptions): Promise<'success' | 'unchanged'> {
+    // Orchestrator handles content diff and may skip pipeline
+    // We capture this by checking if lastCheckedAt was updated without full ingestion
+
+    const manifest = new ManifestService(url);
+    const beforeRecord = manifest.getRecord(url);
+    const beforeCheckedAt = beforeRecord?.lastCheckedAt;
+
     if (options.force) {
       // Force mode: always run full pipeline
       await this.orchestrator.ingest(url, {
@@ -146,12 +154,11 @@ export class BatchCommand {
         provider: options.provider,
         dev: options.dev
       });
-      return;
+      return 'success';
     }
 
     // Check current status
-    const manifest = new ManifestService(url);
-    const record = manifest.getRecord(url);
+    const record = beforeRecord;
 
     if (!record || record.status === 'failed') {
       // Never ingested or failed: run full pipeline
@@ -160,7 +167,13 @@ export class BatchCommand {
         provider: options.provider,
         dev: options.dev
       });
-      return;
+
+      // Check if it was skipped
+      const afterRecord = manifest.getRecord(url);
+      if (afterRecord?.lastCheckedAt && afterRecord.lastCheckedAt !== beforeCheckedAt) {
+        return 'unchanged';
+      }
+      return 'success';
     }
 
     // Resume from incomplete stage
@@ -176,15 +189,28 @@ export class BatchCommand {
       await this.orchestrator.embed(finalUrl, {
         provider: options.provider
       }, true);
+      return 'success';
     } else if (record.status === 'extracted' || record.status === 'structured') {
       // Extraction done, only need embedding
       finalUrl = url; // Use existing URL
       await this.orchestrator.embed(finalUrl, {
         provider: options.provider
       }, true);
+      return 'success';
     } else if (record.status === 'embedded') {
-      // Already complete, skip
-      return;
+      // Already complete, check if we should re-ingest
+      await this.orchestrator.ingest(url, {
+        model: options.model,
+        provider: options.provider,
+        dev: options.dev
+      });
+
+      // Check if it was skipped
+      const afterRecord = manifest.getRecord(url);
+      if (afterRecord?.lastCheckedAt && afterRecord.lastCheckedAt !== beforeCheckedAt) {
+        return 'unchanged';
+      }
+      return 'success';
     } else {
       // Unknown status, run full pipeline
       await this.orchestrator.ingest(url, {
@@ -192,6 +218,13 @@ export class BatchCommand {
         provider: options.provider,
         dev: options.dev
       });
+
+      // Check if it was skipped
+      const afterRecord = manifest.getRecord(url);
+      if (afterRecord?.lastCheckedAt && afterRecord.lastCheckedAt !== beforeCheckedAt) {
+        return 'unchanged';
+      }
+      return 'success';
     }
   }
 
@@ -238,7 +271,8 @@ export class BatchCommand {
         results: {
           success: [],
           failed: [],
-          skipped: toSkip
+          skipped: toSkip,
+          unchanged: []
         },
         startTime
       };
@@ -254,8 +288,14 @@ export class BatchCommand {
                   title: this.formatUrl(url),
                   task: async () => {
                     try {
-                      await this.smartIngest(url, options);
-                      ctx.results.success.push(url);
+                      const result = await this.smartIngest(url, options);
+
+                      // Check if pipeline was skipped due to unchanged content
+                      if (result === 'unchanged') {
+                        ctx.results.unchanged.push(url);
+                      } else {
+                        ctx.results.success.push(url);
+                      }
                     } catch (error: any) {
                       ctx.results.failed.push({
                         url,
@@ -310,6 +350,9 @@ export class BatchCommand {
 
     // Results
     console.log(chalk.green(`✓ Success: ${ctx.results.success.length}`));
+    if (ctx.results.unchanged.length > 0) {
+      console.log(chalk.cyan(`⚡ Unchanged: ${ctx.results.unchanged.length} (content diff - pipeline skipped)`));
+    }
     if (ctx.results.failed.length > 0) {
       console.log(chalk.red(`✗ Failed: ${ctx.results.failed.length}`));
       ctx.results.failed.forEach(({ url, error }) => {
@@ -317,7 +360,7 @@ export class BatchCommand {
       });
     }
     if (ctx.results.skipped.length > 0) {
-      console.log(chalk.yellow(`⏭️  Skipped: ${ctx.results.skipped.length} (fresh)`));
+      console.log(chalk.yellow(`⏭️  Skipped: ${ctx.results.skipped.length} (fresh - not checked)`));
     }
 
     // Storage info

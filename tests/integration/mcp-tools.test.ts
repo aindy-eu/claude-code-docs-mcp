@@ -1,8 +1,8 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { QdrantClient } from '@qdrant/js-client-rest';
-import { registerTools } from '../../src/tools/index.js';
+import { registerTools } from '@/mcp-tools/index.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { getDocUrl } from '../../src/config/documentation-urls.js';
+import { getDocUrl } from '@/config/documentation-urls.js';
 import { v4 as uuidv4 } from 'uuid';
 
 // Check if Qdrant is available before running tests

@@ -1,8 +1,8 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { searchDocumentation, formatSearchResults } from './search.js';
-import { SearchParams } from '../types/index.js';
+import { searchDocumentation, formatSearchResults } from './search/search.js';
+import { SearchParams } from './search/search.types.js';
 
 export function registerTools(server: Server, qdrant: QdrantClient) {
   server.setRequestHandler(ListToolsRequestSchema, async () => ({

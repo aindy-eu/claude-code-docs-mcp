@@ -8,7 +8,7 @@ import { createHash } from 'crypto';
 import path from 'path';
 import fetch from 'node-fetch';
 import { logger } from '../utils/logger.js';
-import { FetchResult, CacheMetadata, CachePaths } from './fetch-service.types.js';
+import { FetchResult, CacheMetadata, CachePaths, ContentComparison } from './fetch-service.types.js';
 
 export class FetchService {
   private domain: string;
@@ -123,6 +123,55 @@ export class FetchService {
   }
 
   /**
+   * Normalize HTML content for comparison
+   * Removes dynamic elements that change but aren't meaningful
+   */
+  private normalizeForComparison(html: string): string {
+    return html
+      .replace(/<!--.*?-->/gs, '') // Remove comments
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '') // Remove inline styles
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .replace(/timestamp="[^"]*"/gi, '') // Remove timestamps
+      .replace(/updated="[^"]*"/gi, '') // Remove update dates
+      .replace(/lastmod="[^"]*"/gi, '') // Remove last modified
+      .trim();
+  }
+
+  /**
+   * Compare current HTML with cached version
+   */
+  private compareContent(oldHtml: string, newHtml: string): ContentComparison {
+    const oldNormalized = this.normalizeForComparison(oldHtml);
+    const newNormalized = this.normalizeForComparison(newHtml);
+
+    const oldHash = createHash('sha256').update(oldNormalized).digest('hex');
+    const newHash = createHash('sha256').update(newNormalized).digest('hex');
+
+    if (oldHash === newHash) {
+      return {
+        hasChanged: false,
+        contentHash: newHash,
+        previousHash: oldHash,
+        comparedAt: new Date().toISOString(),
+        changePercentage: 0
+      };
+    }
+
+    // Simple change percentage based on length difference
+    const lengthDiff = Math.abs(newNormalized.length - oldNormalized.length);
+    const changePercentage = (lengthDiff / oldNormalized.length) * 100;
+
+    return {
+      hasChanged: true,
+      contentHash: newHash,
+      previousHash: oldHash,
+      comparedAt: new Date().toISOString(),
+      changePercentage: Math.min(changePercentage, 100)
+    };
+  }
+
+  /**
    * Fetch HTML from URL and cache it
    */
   async fetch(url: string, force: boolean = false): Promise<FetchResult> {
@@ -162,11 +211,29 @@ export class FetchService {
       headers[key] = value;
     });
 
+    // Compare with existing cache if not forced
+    let comparison: ContentComparison | undefined;
+    let skipPipeline = false;
+
+    if (!force && existsSync(paths.htmlPath)) {
+      const existingHtml = readFileSync(paths.htmlPath, 'utf-8');
+      comparison = this.compareContent(existingHtml, html);
+
+      if (!comparison.hasChanged) {
+        logger.info(`Content unchanged for ${finalUrl} (hash match) - can skip pipeline`);
+        skipPipeline = true;
+        // Don't save - use existing cache
+        return { html: existingHtml, finalUrl, skipPipeline, comparison };
+      }
+
+      logger.info(`Content changed for ${finalUrl} (${comparison.changePercentage?.toFixed(1)}% difference)`);
+    }
+
     // Save to cache using final URL
     await this.saveHTML(finalUrl, html, headers);
 
     logger.info(`Fetched and cached ${finalUrl} (${Buffer.byteLength(html, 'utf8')} bytes)`);
 
-    return { html, finalUrl };
+    return { html, finalUrl, skipPipeline, comparison };
   }
 }

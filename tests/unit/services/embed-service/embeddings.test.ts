@@ -25,7 +25,7 @@ import {
   generateEmbedding,
   getCollectionName,
   EMBEDDING_CONFIGS
-} from '../../src/utils/embeddings.js';
+} from '@/utils/embeddings.js';
 
 describe('Embedding Service', () => {
   beforeEach(() => {

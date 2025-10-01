@@ -2,7 +2,7 @@
 const mockEmbedding = new Array(768).fill(0).map(() => Math.random());
 
 // Mock the embedding service before any imports that might use it
-jest.mock('../../src/utils/embeddings.js', () => ({
+jest.mock('@/utils/embeddings.js', () => ({
   generateEmbedding: jest.fn().mockResolvedValue(mockEmbedding),
   getCollectionName: jest.fn().mockReturnValue('test-collection'),
   EMBEDDING_CONFIGS: {
@@ -11,10 +11,10 @@ jest.mock('../../src/utils/embeddings.js', () => ({
   }
 }));
 
-import { formatSearchResults, searchDocumentation } from '../../src/tools/search.js';
-import { SearchResult, SearchParams } from '../../src/types/index.js';
-import { MockQdrantClient } from '../mocks/qdrantClient.js';
-import { mockSearchResults } from '../fixtures/mockSearchResults.js';
+import { formatSearchResults, searchDocumentation } from '@/mcp-tools/search/search.js';
+import { SearchResult, SearchParams } from '@/mcp-tools/search/search.types.js';
+import { MockQdrantClient } from '../../../mocks/qdrantClient.js';
+import { mockSearchResults } from '../../../fixtures/mockSearchResults.js';
 
 describe('Search Functionality', () => {
   let mockQdrant: MockQdrantClient;

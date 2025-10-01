@@ -35,7 +35,20 @@ export class PipelineOrchestrator {
 
     try {
       spinner.text = 'Fetching HTML...';
-      const finalUrl = await this.fetch(url, true);
+      const result = await fetchStage(url, this.projectRoot, { force: options.force }, true);
+
+      // Check if content is unchanged and we can skip pipeline
+      if (result.skipPipeline && !options.force) {
+        spinner.succeed(chalk.yellow(`✓ Content unchanged - skipped pipeline`));
+
+        // Update manifest with check timestamp
+        const { ManifestService } = await import('../../services/manifest-service.js');
+        const manifest = new ManifestService(result.finalUrl);
+        manifest.updateUnchanged(result.finalUrl);
+        return;
+      }
+
+      const finalUrl = result.finalUrl;
 
       spinner.text = `Extracting with Claude (${options.model})...`;
       await this.extract(finalUrl, { model: options.model, force: options.force, dev: options.dev }, true);
@@ -54,7 +67,8 @@ export class PipelineOrchestrator {
    * Fetch and cache clean HTML content
    */
   async fetch(url: string, silent: boolean = false): Promise<string> {
-    return await fetchStage(url, this.projectRoot, {}, silent);
+    const result = await fetchStage(url, this.projectRoot, {}, silent);
+    return result.finalUrl;
   }
 
   /**

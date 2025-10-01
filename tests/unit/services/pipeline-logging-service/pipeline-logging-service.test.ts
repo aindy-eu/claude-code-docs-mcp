@@ -2,7 +2,7 @@
  * Tests for PipelineLogger service
  */
 
-import { PipelineLoggingService } from '../../src/services/pipeline-logging-service';
+import { PipelineLoggingService } from '@/services/pipeline-logging-service.js';
 import { existsSync, readFileSync, rmSync } from 'fs';
 import path from 'path';
 

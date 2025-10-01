@@ -2,7 +2,7 @@
  * Tests for ManifestService
  */
 
-import { ManifestService } from '../../src/services/manifest-service';
+import { ManifestService } from '@/services/manifest-service.js';
 import { existsSync, readFileSync, rmSync, mkdirSync } from 'fs';
 import path from 'path';
 

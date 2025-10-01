@@ -255,4 +255,22 @@ export class ManifestService {
     this.saveManifest(manifest);
     logger.info(`[MANIFEST] Updated: ${url} -> failed`);
   }
+
+  /**
+   * Update record - content unchanged (skip pipeline)
+   */
+  updateUnchanged(url: string): void {
+    const manifest = this.getManifest();
+    const existing = manifest.records[url] || {};
+
+    // Update last checked timestamp but preserve existing status
+    manifest.records[url] = {
+      ...existing,
+      url,
+      lastCheckedAt: new Date().toISOString()
+    };
+
+    this.saveManifest(manifest);
+    logger.info(`[MANIFEST] Content unchanged: ${url} (skipped pipeline)`);
+  }
 }

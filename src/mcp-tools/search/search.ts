@@ -3,8 +3,8 @@ import {
   generateEmbedding,
   getCollectionName,
   EmbeddingProvider
-} from '../utils/embeddings.js';
-import { SearchResult, SearchParams } from '../types/index.js';
+} from '@/utils/embeddings.js';
+import { SearchResult, SearchParams } from './search.types.js';
 
 export function formatSearchResults(results: SearchResult[]): string {
   if (results.length === 0) {

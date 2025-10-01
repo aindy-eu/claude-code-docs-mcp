@@ -12,6 +12,7 @@ export interface ManifestRecord {
   lastEmbeddedAt?: string;
   lastIngestedAt?: string;
   lastFailedAt?: string;
+  lastCheckedAt?: string; // Content diff check timestamp
   extractionModel?: string;
   embeddingProvider?: string;
   rawResponseSize?: number;

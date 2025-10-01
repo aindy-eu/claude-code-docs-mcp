@@ -6,6 +6,7 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import { FetchService } from '../../services/fetch-service.js';
+import { FetchResult } from '../../services/fetch-service.types.js';
 import { ManifestService } from '../../services/manifest-service.js';
 import { PipelineLoggingService } from '../../services/pipeline-logging-service.js';
 import { FetchOptions } from './types.js';
@@ -15,35 +16,46 @@ export async function fetchStage(
   _projectRoot: string,
   options: FetchOptions = {},
   silent: boolean = false
-): Promise<string> {
+): Promise<FetchResult> {
   const spinner = silent ? null : ora('Fetching HTML...').start();
   const startTime = Date.now();
 
   try {
     const fetchService = new FetchService(url);
 
-    // Fetch and cache (may detect redirect)
-    const { html, finalUrl } = await fetchService.fetch(url, options.force || false);
+    // Fetch and cache (may detect redirect and compare content)
+    const result = await fetchService.fetch(url, options.force || false);
+    const { html, finalUrl, skipPipeline, comparison } = result;
 
     // Use finalUrl for all subsequent operations
     const manifest = new ManifestService(finalUrl);
     const logger = new PipelineLoggingService(finalUrl);
 
-    // Update manifest with final URL
-    manifest.updateFetched(finalUrl);
+    // Update manifest with final URL (only if not skipping)
+    if (!skipPipeline) {
+      manifest.updateFetched(finalUrl);
+    }
 
     // Log success
     const duration = Date.now() - startTime;
     logger.logFetch(finalUrl, duration);
 
-    // Notify user if redirect occurred
-    if (finalUrl !== url) {
-      spinner?.succeed(chalk.green(`✓ Fetch complete (redirected to ${new URL(finalUrl).hostname})`));
+    // Notify user
+    if (skipPipeline) {
+      spinner?.succeed(chalk.yellow('✓ Fetch complete (content unchanged)'));
+    } else if (finalUrl !== url) {
+      const changeMsgMsg = comparison?.hasChanged
+        ? ` (${comparison.changePercentage?.toFixed(1)}% changed)`
+        : '';
+      spinner?.succeed(chalk.green(`✓ Fetch complete (redirected)${changeMsgMsg}`));
     } else {
-      spinner?.succeed(chalk.green('✓ Fetch complete'));
+      const changeMsg = comparison?.hasChanged
+        ? ` (${comparison.changePercentage?.toFixed(1)}% changed)`
+        : '';
+      spinner?.succeed(chalk.green(`✓ Fetch complete${changeMsg}`));
     }
 
-    return finalUrl; // Return final URL for downstream stages
+    return result;
   } catch (error: any) {
     const duration = Date.now() - startTime;
     const logger = new PipelineLoggingService(url);

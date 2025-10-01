@@ -19,7 +19,8 @@ export interface BatchContext {
   results: {
     success: string[];
     failed: Array<{ url: string; error: string }>;
-    skipped: string[];
+    skipped: string[]; // Skipped due to freshness check
+    unchanged: string[]; // Skipped due to content diff
   };
   startTime: number;
 }

@@ -3,8 +3,8 @@ import {
   generateEmbedding,
   getCollectionName,
   EmbeddingProvider
-} from '../../src/utils/embeddings.js';
-import { getDocUrl } from '../../src/config/documentation-urls.js';
+} from '@/utils/embeddings.js';
+import { getDocUrl } from '@/config/documentation-urls.js';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('Qdrant Integration Tests (requires Qdrant)', () => {
