@@ -43,9 +43,8 @@ export async function embedStage(
     const result = await embedService.embed(extracted, provider);
 
     if (!result.success) {
-      const errorMsg = result.errors && result.errors.length > 0
-        ? result.errors.join(', ')
-        : 'Unknown error';
+      const errorMsg =
+        result.errors && result.errors.length > 0 ? result.errors.join(', ') : 'Unknown error';
       throw new Error('Embedding failed: ' + errorMsg);
     }
 

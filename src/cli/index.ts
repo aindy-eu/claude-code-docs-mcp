@@ -25,7 +25,7 @@ program
   .option('--model <model>', 'Claude model for extraction', 'claude-sonnet-4-5-20250929')
   .option('--provider <provider>', 'Embedding provider (ollama/openai)', 'ollama')
   .option('--dev', 'Use minimal dev prompt for faster testing')
-  .action(async (options) => {
+  .action(async options => {
     try {
       const batchCmd = new BatchCommand();
 

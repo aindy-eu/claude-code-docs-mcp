@@ -21,11 +21,7 @@ jest.mock('openai', () => ({
 }));
 
 // Import the module we're testing
-import {
-  generateEmbedding,
-  getCollectionName,
-  EMBEDDING_CONFIGS
-} from '@/utils/embeddings.js';
+import { generateEmbedding, getCollectionName, EMBEDDING_CONFIGS } from '@/utils/embeddings.js';
 
 describe('Embedding Service', () => {
   beforeEach(() => {

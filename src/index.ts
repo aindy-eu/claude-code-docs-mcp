@@ -7,7 +7,7 @@ import { config } from 'dotenv';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { registerTools } from './tools/index.js';
+import { registerTools } from './mcp-tools/index.js';
 
 config();
 
@@ -52,7 +52,10 @@ async function startServer() {
   console.log('\\n📖 Available tools:');
   console.log('  - search_claude_code_docs: Search Claude Code documentation');
   console.log('\\n💡 Usage with Claude Code:');
-  console.log('  1. Add server: claude mcp add claude-docs node', process.cwd() + '/build/index.js');
+  console.log(
+    '  1. Add server: claude mcp add claude-docs node',
+    process.cwd() + '/build/index.js'
+  );
   console.log('  2. Use Claude: claude "How do I implement slash commands?"');
   console.log('\\n✅ Server ready for connections\\n');
 

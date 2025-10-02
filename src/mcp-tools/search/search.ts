@@ -1,9 +1,5 @@
 import { QdrantClient } from '@qdrant/js-client-rest';
-import {
-  generateEmbedding,
-  getCollectionName,
-  EmbeddingProvider
-} from '@/utils/embeddings.js';
+import { generateEmbedding, getCollectionName, EmbeddingProvider } from '@/utils/embeddings.js';
 import { SearchResult, SearchParams } from './search.types.js';
 
 export function formatSearchResults(results: SearchResult[]): string {

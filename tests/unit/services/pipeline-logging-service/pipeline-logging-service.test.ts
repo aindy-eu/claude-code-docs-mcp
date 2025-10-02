@@ -3,7 +3,7 @@
  */
 
 import { PipelineLoggingService } from '@/services/pipeline-logging-service.js';
-import { existsSync, readFileSync, rmSync } from 'fs';
+import { existsSync, readFileSync, rmSync, appendFileSync } from 'fs';
 import path from 'path';
 
 // Use unique test domain to avoid conflicts with other tests
@@ -30,7 +30,7 @@ describe('PipelineLoggingService', () => {
 
   describe('Initialization', () => {
     it('should create log directory on construction', () => {
-      const logger = new PipelineLoggingService(TEST_URL);
+      const _logger = new PipelineLoggingService(TEST_URL);
       expect(existsSync(TEST_LOG_DIR)).toBe(true);
     });
 
@@ -139,13 +139,7 @@ describe('PipelineLoggingService', () => {
       const logger = new PipelineLoggingService(TEST_URL);
       const largeResponse = 'x'.repeat(20000); // 20KB response
 
-      logger.logExtractError(
-        TEST_URL,
-        'claude-sonnet-4',
-        'Error',
-        largeResponse,
-        1000
-      );
+      logger.logExtractError(TEST_URL, 'claude-sonnet-4', 'Error', largeResponse, 1000);
 
       const logPath = path.join(TEST_LOG_DIR, 'extract.jsonl');
       const content = readFileSync(logPath, 'utf-8');
@@ -257,7 +251,7 @@ describe('PipelineLoggingService', () => {
 
       // Append corrupt line
       const logPath = path.join(TEST_LOG_DIR, 'fetch.jsonl');
-      require('fs').appendFileSync(logPath, '\nNOT VALID JSON\n');
+      appendFileSync(logPath, '\nNOT VALID JSON\n');
 
       // Should not throw, but may return empty array or partial results
       expect(() => {

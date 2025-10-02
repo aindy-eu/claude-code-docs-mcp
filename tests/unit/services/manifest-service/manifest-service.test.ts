@@ -3,7 +3,7 @@
  */
 
 import { ManifestService } from '@/services/manifest-service.js';
-import { existsSync, readFileSync, rmSync, mkdirSync } from 'fs';
+import { existsSync, readFileSync, rmSync } from 'fs';
 import path from 'path';
 
 const TEST_URL = 'https://example.com/test-doc';

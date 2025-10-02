@@ -51,7 +51,11 @@ export class PipelineOrchestrator {
       const finalUrl = result.finalUrl;
 
       spinner.text = `Extracting with Claude (${options.model})...`;
-      await this.extract(finalUrl, { model: options.model, force: options.force, dev: options.dev }, true);
+      await this.extract(
+        finalUrl,
+        { model: options.model, force: options.force, dev: options.dev },
+        true
+      );
 
       spinner.text = `Generating embeddings (${options.provider})...`;
       await this.embed(finalUrl, { provider: options.provider }, true);
@@ -110,11 +114,14 @@ export class PipelineOrchestrator {
       console.log(`${chalk.cyan('URL:')} ${record.url}`);
       console.log(`${chalk.cyan('Status:')} ${this.colorStatus(record.status)}`);
       if (record.lastFetchedAt) console.log(`${chalk.cyan('Fetched:')} ${record.lastFetchedAt}`);
-      if (record.lastExtractedAt) console.log(`${chalk.cyan('Extracted:')} ${record.lastExtractedAt}`);
+      if (record.lastExtractedAt)
+        console.log(`${chalk.cyan('Extracted:')} ${record.lastExtractedAt}`);
       if (record.extractionModel) console.log(`${chalk.cyan('Model:')} ${record.extractionModel}`);
-      if (record.embeddingProvider) console.log(`${chalk.cyan('Provider:')} ${record.embeddingProvider}`);
+      if (record.embeddingProvider)
+        console.log(`${chalk.cyan('Provider:')} ${record.embeddingProvider}`);
       if (record.sectionCount) console.log(`${chalk.cyan('Sections:')} ${record.sectionCount}`);
-      if (record.codeExampleCount) console.log(`${chalk.cyan('Examples:')} ${record.codeExampleCount}`);
+      if (record.codeExampleCount)
+        console.log(`${chalk.cyan('Examples:')} ${record.codeExampleCount}`);
       console.log(chalk.gray('─'.repeat(50)));
     } catch (error: any) {
       spinner.fail(chalk.red('✗ Status check failed'));
@@ -167,7 +174,7 @@ export class PipelineOrchestrator {
       fetched: chalk.yellow,
       extracted: chalk.blue,
       structured: chalk.blue,
-      embedded: chalk.green,
+      embedded: chalk.green
     };
     return (colors[status] || chalk.white)(status);
   }

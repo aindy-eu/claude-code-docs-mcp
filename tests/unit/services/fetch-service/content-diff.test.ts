@@ -9,10 +9,7 @@ import path from 'path';
 
 // Real HTML path from test fixture
 // This ensures tests work even if user hasn't ingested docs yet
-const REAL_HTML_PATH = path.join(
-  process.cwd(),
-  '.data/test.com/cache/docs/test/content.html'
-);
+const REAL_HTML_PATH = path.join(process.cwd(), '.data/test.com/cache/docs/test/content.html');
 
 /**
  * This is the ACTUAL normalization logic from FetchService
@@ -72,7 +69,7 @@ describe('Content Diff Logic', () => {
     if (!existsSync(REAL_HTML_PATH)) {
       throw new Error(
         `Test fixture not found at ${REAL_HTML_PATH}. ` +
-        `This file should be committed to the repo for consistent testing.`
+          `This file should be committed to the repo for consistent testing.`
       );
     }
     realHtml = readFileSync(REAL_HTML_PATH, 'utf-8');

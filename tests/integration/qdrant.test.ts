@@ -1,9 +1,5 @@
 import { QdrantClient } from '@qdrant/js-client-rest';
-import {
-  generateEmbedding,
-  getCollectionName,
-  EmbeddingProvider
-} from '@/utils/embeddings.js';
+import { generateEmbedding, getCollectionName, EmbeddingProvider } from '@/utils/embeddings.js';
 import { getDocUrl } from '@/config/documentation-urls.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -263,7 +259,7 @@ describe('Qdrant Integration Tests (requires Qdrant)', () => {
 
         expect(searchResults.points).toHaveLength(1);
         expect(searchResults.points[0].score).toBeCloseTo(1.0, 5); // Should be nearly perfect match
-      } catch (error) {
+      } catch (error: any) {
         console.warn('Skipping real embedding test - ollama not available:', error.message);
         // Mark test as pending instead of failing
         pending('Ollama not available for real embedding test');

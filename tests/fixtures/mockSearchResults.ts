@@ -1,5 +1,5 @@
-import { SearchResult } from '../../src/types/index.js';
-import { getDocUrl } from '../../src/config/documentation-urls.js';
+import { SearchResult } from '@/mcp-tools/search/search.types.js';
+import { getDocUrl } from '@/config/documentation-urls.js';
 
 export const mockSearchResults: SearchResult[] = [
   {

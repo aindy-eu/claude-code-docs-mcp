@@ -117,12 +117,7 @@ export class PipelineLoggingService {
   /**
    * Log successful embedding
    */
-  logEmbed(
-    url: string,
-    provider: string,
-    duration_ms: number,
-    vector_count: number
-  ): void {
+  logEmbed(url: string, provider: string, duration_ms: number, vector_count: number): void {
     this.log({
       level: 'info',
       stage: 'embed',
@@ -137,12 +132,7 @@ export class PipelineLoggingService {
   /**
    * Log failed embedding
    */
-  logEmbedError(
-    url: string,
-    provider: string,
-    error: string,
-    duration_ms: number
-  ): void {
+  logEmbedError(url: string, provider: string, error: string, duration_ms: number): void {
     this.log({
       level: 'error',
       stage: 'embed',

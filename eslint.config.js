@@ -67,7 +67,8 @@ export default [
         afterEach: 'readonly',
         beforeAll: 'readonly',
         afterAll: 'readonly',
-        test: 'readonly'
+        test: 'readonly',
+        setTimeout: 'readonly'
       }
     },
     rules: {
@@ -88,7 +89,9 @@ export default [
       'examples/',
       'analysis/',
       'tools/',
-      '*.md'
+      '*.md',
+      '.local/**',
+      '.data/**'
     ]
   }
 ];

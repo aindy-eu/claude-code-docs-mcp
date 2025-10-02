@@ -5,7 +5,7 @@
 
 import chalk from 'chalk';
 import { QdrantClient } from '@qdrant/js-client-rest';
-import { search, formatSearchResults } from '../../tools/search.js';
+import { searchDocumentation, formatSearchResults } from '@/mcp-tools/search/search.js';
 import { EmbeddingProvider } from '../../utils/embeddings.js';
 import { SearchOptions } from './search.types.js';
 
@@ -31,7 +31,7 @@ export class SearchCommand {
 
     try {
       // Perform search
-      const results = await search(this.qdrantClient, {
+      const results = await searchDocumentation(this.qdrantClient, {
         query,
         provider,
         limit
@@ -52,7 +52,9 @@ export class SearchCommand {
 
       // Show metadata
       console.log(chalk.bold('\n📊 Search Metadata:'));
-      console.log(chalk.green(`✓ Found ${results.length} result${results.length === 1 ? '' : 's'}`));
+      console.log(
+        chalk.green(`✓ Found ${results.length} result${results.length === 1 ? '' : 's'}`)
+      );
       console.log(chalk.green(`✓ Extraction method: Claude-driven`));
       console.log();
     } catch (error: any) {
@@ -62,7 +64,9 @@ export class SearchCommand {
       if (error.message.includes('Not Found')) {
         console.log(chalk.yellow('\nNo collection found. Try:'));
         console.log(chalk.cyan('  npm run setup           ') + chalk.gray('# Create collections'));
-        console.log(chalk.cyan('  npm run cli -- batch    ') + chalk.gray('# Ingest documentation'));
+        console.log(
+          chalk.cyan('  npm run cli -- batch    ') + chalk.gray('# Ingest documentation')
+        );
       }
 
       process.exit(1);

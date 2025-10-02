@@ -37,11 +37,11 @@ export const DOCUMENTATION_SOURCES = {
  * These 5 pages provide the most value for new users/forks
  */
 export const CORE_PAGES: Array<keyof typeof DOCUMENTATION_SOURCES.CLAUDE_CODE.pages> = [
-  'overview',      // What is Claude Code?
-  'quickstart',    // Get started fast
-  'hooks',         // Most powerful feature
+  'overview', // What is Claude Code?
+  'quickstart', // Get started fast
+  'hooks', // Most powerful feature
   'slashCommands', // Core CLI usage
-  'mcp'            // MCP integration (why they're using this!)
+  'mcp' // MCP integration (why they're using this!)
 ];
 
 /**

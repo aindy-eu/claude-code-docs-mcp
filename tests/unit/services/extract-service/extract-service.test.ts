@@ -4,7 +4,7 @@
  */
 
 import { ExtractService } from '@/services/extract-service.js';
-import { existsSync, readFileSync, writeFileSync, rmSync } from 'fs';
+import { existsSync, readFileSync, rmSync } from 'fs';
 import path from 'path';
 
 const TEST_URL = 'https://test.com/docs/test';
@@ -15,12 +15,6 @@ const TEST_JSON_PATH = path.join(STRUCTURED_DIR, 'test.json');
 
 describe('ExtractService', () => {
   let service: ExtractService;
-  let realJson: any;
-
-  beforeAll(() => {
-    // Read the REAL extracted JSON that exists in the repo
-    realJson = JSON.parse(readFileSync(TEST_JSON_PATH, 'utf-8'));
-  });
 
   beforeEach(() => {
     service = new ExtractService(TEST_URL);

@@ -16,12 +16,7 @@ export class ManifestService {
   constructor(url: string) {
     // Extract domain from URL
     this.domain = new URL(url).hostname;
-    this.manifestPath = path.join(
-      process.cwd(),
-      '.data',
-      this.domain,
-      'manifest.json'
-    );
+    this.manifestPath = path.join(process.cwd(), '.data', this.domain, 'manifest.json');
   }
 
   /**

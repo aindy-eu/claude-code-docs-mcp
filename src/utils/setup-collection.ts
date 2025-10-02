@@ -1,10 +1,6 @@
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { config } from 'dotenv';
-import {
-  EMBEDDING_CONFIGS,
-  getCollectionName,
-  EmbeddingProvider
-} from './embeddings.js';
+import { EMBEDDING_CONFIGS, getCollectionName, EmbeddingProvider } from './embeddings.js';
 
 config();
 

@@ -41,8 +41,7 @@ export class BatchCommand {
       const invalidPages = options.pages.filter(p => !allPages.includes(p));
       if (invalidPages.length > 0) {
         throw new Error(
-          `Invalid page(s): ${invalidPages.join(', ')}\n` +
-          `Valid pages: ${allPages.join(', ')}`
+          `Invalid page(s): ${invalidPages.join(', ')}\n` + `Valid pages: ${allPages.join(', ')}`
         );
       }
     }
@@ -65,9 +64,7 @@ export class BatchCommand {
       pageKeys = Object.keys(DOCUMENTATION_SOURCES.CLAUDE_CODE.pages);
     }
 
-    return pageKeys.map(key =>
-      this.urlService.getPageUrl(key as any)
-    );
+    return pageKeys.map(key => this.urlService.getPageUrl(key as any));
   }
 
   /**
@@ -182,20 +179,32 @@ export class BatchCommand {
     if (record.status === 'fetched') {
       // Only HTML fetched, need to extract and embed
       finalUrl = url; // Use existing URL
-      await this.orchestrator.extract(finalUrl, {
-        model: options.model,
-        dev: options.dev
-      }, true);
-      await this.orchestrator.embed(finalUrl, {
-        provider: options.provider
-      }, true);
+      await this.orchestrator.extract(
+        finalUrl,
+        {
+          model: options.model,
+          dev: options.dev
+        },
+        true
+      );
+      await this.orchestrator.embed(
+        finalUrl,
+        {
+          provider: options.provider
+        },
+        true
+      );
       return 'success';
     } else if (record.status === 'extracted' || record.status === 'structured') {
       // Extraction done, only need embedding
       finalUrl = url; // Use existing URL
-      await this.orchestrator.embed(finalUrl, {
-        provider: options.provider
-      }, true);
+      await this.orchestrator.embed(
+        finalUrl,
+        {
+          provider: options.provider
+        },
+        true
+      );
       return 'success';
     } else if (record.status === 'embedded') {
       // Already complete, check if we should re-ingest
@@ -324,7 +333,6 @@ export class BatchCommand {
 
       // Show summary
       this.showSummary(ctx);
-
     } catch (error: any) {
       console.error(chalk.red('\n✗ Batch ingestion failed:'), error.message);
       process.exit(1);
@@ -351,7 +359,11 @@ export class BatchCommand {
     // Results
     console.log(chalk.green(`✓ Success: ${ctx.results.success.length}`));
     if (ctx.results.unchanged.length > 0) {
-      console.log(chalk.cyan(`⚡ Unchanged: ${ctx.results.unchanged.length} (content diff - pipeline skipped)`));
+      console.log(
+        chalk.cyan(
+          `⚡ Unchanged: ${ctx.results.unchanged.length} (content diff - pipeline skipped)`
+        )
+      );
     }
     if (ctx.results.failed.length > 0) {
       console.log(chalk.red(`✗ Failed: ${ctx.results.failed.length}`));

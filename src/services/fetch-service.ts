@@ -8,7 +8,12 @@ import { createHash } from 'crypto';
 import path from 'path';
 import fetch from 'node-fetch';
 import { logger } from '../utils/logger.js';
-import { FetchResult, CacheMetadata, CachePaths, ContentComparison } from './fetch-service.types.js';
+import {
+  FetchResult,
+  CacheMetadata,
+  CachePaths,
+  ContentComparison
+} from './fetch-service.types.js';
 
 export class FetchService {
   private domain: string;
@@ -87,7 +92,11 @@ export class FetchService {
   /**
    * Save HTML with metadata
    */
-  private async saveHTML(url: string, html: string, headers?: Record<string, string>): Promise<void> {
+  private async saveHTML(
+    url: string,
+    html: string,
+    headers?: Record<string, string>
+  ): Promise<void> {
     const paths = this.getCachePaths(url);
 
     // Create directory structure
@@ -226,7 +235,9 @@ export class FetchService {
         return { html: existingHtml, finalUrl, skipPipeline, comparison };
       }
 
-      logger.info(`Content changed for ${finalUrl} (${comparison.changePercentage?.toFixed(1)}% difference)`);
+      logger.info(
+        `Content changed for ${finalUrl} (${comparison.changePercentage?.toFixed(1)}% difference)`
+      );
     }
 
     // Save to cache using final URL
