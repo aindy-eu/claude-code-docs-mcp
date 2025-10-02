@@ -83,22 +83,55 @@ Even though these commands are allowed, **ALWAYS** ask the user before executing
 
 ## Project-Specific Commands
 
+### Testing (Vitest)
 ```bash
-# Quick health check
+# Run all tests in watch mode (development)
 npm test
 
-# Code quality & formatting
-npm run lint         # Check for linting issues
+# Run tests once and exit (CI/production)
+npm run test:ci
+
+# Run with coverage report
+npm run test:coverage
+
+# Run specific test suites
+npm run test:unit        # Unit tests only
+npm run test:integration # Integration tests only
+
+# Interactive UI for test debugging
+npm run test:ui
+```
+
+### Code Quality & Linting
+```bash
+# IMPORTANT: Always run before committing!
+npm run lint         # Check for linting issues (ESLint + Prettier)
 npm run lint:fix     # Auto-fix linting issues
-npm run format       # Format code with Prettier
+
+# Format code separately
+npm run format       # Format all code with Prettier
 npm run format:check # Check if formatting is correct
 
-# Process with specific provider
-npm run process-claude file.json -- --provider openai
-
-# Reprocess existing Claude outputs
-for f in claude-outputs/*.json; do npm run process-claude "$f"; done
+# Build TypeScript
+npm run build        # Compile TypeScript and check types
 ```
+
+## Quality Checklist Before Committing
+
+Always run these commands before marking any task complete:
+
+1. `npm run lint:fix` - Fix all linting/formatting issues
+2. `npm run build` - Ensure TypeScript compiles
+3. `npm run test:unit` - Run unit tests quickly
+4. `npm test` (then press 'q') - Verify all tests pass
+
+If any command fails, fix the issues before proceeding.
+
+**Note**: Tests are now using Vitest (not Jest). Key differences:
+- `vi` instead of `jest` for mocking
+- Tests run much faster (~1.3s vs ~2s)
+- Watch mode is default for `npm test`
+- Use `npm run test:ci` for one-time runs in CI
 
 ## Future-Proof Decisions
 

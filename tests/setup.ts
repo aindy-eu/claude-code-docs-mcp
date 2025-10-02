@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-import { vi, beforeAll } from 'vitest';
+import { vi, beforeAll, afterAll } from 'vitest';
 
 // Load test environment variables
 config({ path: '.env.test' });
@@ -11,7 +11,7 @@ const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;
 const originalConsoleInfo = console.info;
 
-global.beforeAll(() => {
+beforeAll(() => {
   // Suppress logger output during tests
   // You can still see test results, but not [INFO]/[ERROR] spam
   console.log = vi.fn();
@@ -20,7 +20,7 @@ global.beforeAll(() => {
   console.info = vi.fn();
 });
 
-global.afterAll(() => {
+afterAll(() => {
   // Restore console after all tests
   console.log = originalConsoleLog;
   console.error = originalConsoleError;
