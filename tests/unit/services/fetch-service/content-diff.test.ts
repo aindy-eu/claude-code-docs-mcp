@@ -3,7 +3,7 @@
  * Tests the ACTUAL comparison logic with REAL HTML
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { createHash } from 'crypto';
 import { readFileSync, existsSync } from 'fs';
 import path from 'path';

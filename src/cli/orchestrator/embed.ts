@@ -11,6 +11,7 @@ import { ManifestService } from '../../services/manifest-service.js';
 import { PipelineLoggingService } from '../../services/pipeline-logging-service.js';
 import { EmbedService } from '../../services/embed-service.js';
 import { EmbeddingProvider } from '../../utils/embeddings.js';
+import { ClaudeDocOutput } from '../../services/embed-service.types.js';
 import { EmbedOptions } from './types.js';
 
 export async function embedStage(
@@ -40,7 +41,7 @@ export async function embedStage(
     const embedService = new EmbedService(qdrantClient, provider);
 
     // Process and embed
-    const result = await embedService.embed(extracted, provider);
+    const result = await embedService.embed(extracted as ClaudeDocOutput, provider);
 
     if (!result.success) {
       const errorMsg =

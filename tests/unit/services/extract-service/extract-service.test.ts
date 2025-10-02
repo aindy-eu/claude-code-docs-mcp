@@ -3,7 +3,7 @@
  * Uses REAL extracted JSON from .data/test.com/structured/test.json
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ExtractService } from '@/services/extract-service.js';
 import { existsSync, readFileSync, rmSync } from 'fs';
 import path from 'path';
@@ -64,12 +64,12 @@ describe('ExtractService', () => {
 
   describe('get', () => {
     it('should read existing JSON', async () => {
-      const json = await service.get(TEST_URL);
+      const json = (await service.get(TEST_URL)) as any;
 
       expect(json).toBeDefined();
-      expect(json.source).toBe('https://docs.claude.com/en/docs/claude-code/overview');
-      expect(json.pageTitle).toBe('Claude Code Overview');
-      expect(json.sections).toBeInstanceOf(Array);
+      expect(json?.source).toBe('https://docs.claude.com/en/docs/claude-code/overview');
+      expect(json?.pageTitle).toBe('Claude Code Overview');
+      expect(json?.sections).toBeInstanceOf(Array);
     });
 
     it('should return null for non-existent JSON', async () => {
@@ -78,20 +78,20 @@ describe('ExtractService', () => {
     });
 
     it('should preserve complex nested structure', async () => {
-      const json = await service.get(TEST_URL);
+      const json = (await service.get(TEST_URL)) as any;
 
-      expect(json.sections[0].codeExamples).toBeInstanceOf(Array);
-      expect(json.sections[0].codeExamples[0]).toHaveProperty('language');
-      expect(json.sections[0].codeExamples[0]).toHaveProperty('code');
-      expect(json.sections[0].codeExamples[0]).toHaveProperty('description');
+      expect(json?.sections[0].codeExamples).toBeInstanceOf(Array);
+      expect(json?.sections[0].codeExamples[0]).toHaveProperty('language');
+      expect(json?.sections[0].codeExamples[0]).toHaveProperty('code');
+      expect(json?.sections[0].codeExamples[0]).toHaveProperty('description');
     });
 
     it('should preserve metadata', async () => {
-      const json = await service.get(TEST_URL);
+      const json = (await service.get(TEST_URL)) as any;
 
-      expect(json.metadata).toBeDefined();
-      expect(json.metadata.extractionMethod).toBe('claude-driven');
-      expect(json.metadata.model).toBe('claude-sonnet-4-5-20250929');
+      expect(json?.metadata).toBeDefined();
+      expect(json?.metadata?.extractionMethod).toBe('claude-driven');
+      expect(json?.metadata?.model).toBe('claude-sonnet-4-5-20250929');
     });
   });
 
@@ -172,7 +172,7 @@ describe('ExtractService', () => {
 
   describe('Real data validation', () => {
     it('should handle real extracted data structure', async () => {
-      const json = await service.get(TEST_URL);
+      const json = (await service.get(TEST_URL)) as any;
 
       // Validate required fields
       expect(json).toHaveProperty('source');
@@ -182,7 +182,7 @@ describe('ExtractService', () => {
       expect(json).toHaveProperty('metadata');
 
       // Validate sections structure
-      json.sections.forEach((section: any) => {
+      json?.sections.forEach((section: any) => {
         expect(section).toHaveProperty('title');
         expect(section).toHaveProperty('content');
         expect(section).toHaveProperty('type');

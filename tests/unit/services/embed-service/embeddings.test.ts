@@ -89,12 +89,12 @@ describe('Embedding Service', () => {
 
       it('should handle empty embeddings response', async () => {
         mockOllamaEmbeddings.mockResolvedValue({
-          embedding: undefined
+          embedding: undefined as any
         });
 
         // The actual implementation doesn't validate, so it will return undefined
         const result = await generateEmbedding('test text', 'ollama');
-        expect(result).toBeUndefined();
+        expect(result as any).toBeUndefined();
       });
     });
 
