@@ -1,33 +1,37 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
-// Mock the dependencies (vi.mock is hoisted)
-vi.mock('ollama');
-vi.mock('openai');
+// Create shared mock function for OpenAI BEFORE vi.mock()
+const mockOpenAICreate = vi.fn();
+
+// Mock with proper factory functions
+vi.mock('ollama', () => ({
+  __esModule: true,
+  default: {
+    embeddings: vi.fn()
+  }
+}));
+
+vi.mock('openai', () => ({
+  __esModule: true,
+  default: class MockOpenAI {
+    embeddings = {
+      create: mockOpenAICreate // Use the pre-defined function
+    };
+  }
+}));
 
 // Import the module we're testing
 import { generateEmbedding, getCollectionName, EMBEDDING_CONFIGS } from '@/utils/embeddings.js';
 import ollama from 'ollama';
-import OpenAI from 'openai';
+
+// Get typed reference to ollama mock
+const mockOllamaEmbeddings = vi.mocked(ollama.embeddings);
 
 describe('Embedding Service', () => {
-  let mockOllamaEmbeddings: any;
-  let mockOpenAICreate: any;
-
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Setup ollama mock
-    mockOllamaEmbeddings = vi.mocked(ollama).embeddings;
-    mockOllamaEmbeddings = vi.fn();
-    vi.mocked(ollama).embeddings = mockOllamaEmbeddings;
-
-    // Setup OpenAI mock
-    mockOpenAICreate = vi.fn();
-    vi.mocked(OpenAI).mockImplementation(() => ({
-      embeddings: {
-        create: mockOpenAICreate
-      }
-    }) as any);
+    mockOllamaEmbeddings.mockReset();
+    mockOpenAICreate.mockReset();
 
     // Set up env vars for OpenAI tests
     process.env.OPENAI_API_KEY = 'test-api-key';
@@ -95,7 +99,7 @@ describe('Embedding Service', () => {
     });
 
     describe('openai provider', () => {
-      it.skip('should generate embeddings using OpenAI', async () => {
+      it('should generate embeddings using OpenAI', async () => {
         const mockEmbedding = new Array(1536).fill(0).map(() => Math.random());
         mockOpenAICreate.mockResolvedValue({
           data: [{ embedding: mockEmbedding }]
@@ -111,7 +115,7 @@ describe('Embedding Service', () => {
         expect(result).toHaveLength(1536);
       });
 
-      it.skip('should handle OpenAI errors', async () => {
+      it('should handle OpenAI errors', async () => {
         mockOpenAICreate.mockRejectedValue(new Error('OpenAI API error'));
 
         await expect(generateEmbedding('test text', 'openai')).rejects.toThrow('OpenAI API error');
@@ -126,7 +130,7 @@ describe('Embedding Service', () => {
         await expect(generateEmbedding('test text', 'openai')).rejects.toThrow();
       });
 
-      it.skip('should handle missing embedding data', async () => {
+      it('should handle missing embedding data', async () => {
         mockOpenAICreate.mockResolvedValue({
           data: [{ embedding: undefined }]
         });

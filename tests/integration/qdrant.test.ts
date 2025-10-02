@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { generateEmbedding, getCollectionName } from '@/utils/embeddings.js';
 import { getDocUrl } from '@/config/documentation-urls.js';

@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { registerTools } from '@/mcp-tools/index.js';
@@ -162,7 +162,6 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
     // Since we're doing integration tests, let's test with actual embeddings
     // The tests will use the real collection name 'claude_code_docs_ollama'
 
-    // eslint-disable-next-line jest/no-disabled-tests
     it.skip('should execute search tool successfully (requires populated collection)', async () => {
       // Create a mock handler to capture the registered handler
       let registeredHandler: any;
@@ -208,7 +207,6 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
       expect(response.content[0].text).toContain('Claude Code Documentation Search Results');
     });
 
-    // eslint-disable-next-line jest/no-disabled-tests
     it.skip('should handle search with different providers (requires populated collection)', async () => {
       // Set up test server and handler
       let registeredHandler: any;
