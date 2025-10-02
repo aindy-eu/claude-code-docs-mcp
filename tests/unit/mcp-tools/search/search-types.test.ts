@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { SearchResult, SearchParams } from '@/mcp-tools/search/search.types.js';
 
 describe('Type Definitions', () => {

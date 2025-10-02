@@ -3,6 +3,7 @@
  * Tests how manifest tracks pipeline progression through stages
  */
 
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ManifestService } from '@/services/manifest-service.js';
 
 const TEST_URL = 'https://test.com/docs/manifest-tracking-test';

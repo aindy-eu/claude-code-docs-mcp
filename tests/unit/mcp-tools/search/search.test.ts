@@ -1,15 +1,19 @@
-// Create a mock embedding before importing anything else
-const mockEmbedding = new Array(768).fill(0).map(() => Math.random());
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 // Mock the embedding service before any imports that might use it
-jest.mock('@/utils/embeddings.js', () => ({
-  generateEmbedding: jest.fn().mockResolvedValue(mockEmbedding),
-  getCollectionName: jest.fn().mockReturnValue('test-collection'),
-  EMBEDDING_CONFIGS: {
-    ollama: { dimensions: 768, model: 'nomic-embed-text' },
-    openai: { dimensions: 1536, model: 'text-embedding-ada-002' }
-  }
-}));
+vi.mock('@/utils/embeddings.js', () => {
+  // Create mock embedding inside the factory
+  const mockEmbedding = new Array(768).fill(0).map(() => Math.random());
+
+  return {
+    generateEmbedding: vi.fn().mockResolvedValue(mockEmbedding),
+    getCollectionName: vi.fn().mockReturnValue('test-collection'),
+    EMBEDDING_CONFIGS: {
+      ollama: { dimensions: 768, model: 'nomic-embed-text' },
+      openai: { dimensions: 1536, model: 'text-embedding-ada-002' }
+    }
+  };
+});
 
 import { formatSearchResults, searchDocumentation } from '@/mcp-tools/search/search.js';
 import { SearchResult, SearchParams } from '@/mcp-tools/search/search.types.js';
@@ -26,7 +30,7 @@ describe('Search Functionality', () => {
 
   afterEach(() => {
     mockQdrant.reset();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('formatSearchResults', () => {
@@ -121,7 +125,7 @@ describe('Search Functionality', () => {
 
     it('should handle search errors gracefully', async () => {
       const badQdrant = {
-        query: jest.fn().mockRejectedValue(new Error('Connection failed'))
+        query: vi.fn().mockRejectedValue(new Error('Connection failed'))
       };
 
       const params: SearchParams = {
@@ -136,7 +140,7 @@ describe('Search Functionality', () => {
 
     it('should continue with other providers if one fails', async () => {
       const partiallyFailingQdrant = {
-        query: jest
+        query: vi
           .fn()
           .mockResolvedValueOnce(mockQdrant.query('test-collection', {}))
           .mockRejectedValueOnce(new Error('Provider failed'))
