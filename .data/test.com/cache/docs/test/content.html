@@ -1,0 +1,224 @@
+/* These styles mirror our design system (converted to plain CSS with Claude's help) from https://ui.product.ant.dev/button */
+
+/* Base button styles */
+.btn {
+  position: relative;
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 5rem;
+  height: 2.25rem;
+  padding: 0.5rem 1rem;
+  white-space: nowrap;
+  font-family: Styrene;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  &:active {
+    transform: scale(0.985);
+  }
+
+  /* Size variants */
+  &.size-xs {
+    height: 1.75rem;
+    min-width: 3.5rem;
+    padding: 0 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    gap: 0.25rem;
+  }
+
+  &.size-sm {
+    height: 2rem;
+    min-width: 4rem;
+    padding: 0 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+  }
+
+  &.size-lg {
+    height: 2.75rem;
+    min-width: 6rem;
+    padding: 0 1.25rem;
+    border-radius: 0.6rem;
+  }
+
+  &:disabled {
+    pointer-events: none;
+    opacity: 0.5;
+    box-shadow: none;
+  }
+
+  &:focus-visible {
+    outline: none;
+    --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+    --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+    box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow);
+  }
+
+  /* Primary variant */
+  &.primary {
+    font-weight: 600;
+    color: hsl(var(--oncolor-100));
+    background-color: hsl(var(--accent-main-100));
+    background-image: linear-gradient(
+      to right,
+      hsl(var(--accent-main-100)) 0%,
+      hsl(var(--accent-main-200) / 0.5) 50%,
+      hsl(var(--accent-main-200)) 100%
+    );
+    background-size: 200% 100%;
+    background-position: 0% 0%;
+    border: 0.5px solid hsl(var(--border-300) / 0.25);
+    box-shadow: 
+      inset 0 0.5px 0px rgba(255, 255, 0, 0.15),
+      0 1px 1px rgba(0, 0, 0, 0.05);
+    text-shadow: 0 1px 2px rgb(0 0 0 / 10%);
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      background-position: 100% 0%;
+      background-image: linear-gradient(
+        to right,
+        hsl(var(--accent-main-200)) 0%,
+        hsl(var(--accent-main-200)) 100%
+      );
+    }
+
+    &:active {
+      background-color: hsl(var(--accent-main-000));
+      box-shadow: inset 0 1px 6px rgba(0, 0, 0, 0.2);
+      transform: scale(0.985);
+    }
+  }
+
+  /* Flat variant */
+  &.flat {
+    font-weight: 500;
+    color: hsl(var(--oncolor-100));
+    background-color: hsl(var(--accent-main-100));
+    transition: background-color 150ms;
+
+    &:hover {
+      background-color: hsl(var(--accent-main-200));
+    }
+  }
+
+  /* Secondary variant */
+  &.secondary {
+    font-weight: 600;
+    color: hsl(var(--text-100) / 0.9);
+    background-image: radial-gradient(
+      ellipse at center,
+      hsl(var(--bg-500) / 0.1) 50%,
+      hsl(var(--bg-500) / 0.3) 100%
+    );
+    border: 0.5px solid hsl(var(--border-400));
+    transition: color 150ms, background-color 150ms;
+
+    &:hover {
+      color: hsl(var(--text-000));
+      background-color: hsl(var(--bg-500) / 0.6);
+    }
+
+    &:active {
+      background-color: hsl(var(--bg-500) / 0.5);
+    }
+  }
+
+  /* Outline variant */
+  &.outline {
+    font-weight: 600;
+    color: hsl(var(--text-200));
+    background-color: transparent;
+    border: 1.5px solid currentColor;
+    transition: color 150ms, background-color 150ms;
+
+    &:hover {
+      color: hsl(var(--text-100));
+      background-color: hsl(var(--bg-400));
+      border-color: hsl(var(--bg-400));
+    }
+  }
+
+  /* Ghost variant */
+  &.ghost {
+    color: hsl(var(--text-200));
+    border-color: transparent;
+    transition: color 150ms, background-color 150ms;
+
+    &:hover {
+      color: hsl(var(--text-100));
+      background-color: hsl(var(--bg-500) / 0.4);
+    }
+
+    &:active {
+      background-color: hsl(var(--bg-400));
+    }
+  }
+
+  /* Underline variant */
+  &.underline {
+    opacity: 0.8;
+    text-decoration-line: none;
+    text-underline-offset: 3px;
+    transition: all 150ms;
+
+    &:hover {
+      opacity: 1;
+      text-decoration-line: underline;
+    }
+
+    &:active {
+      transform: scale(0.985);
+    }
+  }
+
+  /* Danger variant */
+  &.danger {
+    font-weight: 600;
+    color: hsl(var(--oncolor-100));
+    background-color: hsl(var(--danger-100));
+    transition: background-color 150ms;
+
+    &:hover {
+      background-color: hsl(var(--danger-200));
+    }
+  }
+}
+<span data-as="p">Prerequisites:</span>
+<ul>
+<li><a href="https://nodejs.org/en/download/" target="_blank" rel="noreferrer" class="link">Node.js 18 or newer</a></li>
+<li>A <a href="https://claude.ai" target="_blank" rel="noreferrer" class="link">Claude.ai</a> (recommended) or <a href="https://console.anthropic.com/" target="_blank" rel="noreferrer" class="link">Claude Console</a> account</li>
+</ul>
+<div class="code-block mt-5 mb-8 not-prose rounded-2xl relative group text-gray-950 dark:text-gray-50 codeblock-light border border-gray-950/10 dark:border-white/10 dark:twoslash-dark bg-transparent dark:bg-transparent" numberOfLines="9" language="shellscript"><div class="absolute top-3 right-4 flex items-center gap-1.5"><div class="z-10 relative"><button class="h-[26px] w-[26px] flex items-center justify-center rounded-md backdrop-blur peer group/copy-button" data-testid="copy-code-button" aria-label="Copy the contents from the code block"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400 group-hover/copy-button:text-gray-500 dark:text-white/40 dark:group-hover/copy-button:text-white/60"><path d="M14.25 5.25H7.25C6.14543 5.25 5.25 6.14543 5.25 7.25V14.25C5.25 15.3546 6.14543 16.25 7.25 16.25H14.25C15.3546 16.25 16.25 15.3546 16.25 14.25V7.25C16.25 6.14543 15.3546 5.25 14.25 5.25Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M2.80103 11.998L1.77203 5.07397C1.61003 3.98097 2.36403 2.96397 3.45603 2.80197L10.38 1.77297C11.313 1.63397 12.19 2.16297 12.528 3.00097" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><div aria-hidden="true" class="absolute top-11 left-1/2 transform whitespace-nowrap -translate-x-1/2 -translate-y-1/2 peer-hover:opacity-100 opacity-0 text-white rounded-lg px-1.5 py-0.5 text-xs bg-primary-dark">Copy</div></div></div><div class="w-0 min-w-full max-w-full py-3.5 px-4 h-full dark:bg-codeblock relative text-sm leading-6 children:!my-0 children:!shadow-none children:!bg-transparent transition-[height] duration-300 ease-in-out [&amp;_*]:ring-0 [&amp;_*]:outline-none [&amp;_*]:focus:ring-0 [&amp;_*]:focus:outline-none [&amp;_pre&gt;code]:pr-[3rem] [&amp;_pre&gt;code&gt;span.line-highlight]:min-w-[calc(100%+3rem)] [&amp;_pre&gt;code&gt;span.line-diff]:min-w-[calc(100%+3rem)] rounded-2xl bg-white overflow-x-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-black/15 hover:scrollbar-thumb-black/20 active:scrollbar-thumb-black/20 dark:scrollbar-thumb-white/20 dark:hover:scrollbar-thumb-white/25 dark:active:scrollbar-thumb-white/25" data-component-part="code-block-root" tabindex="0" style="font-variant-ligatures:none;height:auto"><div class="font-mono whitespace-pre leading-6"><pre class="shiki shiki-themes github-light-default dark-plus" style="background-color:transparent;--shiki-dark-bg:transparent;color:#1f2328;--shiki-dark:#D4D4D4" language="shellscript"><code language="shellscript" numberOfLines="9"><span class="line"><span style="color:#6E7781;--shiki-dark:#6A9955"># Install Claude Code</span></span>
+<span class="line"><span style="color:#953800;--shiki-dark:#DCDCAA">npm</span><span style="color:#0A3069;--shiki-dark:#CE9178"> install</span><span style="color:#0550AE;--shiki-dark:#569CD6"> -g</span><span style="color:#0A3069;--shiki-dark:#CE9178"> @anthropic-ai/claude-code</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6E7781;--shiki-dark:#6A9955"># Navigate to your project</span></span>
+<span class="line"><span style="color:#0550AE;--shiki-dark:#DCDCAA">cd</span><span style="color:#0A3069;--shiki-dark:#CE9178"> your-awesome-project</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6E7781;--shiki-dark:#6A9955"># Start coding with Claude</span></span>
+<span class="line"><span style="color:#953800;--shiki-dark:#DCDCAA">claude</span></span>
+<span class="line"><span style="color:#6E7781;--shiki-dark:#6A9955"># You&#x27;ll be prompted to log in on first use</span></span>
+</code></pre></div></div></div>
+<span data-as="p">That’s it! You’re ready to start coding with Claude. <a class="link" href="/en/docs/claude-code/quickstart">Continue with Quickstart (5 mins) →</a></span>
+<span data-as="p">(Got specific setup needs or hit issues? See <a class="link" href="/en/docs/claude-code/setup">advanced setup</a> or <a class="link" href="/en/docs/claude-code/troubleshooting">troubleshooting</a>.)</span>
+<div class="callout my-4 px-5 py-4 overflow-hidden rounded-2xl flex gap-3 border border-sky-500/20 bg-sky-50/50 dark:border-sky-500/30 dark:bg-sky-500/10" data-callout-type="note"><div class="mt-0.5 w-4" data-component-part="callout-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-sky-500" aria-label="Note"><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.3C10.14 1.3 12.7 3.86 12.7 7C12.7 10.14 10.14 12.7 7 12.7C5.48908 12.6974 4.0408 12.096 2.97241 11.0276C1.90403 9.9592 1.30264 8.51092 1.3 7C1.3 3.86 3.86 1.3 7 1.3ZM7 0C3.14 0 0 3.14 0 7C0 10.86 3.14 14 7 14C10.86 14 14 10.86 14 7C14 3.14 10.86 0 7 0ZM8 3H6V8H8V3ZM8 9H6V11H8V9Z"></path></svg></div><div class="text-sm prose min-w-0 w-full text-sky-900 dark:text-sky-200" data-component-part="callout-content"><span data-as="p"><strong>New VS Code Extension (Beta)</strong>: Prefer a graphical interface? Our new <a class="link" href="/en/docs/claude-code/vs-code">VS Code extension</a> provides an easy-to-use native IDE experience without requiring terminal familiarity. Simply install from the marketplace and start coding with Claude directly in your sidebar.</span></div></div>
+<h2 class="flex whitespace-pre-wrap group font-semibold" id="what-claude-code-does-for-you"><div class="absolute"><a href="#what-claude-code-does-for-you" class="-ml-10 flex items-center opacity-0 border-0 group-hover:opacity-100" aria-label="Navigate to header">​<div class="w-6 h-6 rounded-md flex items-center justify-center shadow-sm text-gray-400 dark:text-white/50 dark:bg-background-dark dark:brightness-[1.35] dark:ring-1 dark:hover:brightness-150 bg-white ring-1 ring-gray-400/30 dark:ring-gray-700/25 hover:ring-gray-400/60 dark:hover:ring-white/20"><svg xmlns="http://www.w3.org/2000/svg" fill="gray" height="12px" viewBox="0 0 576 512"><path d="M0 256C0 167.6 71.6 96 160 96h72c13.3 0 24 10.7 24 24s-10.7 24-24 24H160C98.1 144 48 194.1 48 256s50.1 112 112 112h72c13.3 0 24 10.7 24 24s-10.7 24-24 24H160C71.6 416 0 344.4 0 256zm576 0c0 88.4-71.6 160-160 160H344c-13.3 0-24-10.7-24-24s10.7-24 24-24h72c61.9 0 112-50.1 112-112s-50.1-112-112-112H344c-13.3 0-24-10.7-24-24s10.7-24 24-24h72c88.4 0 160 71.6 160 160zM184 232H392c13.3 0 24 10.7 24 24s-10.7 24-24 24H184c-13.3 0-24-10.7-24-24s10.7-24 24-24z"></path></svg></div></a></div><span class="cursor-pointer">What Claude Code does for you</span></h2>
+<ul>
+<li><strong>Build features from descriptions</strong>: Tell Claude what you want to build in plain English. It will make a plan, write the code, and ensure it works.</li>
+<li><strong>Debug and fix issues</strong>: Describe a bug or paste an error message. Claude Code will analyze your codebase, identify the problem, and implement a fix.</li>
+<li><strong>Navigate any codebase</strong>: Ask anything about your team’s codebase, and get a thoughtful answer back. Claude Code maintains awareness of your entire project structure, can find up-to-date information from the web, and with <a class="link" href="/en/docs/claude-code/mcp">MCP</a> can pull from external datasources like Google Drive, Figma, and Slack.</li>
+<li><strong>Automate tedious tasks</strong>: Fix fiddly lint issues, resolve merge conflicts, and write release notes. Do all this in a single command from your developer machines, or automatically in CI.</li>
+</ul>
+<h2 class="flex whitespace-pre-wrap group font-semibold" id="why-developers-love-claude-code"><div class="absolute"><a href="#why-developers-love-claude-code" class="-ml-10 flex items-center opacity-0 border-0 group-hover:opacity-100" aria-label="Navigate to header">​<div class="w-6 h-6 rounded-md flex items-center justify-center shadow-sm text-gray-400 dark:text-white/50 dark:bg-background-dark dark:brightness-[1.35] dark:ring-1 dark:hover:brightness-150 bg-white ring-1 ring-gray-400/30 dark:ring-gray-700/25 hover:ring-gray-400/60 dark:hover:ring-white/20"><svg xmlns="http://www.w3.org/2000/svg" fill="gray" height="12px" viewBox="0 0 576 512"><path d="M0 256C0 167.6 71.6 96 160 96h72c13.3 0 24 10.7 24 24s-10.7 24-24 24H160C98.1 144 48 194.1 48 256s50.1 112 112 112h72c13.3 0 24 10.7 24 24s-10.7 24-24 24H160C71.6 416 0 344.4 0 256zm576 0c0 88.4-71.6 160-160 160H344c-13.3 0-24-10.7-24-24s10.7-24 24-24h72c61.9 0 112-50.1 112-112s-50.1-112-112-112H344c-13.3 0-24-10.7-24-24s10.7-24 24-24h72c88.4 0 160 71.6 160 160zM184 232H392c13.3 0 24 10.7 24 24s-10.7 24-24 24H184c-13.3 0-24-10.7-24-24s10.7-24 24-24z"></path></svg></div></a></div><span class="cursor-pointer">Why developers love Claude Code</span></h2>
+<ul>
+<li><strong>Works in your terminal</strong>: Not another chat window. Not another IDE. Claude Code meets you where you already work, with the tools you already love.</li>
+<li><strong>Takes action</strong>: Claude Code can directly edit files, run commands, and create commits. Need more? <a class="link" href="/en/docs/claude-code/mcp">MCP</a> lets Claude read your design docs in Google Drive, update your tickets in Jira, or use <em>your</em> custom developer tooling.</li>
+<li><strong>Unix philosophy</strong>: Claude Code is composable and scriptable. <code>tail -f app.log | claude -p &quot;Slack me if you see any anomalies appear in this log stream&quot;</code> <em>works</em>. Your CI can run <code>claude -p &quot;If there are new text strings, translate them into French and raise a PR for @lang-fr-team to review&quot;</code>.</li>
+<li><strong>Enterprise-ready</strong>: Use the Claude API, or host on AWS or GCP. Enterprise-grade <a class="link" href="/en/docs/claude-code/security">security</a>, <a class="link" href="/en/docs/claude-code/data-usage">privacy</a>, and <a href="https://trust.anthropic.com/" target="_blank" rel="noreferrer" class="link">compliance</a> is built-in.</li>
+</ul>
+<h2 class="flex whitespace-pre-wrap group font-semibold" id="next-steps"><div class="absolute"><a href="#next-steps" class="-ml-10 flex items-center opacity-0 border-0 group-hover:opacity-100" aria-label="Navigate to header">​<div class="w-6 h-6 rounded-md flex items-center justify-center shadow-sm text-gray-400 dark:text-white/50 dark:bg-background-dark dark:brightness-[1.35] dark:ring-1 dark:hover:brightness-150 bg-white ring-1 ring-gray-400/30 dark:ring-gray-700/25 hover:ring-gray-400/60 dark:hover:ring-white/20"><svg xmlns="http://www.w3.org/2000/svg" fill="gray" height="12px" viewBox="0 0 576 512"><path d="M0 256C0 167.6 71.6 96 160 96h72c13.3 0 24 10.7 24 24s-10.7 24-24 24H160C98.1 144 48 194.1 48 256s50.1 112 112 112h72c13.3 0 24 10.7 24 24s-10.7 24-24 24H160C71.6 416 0 344.4 0 256zm576 0c0 88.4-71.6 160-160 160H344c-13.3 0-24-10.7-24-24s10.7-24 24-24h72c61.9 0 112-50.1 112-112s-50.1-112-112-112H344c-13.3 0-24-10.7-24-24s10.7-24 24-24h72c88.4 0 160 71.6 160 160zM184 232H392c13.3 0 24 10.7 24 24s-10.7 24-24 24H184c-13.3 0-24-10.7-24-24s10.7-24 24-24z"></path></svg></div></a></div><span class="cursor-pointer">Next steps</span></h2>
+<div class="card-group not-prose grid gap-x-4 sm:grid-cols-2"><a class="card block font-normal group relative my-2 ring-2 ring-transparent rounded-2xl bg-white dark:bg-background-dark border border-gray-950/10 dark:border-white/10 overflow-hidden w-full cursor-pointer hover:!border-primary dark:hover:!border-primary-light" href="/en/docs/claude-code/quickstart"><div class="px-6 py-5 relative" data-component-part="card-content-container"><div id="card-link-arrow-icon" class="absolute text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-primary-light top-5 right-5 hidden"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-up-right w-4 h-4"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></div><div class="h-6 w-6 fill-gray-800 dark:fill-gray-100 text-gray-800 dark:text-gray-100" data-component-part="card-icon"><svg class="h-6 w-6 bg-primary dark:bg-primary-light !m-0 shrink-0" style="-webkit-mask-image:url(https://d3gk2c5xim1je2.cloudfront.net/v6.6.0/regular/rocket.svg);-webkit-mask-repeat:no-repeat;-webkit-mask-position:center;mask-image:url(https://d3gk2c5xim1je2.cloudfront.net/v6.6.0/regular/rocket.svg);mask-repeat:no-repeat;mask-position:center"></svg></div><div><h2 class="not-prose font-semibold text-base text-gray-800 dark:text-white mt-4" contentEditable="false" data-component-part="card-title">Quickstart</h2><div class="prose mt-1 font-normal text-sm leading-6 text-gray-600 dark:text-gray-400" data-component-part="card-content"><span data-as="p">See Claude Code in action with practical examples</span></div></div></div></a><a class="card block font-normal group relative my-2 ring-2 ring-transparent rounded-2xl bg-white dark:bg-background-dark border border-gray-950/10 dark:border-white/10 overflow-hidden w-full cursor-pointer hover:!border-primary dark:hover:!border-primary-light" href="/en/docs/claude-code/common-workflows"><div class="px-6 py-5 relative" data-component-part="card-content-container"><div id="card-link-arrow-icon" class="absolute text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-primary-light top-5 right-5 hidden"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-up-right w-4 h-4"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></div><div class="h-6 w-6 fill-gray-800 dark:fill-gray-100 text-gray-800 dark:text-gray-100" data-component-part="card-icon"><svg class="h-6 w-6 bg-primary dark:bg-primary-light !m-0 shrink-0" style="-webkit-mask-image:url(https://d3gk2c5xim1je2.cloudfront.net/v6.6.0/regular/graduation-cap.svg);-webkit-mask-repeat:no-repeat;-webkit-mask-position:center;mask-image:url(https://d3gk2c5xim1je2.cloudfront.net/v6.6.0/regular/graduation-cap.svg);mask-repeat:no-repeat;mask-position:center"></svg></div><div><h2 class="not-prose font-semibold text-base text-gray-800 dark:text-white mt-4" contentEditable="false" data-component-part="card-title">Common workflows</h2><div class="prose mt-1 font-normal text-sm leading-6 text-gray-600 dark:text-gray-400" data-component-part="card-content"><span data-as="p">Step-by-step guides for common workflows</span></div></div></div></a><a class="card block font-normal group relative my-2 ring-2 ring-transparent rounded-2xl bg-white dark:bg-background-dark border border-gray-950/10 dark:border-white/10 overflow-hidden w-full cursor-pointer hover:!border-primary dark:hover:!border-primary-light" href="/en/docs/claude-code/troubleshooting"><div class="px-6 py-5 relative" data-component-part="card-content-container"><div id="card-link-arrow-icon" class="absolute text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-primary-light top-5 right-5 hidden"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-up-right w-4 h-4"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></div><div class="h-6 w-6 fill-gray-800 dark:fill-gray-100 text-gray-800 dark:text-gray-100" data-component-part="card-icon"><svg class="h-6 w-6 bg-primary dark:bg-primary-light !m-0 shrink-0" style="-webkit-mask-image:url(https://d3gk2c5xim1je2.cloudfront.net/v6.6.0/regular/wrench.svg);-webkit-mask-repeat:no-repeat;-webkit-mask-position:center;mask-image:url(https://d3gk2c5xim1je2.cloudfront.net/v6.6.0/regular/wrench.svg);mask-repeat:no-repeat;mask-position:center"></svg></div><div><h2 class="not-prose font-semibold text-base text-gray-800 dark:text-white mt-4" contentEditable="false" data-component-part="card-title">Troubleshooting</h2><div class="prose mt-1 font-normal text-sm leading-6 text-gray-600 dark:text-gray-400" data-component-part="card-content"><span data-as="p">Solutions for common issues with Claude Code</span></div></div></div></a><a class="card block font-normal group relative my-2 ring-2 ring-transparent rounded-2xl bg-white dark:bg-background-dark border border-gray-950/10 dark:border-white/10 overflow-hidden w-full cursor-pointer hover:!border-primary dark:hover:!border-primary-light" href="/en/docs/claude-code/ide-integrations"><div class="px-6 py-5 relative" data-component-part="card-content-container"><div id="card-link-arrow-icon" class="absolute text-gray-400 dark:text-gray-500 group-hover:text-primary dark:group-hover:text-primary-light top-5 right-5 hidden"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-up-right w-4 h-4"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></div><div class="h-6 w-6 fill-gray-800 dark:fill-gray-100 text-gray-800 dark:text-gray-100" data-component-part="card-icon"><svg class="h-6 w-6 bg-primary dark:bg-primary-light !m-0 shrink-0" style="-webkit-mask-image:url(https://d3gk2c5xim1je2.cloudfront.net/v6.6.0/regular/laptop.svg);-webkit-mask-repeat:no-repeat;-webkit-mask-position:center;mask-image:url(https://d3gk2c5xim1je2.cloudfront.net/v6.6.0/regular/laptop.svg);mask-repeat:no-repeat;mask-position:center"></svg></div><div><h2 class="not-prose font-semibold text-base text-gray-800 dark:text-white mt-4" contentEditable="false" data-component-part="card-title">IDE setup</h2><div class="prose mt-1 font-normal text-sm leading-6 text-gray-600 dark:text-gray-400" data-component-part="card-content"><span data-as="p">Add Claude Code to your IDE</span></div></div></div></a></div>
+<h2 class="flex whitespace-pre-wrap group font-semibold" id="additional-resources"><div class="absolute"><a href="#additional-resources" class="-ml-10 flex items-center opacity-0 border-0 group-hover:opacity-100" aria-label="Navigate to header">​<div class="w-6 h-6 rounded-md flex items-center justify-center shadow-sm text-gray-400 dark:text-white/50 dark:bg-background-dark dark:brightness-[1.35] dark:ring-1 dark:hover:brightness-150 bg-white ring-1 ring-gray-400/30 dark:ring-gray-700/25 hover:ring-gray-400/60 dark:hover:ring-white/20"><svg xmlns="http://www.w3.org/2000/svg" fill="gray" height="12px" viewBox="0 0 576 512"><path d="M0 256C0 167.6 71.6 96 160 96h72c13.3 0 24 10.7 24 24s-10.7 24-24 24H160C98.1 144 48 194.1 48 256s50.1 112 112 112h72c13.3 0 24 10.7 24 24s-10.7 24-24 24H160C71.6 416 0 344.4 0 256zm576 0c0 88.4-71.6 160-160 160H344c-13.3 0-24-10.7-24-24s10.7-24 24-24h72c61.9 0 112-50.1 112-112s-50.1-112-112-112H344c-13.3 0-24-10.7-24-24s10.7-24 24-24h72c88.4 0 160 71.6 160 160zM184 232H392c13.3 0 24 10.7 24 24s-10.7 24-24 24H184c-13.3 0-24-10.7-24-24s10.7-24 24-24z"></path></svg></div></a></div><span class="cursor-pointer">Additional resources</span></h2>

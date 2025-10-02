@@ -1,0 +1,27 @@
+{
+  "version": "2.0",
+  "domain": "test.com",
+  "createdAt": "2025-09-30T14:30:37.3NZ",
+  "lastUpdatedAt": "2025-10-02T09:06:03.708Z",
+  "defaultTTLDays": 7,
+  "records": {
+    "https://test.com": {
+      "url": "https://test.com",
+      "lastFetchedAt": "2025-09-30T14:31:06Z",
+      "status": "fetched"
+    },
+    "https://test.com/docs/manifest-tracking-test": {
+      "url": "https://test.com/docs/manifest-tracking-test",
+      "status": "embedded",
+      "lastFetchedAt": "2025-10-02T09:06:03.696Z",
+      "lastExtractedAt": "2025-10-02T09:06:03.702Z",
+      "extractionModel": "claude-sonnet-4-5-20250929",
+      "lastEmbeddedAt": "2025-10-02T09:06:03.707Z",
+      "lastIngestedAt": "2025-10-02T09:06:03.707Z",
+      "embeddingProvider": "openai",
+      "lastFailedAt": "2025-10-02T09:06:03.695Z",
+      "lastError": "Claude API timeout",
+      "lastCheckedAt": "2025-10-02T09:06:03.708Z"
+    }
+  }
+}
