@@ -90,7 +90,7 @@ describe('ManifestService (Mocked FS)', () => {
         }
       };
 
-      const manifestPath = `claude-code-docs-mcp-vitest-opus/.data/${TEST_DOMAIN}/manifest.json`;
+      const manifestPath = `${process.cwd()}/.data/${TEST_DOMAIN}/manifest.json`;
       virtualFS.set(manifestPath, JSON.stringify(existingManifest, null, 2));
 
       const manager = new ManifestService(TEST_URL);
