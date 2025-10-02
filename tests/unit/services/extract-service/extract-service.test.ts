@@ -1,193 +1,425 @@
 /**
- * Tests for ExtractService
- * Uses REAL extracted JSON from .data/test.com/structured/test.json
+ * ExtractService Tests with Mocked File System
+ * Comprehensive tests without touching real files
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ExtractService } from '@/services/extract-service.js';
-import { existsSync, readFileSync, rmSync } from 'fs';
-import path from 'path';
+import {
+  extractedSimple,
+  extractedComplex,
+  extractedMinimal,
+  extractedCodeHeavy,
+  urlFilenameMappings,
+  edgeCases
+} from '../../../fixtures/extractServiceFixtures.js';
 
-const TEST_URL = 'https://test.com/docs/test';
-const TEST_DOMAIN = 'test.com';
-const TEST_DATA_DIR = path.join(process.cwd(), '.data', TEST_DOMAIN);
-const STRUCTURED_DIR = path.join(TEST_DATA_DIR, 'structured');
-const TEST_JSON_PATH = path.join(STRUCTURED_DIR, 'test.json');
+// Mock logger
+vi.mock('@/utils/logger.js', () => ({
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn()
+  }
+}));
 
-describe('ExtractService', () => {
-  let service: ExtractService;
+// Mock fs
+vi.mock('fs', () => ({
+  existsSync: vi.fn(),
+  readFileSync: vi.fn(),
+  writeFileSync: vi.fn(),
+  mkdirSync: vi.fn()
+}));
+
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { logger } from '@/utils/logger.js';
+
+const TEST_URL = 'https://docs.example.com/test';
+
+describe('ExtractService (Mocked)', () => {
+  let virtualFS: Map<string, string>;
 
   beforeEach(() => {
-    service = new ExtractService(TEST_URL);
+    // Reset virtual filesystem
+    virtualFS = new Map();
+
+    // Reset all mocks
+    vi.clearAllMocks();
+
+    // Setup fs mocks
+    vi.mocked(existsSync).mockImplementation(path => virtualFS.has(path as string));
+
+    vi.mocked(readFileSync).mockImplementation(path => {
+      const content = virtualFS.get(path as string);
+      if (!content) {
+        throw new Error(`ENOENT: no such file or directory, open '${path}'`);
+      }
+      return content;
+    });
+
+    vi.mocked(writeFileSync).mockImplementation((path, data) => {
+      virtualFS.set(path as string, data as string);
+    });
+
+    vi.mocked(mkdirSync).mockImplementation(() => undefined as any);
   });
 
   describe('Initialization', () => {
-    it('should create structured directory on construction', () => {
-      expect(existsSync(STRUCTURED_DIR)).toBe(true);
+    it('should extract domain from URL', () => {
+      const service = new ExtractService('https://docs.example.com/path/to/doc');
+      const jsonPath = service.getJsonPath('https://docs.example.com/path/to/doc');
+
+      expect(jsonPath).toContain('docs.example.com');
     });
 
-    it('should extract domain from URL', () => {
-      const testService = new ExtractService('https://example.com/path/to/doc');
-      const jsonPath = testService.getJsonPath('https://example.com/path/to/doc');
-      expect(jsonPath).toContain('example.com');
+    it('should create structured directory on construction', () => {
+      new ExtractService(TEST_URL);
+
+      expect(mkdirSync).toHaveBeenCalled();
     });
   });
 
   describe('getJsonPath', () => {
-    it('should generate correct path for URL', () => {
-      const jsonPath = service.getJsonPath(TEST_URL);
-      expect(jsonPath).toBe(TEST_JSON_PATH);
+    it('should generate correct path for simple URL', () => {
+      const service = new ExtractService(urlFilenameMappings.simple.url);
+      const jsonPath = service.getJsonPath(urlFilenameMappings.simple.url);
+
+      expect(jsonPath).toContain(urlFilenameMappings.simple.expectedFilename);
+    });
+
+    it('should use last URL segment as filename', () => {
+      const service = new ExtractService(urlFilenameMappings.nested.url);
+      const jsonPath = service.getJsonPath(urlFilenameMappings.nested.url);
+
+      expect(jsonPath).toContain(urlFilenameMappings.nested.expectedFilename);
+      expect(jsonPath).toContain('hooks.json');
+      expect(jsonPath).not.toContain('guides');
     });
 
     it('should handle URL with trailing slash', () => {
-      const jsonPath = service.getJsonPath('https://test.com/docs/test/');
-      expect(jsonPath).toBe(TEST_JSON_PATH);
+      const service = new ExtractService(urlFilenameMappings.withTrailingSlash.url);
+      const jsonPath = service.getJsonPath(urlFilenameMappings.withTrailingSlash.url);
+
+      expect(jsonPath).toContain(urlFilenameMappings.withTrailingSlash.expectedFilename);
     });
 
-    it('should clean special characters from filename', () => {
-      const jsonPath = service.getJsonPath('https://test.com/my-doc@2024!');
-      expect(jsonPath).toContain('my-doc_2024_');
+    it('should use index.json for root URL', () => {
+      const service = new ExtractService(urlFilenameMappings.root.url);
+      const jsonPath = service.getJsonPath(urlFilenameMappings.root.url);
+
+      expect(jsonPath).toContain(urlFilenameMappings.root.expectedFilename);
+    });
+
+    it('should sanitize special characters', () => {
+      const service = new ExtractService(urlFilenameMappings.specialChars.url);
+      const jsonPath = service.getJsonPath(urlFilenameMappings.specialChars.url);
+
+      expect(jsonPath).toContain('my-doc_2024_.json');
       expect(jsonPath).not.toContain('@');
       expect(jsonPath).not.toContain('!');
     });
 
-    it('should handle root path', () => {
-      const jsonPath = service.getJsonPath('https://test.com/');
-      expect(jsonPath).toContain('index.json');
+    it('should sanitize multiple special characters', () => {
+      const service = new ExtractService(urlFilenameMappings.multipleSpecialChars.url);
+      const jsonPath = service.getJsonPath(urlFilenameMappings.multipleSpecialChars.url);
+
+      // Service uses last URL segment 'api#v2.0' → sanitizes to 'api_v2_0'
+      // But URL parsing treats '#v2.0' as fragment (removed), so we get 'api'
+      expect(jsonPath).toContain('api.json');
+      expect(jsonPath).not.toContain('#');
     });
 
-    it('should use last segment as filename', () => {
-      const jsonPath = service.getJsonPath('https://test.com/docs/guides/advanced');
-      expect(jsonPath).toContain('advanced.json');
-    });
-  });
+    it('should preserve numbers and dashes', () => {
+      const service = new ExtractService(urlFilenameMappings.numbersAndDashes.url);
+      const jsonPath = service.getJsonPath(urlFilenameMappings.numbersAndDashes.url);
 
-  describe('get', () => {
-    it('should read existing JSON', async () => {
-      const json = (await service.get(TEST_URL)) as any;
-
-      expect(json).toBeDefined();
-      expect(json?.source).toBe('https://docs.claude.com/en/docs/claude-code/overview');
-      expect(json?.pageTitle).toBe('Claude Code Overview');
-      expect(json?.sections).toBeInstanceOf(Array);
-    });
-
-    it('should return null for non-existent JSON', async () => {
-      const json = await service.get('https://test.com/does-not-exist');
-      expect(json).toBeNull();
-    });
-
-    it('should preserve complex nested structure', async () => {
-      const json = (await service.get(TEST_URL)) as any;
-
-      expect(json?.sections[0].codeExamples).toBeInstanceOf(Array);
-      expect(json?.sections[0].codeExamples[0]).toHaveProperty('language');
-      expect(json?.sections[0].codeExamples[0]).toHaveProperty('code');
-      expect(json?.sections[0].codeExamples[0]).toHaveProperty('description');
-    });
-
-    it('should preserve metadata', async () => {
-      const json = (await service.get(TEST_URL)) as any;
-
-      expect(json?.metadata).toBeDefined();
-      expect(json?.metadata?.extractionMethod).toBe('claude-driven');
-      expect(json?.metadata?.model).toBe('claude-sonnet-4-5-20250929');
+      expect(jsonPath).toContain('version-2-0.json');
     });
   });
 
   describe('save', () => {
-    const TEMP_URL = 'https://test.com/temp-test-doc';
-    let tempJsonPath: string;
+    it('should save simple extracted JSON', async () => {
+      const service = new ExtractService(TEST_URL);
 
-    beforeEach(() => {
-      tempJsonPath = service.getJsonPath(TEMP_URL);
+      await service.save(TEST_URL, extractedSimple);
+
+      const jsonPath = service.getJsonPath(TEST_URL);
+      expect(writeFileSync).toHaveBeenCalledWith(jsonPath, expect.any(String));
+      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Saved extracted JSON'));
     });
 
-    afterEach(() => {
-      // Clean up temp file
-      if (existsSync(tempJsonPath)) {
-        rmSync(tempJsonPath);
-      }
+    it('should save JSON with 2-space indentation', async () => {
+      const service = new ExtractService(TEST_URL);
+
+      await service.save(TEST_URL, extractedMinimal);
+
+      const jsonPath = service.getJsonPath(TEST_URL);
+      const writeCall = vi.mocked(writeFileSync).mock.calls.find(call => call[0] === jsonPath);
+      const savedContent = writeCall![1] as string;
+
+      // Check for 2-space indentation
+      expect(savedContent).toContain('  "source"');
+      expect(savedContent).toContain('  "pageTitle"');
     });
 
-    it('should save JSON to correct path', async () => {
-      const testData = {
-        title: 'Test Doc',
-        content: 'Test content'
-      };
+    it('should save complex nested structure', async () => {
+      const service = new ExtractService(TEST_URL);
 
-      await service.save(TEMP_URL, testData);
+      await service.save(TEST_URL, extractedComplex);
 
-      expect(existsSync(tempJsonPath)).toBe(true);
-    });
+      const jsonPath = service.getJsonPath(TEST_URL);
+      expect(writeFileSync).toHaveBeenCalledWith(jsonPath, expect.any(String));
 
-    it('should save JSON with proper formatting', async () => {
-      const testData = {
-        title: 'Test Doc',
-        sections: [{ heading: 'Test' }]
-      };
-
-      await service.save(TEMP_URL, testData);
-
-      const savedContent = readFileSync(tempJsonPath, 'utf-8');
+      // Verify we can parse it back
+      const writeCall = vi.mocked(writeFileSync).mock.calls.find(call => call[0] === jsonPath);
+      const savedContent = writeCall![1] as string;
       const parsed = JSON.parse(savedContent);
 
-      expect(parsed).toEqual(testData);
-      // Check formatting (indented with 2 spaces)
-      expect(savedContent).toContain('  "title"');
+      expect(parsed.sections).toHaveLength(3);
+      expect(parsed.sections[0].codeExamples).toBeDefined();
     });
 
-    it('should roundtrip save and get', async () => {
-      const originalData = {
-        source: 'https://test.com',
-        pageTitle: 'Roundtrip Test',
-        sections: [
-          {
-            title: 'Section 1',
-            content: 'Content here',
-            codeExamples: [{ language: 'js', code: 'console.log()' }]
-          }
-        ],
-        metadata: { test: true }
-      };
+    it('should save code-heavy documents', async () => {
+      const service = new ExtractService(TEST_URL);
 
-      await service.save(TEMP_URL, originalData);
-      const retrievedData = await service.get(TEMP_URL);
+      await service.save(TEST_URL, extractedCodeHeavy);
 
-      expect(retrievedData).toEqual(originalData);
+      const jsonPath = service.getJsonPath(TEST_URL);
+      const writeCall = vi.mocked(writeFileSync).mock.calls.find(call => call[0] === jsonPath);
+      const savedContent = writeCall![1] as string;
+      const parsed = JSON.parse(savedContent);
+
+      expect(parsed.sections[0].codeExamples).toHaveLength(3);
+      expect(parsed.sections[0].codeExamples[0].language).toBe('javascript');
+    });
+
+    it('should create directory if needed', async () => {
+      const service = new ExtractService(TEST_URL);
+
+      await service.save(TEST_URL, extractedSimple);
+
+      // Directory creation happens in constructor + save
+      expect(mkdirSync).toHaveBeenCalled();
+    });
+
+    it('should handle unicode content', async () => {
+      const service = new ExtractService(TEST_URL);
+
+      await service.save(TEST_URL, edgeCases.unicodeContent);
+
+      const jsonPath = service.getJsonPath(TEST_URL);
+      const writeCall = vi.mocked(writeFileSync).mock.calls.find(call => call[0] === jsonPath);
+      const savedContent = writeCall![1] as string;
+      const parsed = JSON.parse(savedContent);
+
+      expect(parsed.pageTitle).toContain('你好');
+      expect(parsed.pageTitle).toContain('🎉');
+      expect(parsed.summary).toContain('中文');
+    });
+  });
+
+  describe('get', () => {
+    it('should retrieve saved JSON', async () => {
+      const service = new ExtractService(TEST_URL);
+      const jsonPath = service.getJsonPath(TEST_URL);
+
+      // Pre-populate virtual FS
+      virtualFS.set(jsonPath, JSON.stringify(extractedSimple, null, 2));
+
+      const retrieved = await service.get(TEST_URL);
+
+      expect(retrieved).toEqual(extractedSimple);
+    });
+
+    it('should return null for non-existent JSON', async () => {
+      const service = new ExtractService(TEST_URL);
+
+      const result = await service.get('https://docs.example.com/does-not-exist');
+
+      expect(result).toBeNull();
+    });
+
+    it('should parse complex nested structures correctly', async () => {
+      const service = new ExtractService(TEST_URL);
+      const jsonPath = service.getJsonPath(TEST_URL);
+
+      virtualFS.set(jsonPath, JSON.stringify(extractedComplex, null, 2));
+
+      const retrieved = (await service.get(TEST_URL)) as any;
+
+      expect(retrieved).toEqual(extractedComplex);
+      expect(retrieved.sections).toHaveLength(3);
+      expect(retrieved.sections[1].codeExamples).toHaveLength(1);
+      expect(retrieved.sections[1].codeExamples[0].language).toBe('json');
+    });
+
+    it('should preserve metadata structure', async () => {
+      const service = new ExtractService(TEST_URL);
+      const jsonPath = service.getJsonPath(TEST_URL);
+
+      virtualFS.set(jsonPath, JSON.stringify(extractedSimple, null, 2));
+
+      const retrieved = (await service.get(TEST_URL)) as any;
+
+      expect(retrieved.metadata).toBeDefined();
+      expect(retrieved.metadata.modelUsed).toBe('claude-sonnet-4-5-20250929');
+      expect(retrieved.metadata.extractionStats).toBeDefined();
+      expect(retrieved.metadata.extractionStats.totalSections).toBe(1);
+    });
+
+    it('should handle edge case: empty JSON', async () => {
+      const service = new ExtractService(TEST_URL);
+      const jsonPath = service.getJsonPath(TEST_URL);
+
+      virtualFS.set(jsonPath, JSON.stringify(edgeCases.emptyJson));
+
+      const retrieved = await service.get(TEST_URL);
+
+      expect(retrieved).toEqual({});
     });
   });
 
   describe('exists', () => {
-    it('should return true for existing JSON', () => {
-      const exists = service.exists(TEST_URL);
-      expect(exists).toBe(true);
+    it('should return true when JSON exists', () => {
+      const service = new ExtractService(TEST_URL);
+      const jsonPath = service.getJsonPath(TEST_URL);
+
+      virtualFS.set(jsonPath, JSON.stringify(extractedSimple));
+
+      const result = service.exists(TEST_URL);
+
+      expect(result).toBe(true);
     });
 
-    it('should return false for non-existent JSON', () => {
-      const exists = service.exists('https://test.com/does-not-exist');
-      expect(exists).toBe(false);
+    it('should return false when JSON does not exist', () => {
+      const service = new ExtractService(TEST_URL);
+
+      const result = service.exists('https://docs.example.com/non-existent');
+
+      expect(result).toBe(false);
     });
   });
 
-  describe('Real data validation', () => {
-    it('should handle real extracted data structure', async () => {
-      const json = (await service.get(TEST_URL)) as any;
+  describe('Roundtrip (save → get)', () => {
+    it('should preserve exact structure after save and get', async () => {
+      const service = new ExtractService(TEST_URL);
 
-      // Validate required fields
-      expect(json).toHaveProperty('source');
-      expect(json).toHaveProperty('pageTitle');
-      expect(json).toHaveProperty('summary');
-      expect(json).toHaveProperty('sections');
-      expect(json).toHaveProperty('metadata');
+      await service.save(TEST_URL, extractedSimple);
+      const retrieved = await service.get(TEST_URL);
+
+      expect(retrieved).toEqual(extractedSimple);
+    });
+
+    it('should preserve complex structures', async () => {
+      const service = new ExtractService(TEST_URL);
+
+      await service.save(TEST_URL, extractedComplex);
+      const retrieved = await service.get(TEST_URL);
+
+      expect(retrieved).toEqual(extractedComplex);
+    });
+
+    it('should preserve code examples', async () => {
+      const service = new ExtractService(TEST_URL);
+
+      await service.save(TEST_URL, extractedCodeHeavy);
+      const retrieved = (await service.get(TEST_URL)) as any;
+
+      expect(retrieved.sections[0].codeExamples).toEqual(
+        extractedCodeHeavy.sections[0].codeExamples
+      );
+    });
+
+    it('should preserve unicode and special characters', async () => {
+      const service = new ExtractService(TEST_URL);
+
+      await service.save(TEST_URL, edgeCases.unicodeContent);
+      const retrieved = await service.get(TEST_URL);
+
+      expect(retrieved).toEqual(edgeCases.unicodeContent);
+    });
+  });
+
+  describe('Real-world structure validation', () => {
+    it('should handle realistic extraction with all fields', async () => {
+      const service = new ExtractService(TEST_URL);
+
+      await service.save(TEST_URL, extractedComplex);
+      const retrieved = (await service.get(TEST_URL)) as any;
+
+      // Validate required top-level fields
+      expect(retrieved).toHaveProperty('source');
+      expect(retrieved).toHaveProperty('pageTitle');
+      expect(retrieved).toHaveProperty('summary');
+      expect(retrieved).toHaveProperty('sections');
+      expect(retrieved).toHaveProperty('prerequisites');
+      expect(retrieved).toHaveProperty('useCases');
+      expect(retrieved).toHaveProperty('configuration');
+      expect(retrieved).toHaveProperty('troubleshooting');
+      expect(retrieved).toHaveProperty('metadata');
 
       // Validate sections structure
-      json?.sections.forEach((section: any) => {
+      retrieved.sections.forEach((section: any) => {
         expect(section).toHaveProperty('title');
         expect(section).toHaveProperty('content');
-        expect(section).toHaveProperty('type');
+        expect(section).toHaveProperty('confidence');
         expect(section).toHaveProperty('codeExamples');
+        expect(section).toHaveProperty('keyConcepts');
+        expect(section).toHaveProperty('implementation');
       });
+
+      // Validate metadata structure
+      expect(retrieved.metadata).toHaveProperty('extractedAt');
+      expect(retrieved.metadata).toHaveProperty('modelUsed');
+      expect(retrieved.metadata).toHaveProperty('extractionStats');
+    });
+
+    it('should preserve code example structure', async () => {
+      const service = new ExtractService(TEST_URL);
+
+      await service.save(TEST_URL, extractedCodeHeavy);
+      const retrieved = (await service.get(TEST_URL)) as any;
+
+      const codeExample = retrieved.sections[0].codeExamples[0];
+      expect(codeExample).toHaveProperty('language');
+      expect(codeExample).toHaveProperty('code');
+      expect(codeExample).toHaveProperty('description');
+      expect(codeExample).toHaveProperty('demonstrates');
+      expect(codeExample).toHaveProperty('context');
+      expect(codeExample).toHaveProperty('variations');
+      expect(codeExample).toHaveProperty('confidence');
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('should handle malformed JSON gracefully', async () => {
+      const service = new ExtractService(TEST_URL);
+      const jsonPath = service.getJsonPath(TEST_URL);
+
+      // Set invalid JSON in virtual FS
+      virtualFS.set(jsonPath, edgeCases.invalidJson);
+
+      await expect(service.get(TEST_URL)).rejects.toThrow();
+    });
+
+    it('should handle huge documents', async () => {
+      const service = new ExtractService(TEST_URL);
+
+      await service.save(TEST_URL, edgeCases.hugeDocument);
+      const retrieved = (await service.get(TEST_URL)) as any;
+
+      expect(retrieved.sections).toHaveLength(100);
+      expect(retrieved.metadata.extractionStats.totalSections).toBe(100);
+    });
+
+    it('should handle minimal documents', async () => {
+      const service = new ExtractService(TEST_URL);
+
+      await service.save(TEST_URL, extractedMinimal);
+      const retrieved = (await service.get(TEST_URL)) as any;
+
+      expect(retrieved.sections).toHaveLength(0);
+      expect(retrieved.metadata.completeness).toBe('low');
     });
   });
 });

@@ -275,25 +275,19 @@ describe('Qdrant Integration Tests (requires Qdrant)', () => {
     });
 
     it('should use generated collection names with Qdrant', async () => {
-      const collectionName = getCollectionName('ollama');
+      // CRITICAL: Use test-specific collection name to avoid destroying production data
+      const testCollectionName = `test_collection_name_${Date.now()}`;
 
-      // First delete if it exists from previous test run
-      try {
-        await qdrant.deleteCollection(collectionName);
-      } catch {
-        // Collection might not exist
-      }
-
-      await qdrant.createCollection(collectionName, {
+      await qdrant.createCollection(testCollectionName, {
         vectors: { size: 768, distance: 'Cosine' }
       });
 
       const collections = await qdrant.getCollections();
       const names = collections.collections.map(c => c.name);
-      expect(names).toContain(collectionName);
+      expect(names).toContain(testCollectionName);
 
-      // Clean up
-      await qdrant.deleteCollection(collectionName);
+      // Clean up test collection
+      await qdrant.deleteCollection(testCollectionName);
     });
   });
 });

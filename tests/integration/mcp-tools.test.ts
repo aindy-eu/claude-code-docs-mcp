@@ -25,8 +25,8 @@ const checkQdrantAvailable = async () => {
 describe('MCP Tools Integration (requires Qdrant)', () => {
   let server: Server;
   let qdrant: QdrantClient;
-  // Use the actual collection name that the search function expects
-  const testCollectionName = 'claude_code_docs_ollama';
+  // CRITICAL: Use unique test collection to avoid destroying production data
+  const testCollectionName = `test_mcp_tools_${Date.now()}`;
 
   // Store a fixed embedding to use consistently across tests
   const fixedEmbedding = new Array(768).fill(0).map((_, i) => Math.sin(i) * 0.5 + 0.5);
@@ -159,8 +159,7 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
   });
 
   describe('Search Tool', () => {
-    // Since we're doing integration tests, let's test with actual embeddings
-    // The tests will use the real collection name 'claude_code_docs_ollama'
+    // Note: These tests use a test-specific collection, not production collection
 
     it.skip('should execute search tool successfully (requires populated collection)', async () => {
       // Create a mock handler to capture the registered handler
