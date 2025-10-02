@@ -4,6 +4,7 @@ import { config } from 'dotenv';
 config({ path: '.env.test' });
 
 // Suppress console output in tests (keeps test output clean)
+/* eslint-disable no-console */
 const originalConsoleLog = console.log;
 const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;
@@ -22,6 +23,7 @@ global.afterAll(() => {
   console.error = originalConsoleError;
   console.warn = originalConsoleWarn;
 });
+/* eslint-enable no-console */
 
 // Global test setup
 beforeAll(async () => {

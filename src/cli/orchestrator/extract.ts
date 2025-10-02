@@ -88,7 +88,7 @@ export async function extractStage(
       });
 
       if (!silent && stderr) {
-        console.log(stderr);
+        console.info(stderr);
       }
 
       spinner?.succeed(chalk.green('✓ Extraction complete'));

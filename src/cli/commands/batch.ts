@@ -254,23 +254,23 @@ export class BatchCommand {
       const { toIngest, toSkip } = await this.filterUrlsByFreshness(allUrls, options);
 
       // Show preview
-      console.log(chalk.bold('\n🔍 Batch Ingestion Plan\n'));
-      console.log(chalk.cyan(`Total pages configured: ${allUrls.length}`));
-      console.log(chalk.green(`Pages to ingest: ${toIngest.length}`));
+      console.info(chalk.bold('\n🔍 Batch Ingestion Plan\n'));
+      console.info(chalk.cyan(`Total pages configured: ${allUrls.length}`));
+      console.info(chalk.green(`Pages to ingest: ${toIngest.length}`));
       if (toSkip.length > 0) {
-        console.log(chalk.yellow(`Pages to skip: ${toSkip.length} (fresh)`));
+        console.info(chalk.yellow(`Pages to skip: ${toSkip.length} (fresh)`));
       }
 
       if (toIngest.length === 0) {
-        console.log(chalk.yellow('\n✨ Nothing to ingest! All pages are fresh.\n'));
-        console.log(chalk.gray('Use --force to re-ingest anyway'));
+        console.info(chalk.yellow('\n✨ Nothing to ingest! All pages are fresh.\n'));
+        console.info(chalk.gray('Use --force to re-ingest anyway'));
         return;
       }
 
       if (options.dryRun) {
-        console.log(chalk.bold('\n📋 Would ingest:\n'));
-        toIngest.forEach(url => console.log(`  ${chalk.cyan('→')} ${this.formatUrl(url)}`));
-        console.log(chalk.gray('\nRun without --dry-run to execute'));
+        console.info(chalk.bold('\n📋 Would ingest:\n'));
+        toIngest.forEach(url => console.info(`  ${chalk.cyan('→')} ${this.formatUrl(url)}`));
+        console.info(chalk.gray('\nRun without --dry-run to execute'));
         return;
       }
 
@@ -347,41 +347,41 @@ export class BatchCommand {
     const minutes = Math.floor(duration / 60);
     const seconds = duration % 60;
 
-    console.log(chalk.bold('\n📊 Batch Ingestion Summary\n'));
+    console.info(chalk.bold('\n📊 Batch Ingestion Summary\n'));
 
     // Time
     if (minutes > 0) {
-      console.log(chalk.gray(`⏱️  Duration: ${minutes}m ${seconds}s`));
+      console.info(chalk.gray(`⏱️  Duration: ${minutes}m ${seconds}s`));
     } else {
-      console.log(chalk.gray(`⏱️  Duration: ${seconds}s`));
+      console.info(chalk.gray(`⏱️  Duration: ${seconds}s`));
     }
 
     // Results
-    console.log(chalk.green(`✓ Success: ${ctx.results.success.length}`));
+    console.info(chalk.green(`✓ Success: ${ctx.results.success.length}`));
     if (ctx.results.unchanged.length > 0) {
-      console.log(
+      console.info(
         chalk.cyan(
           `⚡ Unchanged: ${ctx.results.unchanged.length} (content diff - pipeline skipped)`
         )
       );
     }
     if (ctx.results.failed.length > 0) {
-      console.log(chalk.red(`✗ Failed: ${ctx.results.failed.length}`));
+      console.warn(chalk.red(`✗ Failed: ${ctx.results.failed.length}`));
       ctx.results.failed.forEach(({ url, error }) => {
-        console.log(chalk.red(`  → ${this.formatUrl(url)}: ${error}`));
+        console.warn(chalk.red(`  → ${this.formatUrl(url)}: ${error}`));
       });
     }
     if (ctx.results.skipped.length > 0) {
-      console.log(chalk.yellow(`⏭️  Skipped: ${ctx.results.skipped.length} (fresh - not checked)`));
+      console.info(chalk.yellow(`⏭️  Skipped: ${ctx.results.skipped.length} (fresh - not checked)`));
     }
 
     // Storage info
     if (ctx.results.success.length > 0) {
-      console.log(chalk.bold('\n💾 Ready to use!\n'));
-      console.log(chalk.gray('Try searching:'));
-      console.log(chalk.cyan('  npm run search "your query"'));
+      console.info(chalk.bold('\n💾 Ready to use!\n'));
+      console.info(chalk.gray('Try searching:'));
+      console.info(chalk.cyan('  npm run search "your query"'));
     }
 
-    console.log();
+    console.info();
   }
 }

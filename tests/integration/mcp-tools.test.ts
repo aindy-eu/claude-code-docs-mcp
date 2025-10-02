@@ -34,8 +34,8 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
     // Check if Qdrant is available
     const isAvailable = await checkQdrantAvailable();
     if (!isAvailable) {
-      console.log('⚠️  Qdrant is not running - skipping integration tests');
-      console.log(
+      console.info('⚠️  Qdrant is not running - skipping integration tests');
+      console.info(
         '   To run these tests, start Qdrant with: docker run -p 6333:6333 qdrant/qdrant'
       );
       return;

@@ -37,27 +37,27 @@ registerTools(server, qdrant);
 
 // Handle server lifecycle
 process.on('SIGINT', async () => {
-  console.log('\\n🛑 Shutting down MCP server...');
+  console.info('\\n🛑 Shutting down MCP server...');
   await server.close();
   process.exit(0);
 });
 
 // Start server
 async function startServer() {
-  console.log('🚀 Starting Claude Code Documentation MCP Server...');
-  console.log(
+  console.info('🚀 Starting Claude Code Documentation MCP Server...');
+  console.info(
     `📡 Qdrant: ${process.env.QDRANT_HOST || 'localhost'}:${process.env.QDRANT_PORT || '6333'}`
   );
-  console.log(`🧠 Default provider: ${process.env.DEFAULT_EMBEDDING_PROVIDER || 'ollama'}`);
-  console.log('\\n📖 Available tools:');
-  console.log('  - search_claude_code_docs: Search Claude Code documentation');
-  console.log('\\n💡 Usage with Claude Code:');
-  console.log(
+  console.info(`🧠 Default provider: ${process.env.DEFAULT_EMBEDDING_PROVIDER || 'ollama'}`);
+  console.info('\\n📖 Available tools:');
+  console.info('  - search_claude_code_docs: Search Claude Code documentation');
+  console.info('\\n💡 Usage with Claude Code:');
+  console.info(
     '  1. Add server: claude mcp add claude-docs node',
     process.cwd() + '/build/index.js'
   );
-  console.log('  2. Use Claude: claude "How do I implement slash commands?"');
-  console.log('\\n✅ Server ready for connections\\n');
+  console.info('  2. Use Claude: claude "How do I implement slash commands?"');
+  console.info('\\n✅ Server ready for connections\\n');
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

@@ -25,9 +25,9 @@ export class SearchCommand {
     const provider = (options.provider || 'ollama') as EmbeddingProvider;
     const limit = options.limit || 3;
 
-    console.log(chalk.bold(`\n🔍 Searching for: "${query}"`));
-    console.log(chalk.cyan(`📊 Provider: ${provider}`));
-    console.log(chalk.cyan(`📄 Limit: ${limit}\n`));
+    console.info(chalk.bold(`\n🔍 Searching for: "${query}"`));
+    console.info(chalk.cyan(`📊 Provider: ${provider}`));
+    console.info(chalk.cyan(`📄 Limit: ${limit}\n`));
 
     try {
       // Perform search
@@ -38,33 +38,33 @@ export class SearchCommand {
       });
 
       if (results.length === 0) {
-        console.log(chalk.yellow('No results found.\n'));
-        console.log(chalk.gray('Try:'));
-        console.log(chalk.gray('  - Different search terms'));
-        console.log(chalk.gray('  - Broader query'));
-        console.log(chalk.gray('  - Check if documentation is ingested: npm run cli -- list'));
+        console.info(chalk.yellow('No results found.\n'));
+        console.info(chalk.gray('Try:'));
+        console.info(chalk.gray('  - Different search terms'));
+        console.info(chalk.gray('  - Broader query'));
+        console.info(chalk.gray('  - Check if documentation is ingested: npm run cli -- list'));
         return;
       }
 
       // Format and display results
       const formattedResults = formatSearchResults(results);
-      console.log(formattedResults);
+      console.info(formattedResults);
 
       // Show metadata
-      console.log(chalk.bold('\n📊 Search Metadata:'));
-      console.log(
+      console.info(chalk.bold('\n📊 Search Metadata:'));
+      console.info(
         chalk.green(`✓ Found ${results.length} result${results.length === 1 ? '' : 's'}`)
       );
-      console.log(chalk.green(`✓ Extraction method: Claude-driven`));
-      console.log();
+      console.info(chalk.green(`✓ Extraction method: Claude-driven`));
+      console.info();
     } catch (error: any) {
       console.error(chalk.red('\n❌ Search failed:'), error.message);
 
       // Helpful error messages
       if (error.message.includes('Not Found')) {
-        console.log(chalk.yellow('\nNo collection found. Try:'));
-        console.log(chalk.cyan('  npm run setup           ') + chalk.gray('# Create collections'));
-        console.log(
+        console.warn(chalk.yellow('\nNo collection found. Try:'));
+        console.info(chalk.cyan('  npm run setup           ') + chalk.gray('# Create collections'));
+        console.info(
           chalk.cyan('  npm run cli -- batch    ') + chalk.gray('# Ingest documentation')
         );
       }

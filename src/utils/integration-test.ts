@@ -15,21 +15,21 @@ const qdrant = new QdrantClient({
 });
 
 async function testQdrantConnection() {
-  console.log('🔍 Testing Qdrant connection...');
+  console.info('🔍 Testing Qdrant connection...');
 
   try {
     await qdrant.getCollections();
-    console.log('✅ Qdrant connection successful');
+    console.info('✅ Qdrant connection successful');
     return true;
   } catch (error: any) {
     console.error('❌ Qdrant connection failed:', error.message);
-    console.log('💡 Make sure Qdrant is running: docker run -p 6333:6333 qdrant/qdrant');
+    console.info('💡 Make sure Qdrant is running: docker run -p 6333:6333 qdrant/qdrant');
     return false;
   }
 }
 
 async function testEmbeddingGeneration(provider: EmbeddingProvider) {
-  console.log(`\\n🧠 Testing ${provider} embedding generation...`);
+  console.info(`\\n🧠 Testing ${provider} embedding generation...`);
 
   try {
     const testText = 'How do I implement slash commands in Claude Code?';
@@ -37,7 +37,7 @@ async function testEmbeddingGeneration(provider: EmbeddingProvider) {
 
     const expectedDimensions = EMBEDDING_CONFIGS[provider].dimensions;
     if (embedding.length === expectedDimensions) {
-      console.log(`✅ ${provider} embeddings working (${embedding.length} dimensions)`);
+      console.info(`✅ ${provider} embeddings working (${embedding.length} dimensions)`);
       return true;
     } else {
       console.error(
@@ -49,36 +49,36 @@ async function testEmbeddingGeneration(provider: EmbeddingProvider) {
     console.error(`❌ ${provider} embedding failed:`, error.message);
 
     if (provider === 'ollama') {
-      console.log('💡 Make sure Ollama is running and nomic-embed-text is installed:');
-      console.log('   ollama pull nomic-embed-text');
+      console.info('💡 Make sure Ollama is running and nomic-embed-text is installed:');
+      console.info('   ollama pull nomic-embed-text');
     } else {
-      console.log('💡 Make sure OPENAI_API_KEY is set in your .env file');
+      console.info('💡 Make sure OPENAI_API_KEY is set in your .env file');
     }
     return false;
   }
 }
 
 async function testCollectionExists(provider: EmbeddingProvider) {
-  console.log(`\\n📦 Testing ${provider} collection...`);
+  console.info(`\\n📦 Testing ${provider} collection...`);
 
   try {
     const collectionName = getCollectionName(provider);
     const info = await qdrant.getCollection(collectionName);
 
-    console.log(`✅ Collection "${collectionName}" exists`);
-    console.log(`   - Points: ${info.points_count || 0}`);
-    console.log(`   - Vectors: ${info.config?.params?.vectors?.size || 'unknown'} dimensions`);
+    console.info(`✅ Collection "${collectionName}" exists`);
+    console.info(`   - Points: ${info.points_count || 0}`);
+    console.info(`   - Vectors: ${info.config?.params?.vectors?.size || 'unknown'} dimensions`);
 
     return (info.points_count || 0) > 0;
   } catch (error: any) {
     console.error(`❌ Collection test failed:`, error.message);
-    console.log(`💡 Run "npm run setup" to create collections`);
+    console.info(`💡 Run "npm run setup" to create collections`);
     return false;
   }
 }
 
 async function testSearch(provider: EmbeddingProvider) {
-  console.log(`\\n🔍 Testing search with ${provider}...`);
+  console.info(`\\n🔍 Testing search with ${provider}...`);
 
   try {
     const query = 'slash commands implementation';
@@ -92,14 +92,14 @@ async function testSearch(provider: EmbeddingProvider) {
     });
 
     if (results.points.length > 0) {
-      console.log(`✅ Search working - found ${results.points.length} results`);
-      console.log(
+      console.info(`✅ Search working - found ${results.points.length} results`);
+      console.info(
         `   Best match: "${results.points[0].payload?.title}" (score: ${results.points[0].score?.toFixed(3)})`
       );
       return true;
     } else {
-      console.log(`⚠️  Search returned no results - collection may be empty`);
-      console.log(`💡 Use Claude-driven ingestion: npm run cli -- batch --core`);
+      console.info(`⚠️  Search returned no results - collection may be empty`);
+      console.info(`💡 Use Claude-driven ingestion: npm run cli -- batch --core`);
       return false;
     }
   } catch (error: any) {
@@ -109,7 +109,7 @@ async function testSearch(provider: EmbeddingProvider) {
 }
 
 async function runTests() {
-  console.log('🧪 Claude Code Docs MCP Server Tests\\n');
+  console.info('🧪 Claude Code Docs MCP Server Tests\\n');
 
   const results = {
     qdrant: false,
@@ -124,7 +124,7 @@ async function runTests() {
   // Test Qdrant connection
   results.qdrant = await testQdrantConnection();
   if (!results.qdrant) {
-    console.log('\\n❌ Cannot continue without Qdrant connection');
+    console.info('\\n❌ Cannot continue without Qdrant connection');
     return;
   }
 
@@ -135,7 +135,7 @@ async function runTests() {
   if (process.env.OPENAI_API_KEY) {
     results.openai_embedding = await testEmbeddingGeneration('openai');
   } else {
-    console.log('\\n⚠️  Skipping OpenAI tests (no API key)');
+    console.info('\\n⚠️  Skipping OpenAI tests (no API key)');
   }
 
   // Test collections
@@ -154,11 +154,11 @@ async function runTests() {
   }
 
   // Summary
-  console.log('\\n📊 Test Summary:');
-  console.log('================');
+  console.info('\\n📊 Test Summary:');
+  console.info('================');
 
   const printResult = (name: string, result: boolean) => {
-    console.log(`${result ? '✅' : '❌'} ${name}`);
+    console.info(`${result ? '✅' : '❌'} ${name}`);
   };
 
   printResult('Qdrant Connection', results.qdrant);
@@ -172,18 +172,18 @@ async function runTests() {
   const hasWorkingSetup = results.ollama_search || results.openai_search;
 
   if (hasWorkingSetup) {
-    console.log('\\n🎉 Setup is working! You can now:');
-    console.log('1. Run "npm start" to start the MCP server');
-    console.log('2. Use with Claude Code:');
-    console.log('   - Add: claude mcp add claude-docs node', process.cwd() + '/build/index.js');
-    console.log('   - Use: claude "How do I implement slash commands?"');
+    console.info('\\n🎉 Setup is working! You can now:');
+    console.info('1. Run "npm start" to start the MCP server');
+    console.info('2. Use with Claude Code:');
+    console.info('   - Add: claude mcp add claude-docs node', process.cwd() + '/build/index.js');
+    console.info('   - Use: claude "How do I implement slash commands?"');
   } else {
-    console.log('\\n❌ Setup incomplete. Next steps:');
+    console.info('\\n❌ Setup incomplete. Next steps:');
     if (!results.ollama_collection && !results.openai_collection) {
-      console.log('1. Run "npm run setup" to create collections');
-      console.log('2. Use Claude-driven ingestion: npm run cli -- batch --core');
+      console.info('1. Run "npm run setup" to create collections');
+      console.info('2. Use Claude-driven ingestion: npm run cli -- batch --core');
     } else if (!results.ollama_search && !results.openai_search) {
-      console.log('1. Use Claude-driven ingestion: npm run cli -- batch --core');
+      console.info('1. Use Claude-driven ingestion: npm run cli -- batch --core');
     }
   }
 }

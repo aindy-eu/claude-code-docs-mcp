@@ -109,20 +109,20 @@ export class PipelineOrchestrator {
       }
 
       spinner.stop();
-      console.log(chalk.bold('\nManifest Record:'));
-      console.log(chalk.gray('─'.repeat(50)));
-      console.log(`${chalk.cyan('URL:')} ${record.url}`);
-      console.log(`${chalk.cyan('Status:')} ${this.colorStatus(record.status)}`);
-      if (record.lastFetchedAt) console.log(`${chalk.cyan('Fetched:')} ${record.lastFetchedAt}`);
+      console.info(chalk.bold('\nManifest Record:'));
+      console.info(chalk.gray('─'.repeat(50)));
+      console.info(`${chalk.cyan('URL:')} ${record.url}`);
+      console.info(`${chalk.cyan('Status:')} ${this.colorStatus(record.status)}`);
+      if (record.lastFetchedAt) console.info(`${chalk.cyan('Fetched:')} ${record.lastFetchedAt}`);
       if (record.lastExtractedAt)
-        console.log(`${chalk.cyan('Extracted:')} ${record.lastExtractedAt}`);
-      if (record.extractionModel) console.log(`${chalk.cyan('Model:')} ${record.extractionModel}`);
+        console.info(`${chalk.cyan('Extracted:')} ${record.lastExtractedAt}`);
+      if (record.extractionModel) console.info(`${chalk.cyan('Model:')} ${record.extractionModel}`);
       if (record.embeddingProvider)
-        console.log(`${chalk.cyan('Provider:')} ${record.embeddingProvider}`);
-      if (record.sectionCount) console.log(`${chalk.cyan('Sections:')} ${record.sectionCount}`);
+        console.info(`${chalk.cyan('Provider:')} ${record.embeddingProvider}`);
+      if (record.sectionCount) console.info(`${chalk.cyan('Sections:')} ${record.sectionCount}`);
       if (record.codeExampleCount)
-        console.log(`${chalk.cyan('Examples:')} ${record.codeExampleCount}`);
-      console.log(chalk.gray('─'.repeat(50)));
+        console.info(`${chalk.cyan('Examples:')} ${record.codeExampleCount}`);
+      console.info(chalk.gray('─'.repeat(50)));
     } catch (error: any) {
       spinner.fail(chalk.red('✗ Status check failed'));
       throw error;
@@ -142,27 +142,27 @@ export class PipelineOrchestrator {
 
       spinner.stop();
 
-      console.log(chalk.bold('\nIngested Documentation:'));
-      console.log(chalk.gray('─'.repeat(80)));
+      console.info(chalk.bold('\nIngested Documentation:'));
+      console.info(chalk.gray('─'.repeat(80)));
 
       const records = Object.values(manifest.records) as any[];
 
       if (records.length === 0) {
-        console.log(chalk.yellow('No documents ingested yet.'));
+        console.info(chalk.yellow('No documents ingested yet.'));
         return;
       }
 
       records.forEach((record: any) => {
         const url = record.url.replace('https://docs.claude.com', '');
-        console.log(
+        console.info(
           `${this.colorStatus(record.status)} ${chalk.cyan(url)} ${chalk.gray(
             record.lastExtractedAt ? `(${record.extractionModel || 'unknown'})` : ''
           )}`
         );
       });
 
-      console.log(chalk.gray('─'.repeat(80)));
-      console.log(chalk.bold(`Total: ${records.length} documents`));
+      console.info(chalk.gray('─'.repeat(80)));
+      console.info(chalk.bold(`Total: ${records.length} documents`));
     } catch (error: any) {
       spinner.fail(chalk.red('✗ List failed'));
       throw error;

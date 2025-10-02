@@ -20,7 +20,7 @@ describe('Qdrant Integration Tests (requires Qdrant)', () => {
         await qdrant.getCollections();
         break;
       } catch (error) {
-        console.log(`Waiting for Qdrant... (${retries} retries left)`);
+        console.info(`Waiting for Qdrant... (${retries} retries left)`);
         await new Promise(resolve => setTimeout(resolve, 2000));
         retries--;
         if (retries === 0) {

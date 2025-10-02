@@ -14,7 +14,7 @@ async function setupCollection(provider: EmbeddingProvider) {
   const collectionName = getCollectionName(provider);
 
   try {
-    console.log(`📦 Creating collection "${collectionName}" for ${provider}...`);
+    console.info(`📦 Creating collection "${collectionName}" for ${provider}...`);
 
     await client.createCollection(collectionName, {
       vectors: {
@@ -23,13 +23,13 @@ async function setupCollection(provider: EmbeddingProvider) {
       }
     });
 
-    console.log(`✅ Collection "${collectionName}" created successfully`);
-    console.log(`   - Provider: ${provider}`);
-    console.log(`   - Model: ${config.model}`);
-    console.log(`   - Dimensions: ${config.dimensions}`);
+    console.info(`✅ Collection "${collectionName}" created successfully`);
+    console.info(`   - Provider: ${provider}`);
+    console.info(`   - Model: ${config.model}`);
+    console.info(`   - Dimensions: ${config.dimensions}`);
   } catch (error: any) {
     if (error.message?.includes('already exists')) {
-      console.log(`⚠️  Collection "${collectionName}" already exists`);
+      console.info(`⚠️  Collection "${collectionName}" already exists`);
     } else {
       console.error(`❌ Error creating collection "${collectionName}":`, error.message);
       throw error;
@@ -38,12 +38,12 @@ async function setupCollection(provider: EmbeddingProvider) {
 }
 
 async function setupAllCollections() {
-  console.log('🚀 Setting up Qdrant collections for Claude Code documentation...\n');
+  console.info('🚀 Setting up Qdrant collections for Claude Code documentation...\n');
 
   try {
     // Test Qdrant connection
     await client.getCollections();
-    console.log('✅ Qdrant connection successful\n');
+    console.info('✅ Qdrant connection successful\n');
 
     // Setup collections for both providers
     const providers: EmbeddingProvider[] = ['ollama', 'openai'];
@@ -52,14 +52,14 @@ async function setupAllCollections() {
       await setupCollection(provider);
     }
 
-    console.log('\n🎉 All collections setup complete!');
-    console.log('\nNext steps:');
-    console.log('1. Use Claude-driven ingestion: npm run cli -- batch --core');
-    console.log('2. Run "npm start" to start the MCP server');
+    console.info('\n🎉 All collections setup complete!');
+    console.info('\nNext steps:');
+    console.info('1. Use Claude-driven ingestion: npm run cli -- batch --core');
+    console.info('2. Run "npm start" to start the MCP server');
   } catch (error: any) {
     console.error('❌ Setup failed:', error.message);
-    console.log('\n💡 Make sure Qdrant is running:');
-    console.log('   docker run -p 6333:6333 -p 6334:6334 qdrant/qdrant');
+    console.info('\n💡 Make sure Qdrant is running:');
+    console.info('   docker run -p 6333:6333 -p 6334:6334 qdrant/qdrant');
     process.exit(1);
   }
 }
