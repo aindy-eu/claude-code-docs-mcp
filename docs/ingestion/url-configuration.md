@@ -24,25 +24,28 @@ export const DOCUMENTATION_SOURCES = {
 
 ## Usage
 
-### In TypeScript
+### In TypeScript (Primary Method)
 ```typescript
 // Instead of hardcoding URLs
-import { getDocUrl, getAllDocUrls } from '../config/documentation-urls.js';
+import { getDocUrl, getAllDocUrls, CORE_PAGES } from '../config/documentation-urls.js';
 
 const overviewUrl = getDocUrl('overview');
 const allUrls = getAllDocUrls();
+
+// For batch ingestion
+const corePages = CORE_PAGES; // ['overview', 'quickstart', 'hooks', 'slashCommands', 'mcp']
 ```
 
-### In Shell Scripts
+### CLI Commands
 ```bash
-# Generate and source configuration
-npm run generate-url-config > tools/url-config.sh
-source tools/url-config.sh
-
-# Use the URLs
-echo "Overview URL: $DOCS_URL_OVERVIEW"
-echo "Base URL: $DOCS_BASE_URL"
+# Use the TypeScript CLI (recommended)
+npm run cli -- batch --core           # Ingest 5 core pages
+npm run cli -- batch --pages overview,hooks  # Specific pages
+npm run cli -- ingest <url>            # Single page
 ```
+
+### Legacy Shell Scripts (Archived)
+Shell script generation has been replaced by TypeScript CLI. See `legacy/` for archived bash tools.
 
 ## Migration
 
@@ -59,20 +62,34 @@ npm run migrate-urls
 ## Commands
 
 ```bash
+# Migration
 npm run migrate-urls [-- --dry-run]  # Migrate manifest URLs
-npm run generate-url-config           # Generate shell config
-npm run ingestion-status              # Uses config automatically
+
+# Status & Monitoring
+npm run ingestion-status              # Check ingestion state
+npm run cli -- list                   # List all ingested docs
+npm run cli -- status <url>           # Check specific doc
+
+# Batch Ingestion
+npm run cli -- batch --core           # 5 essential pages
+npm run cli -- batch                  # All 10 pages
+npm run cli -- batch --stale-only     # Only outdated pages
 ```
 
 ## Available Pages
 
-The system tracks these documentation pages:
+### Core Pages (--core)
+These 5 essential pages are recommended for quick seeding (~2.5 minutes):
 - `overview` - Claude Code overview
 - `quickstart` - Getting started guide
-- `slashCommands` - Slash command reference
 - `hooks` - Hooks documentation
-- `settings` - Settings configuration
+- `slashCommands` - Slash command reference
 - `mcp` - MCP integration guide
+
+### Full Page Set (default)
+All 10 pages (~5 minutes):
+- Core pages above, plus:
+- `settings` - Settings configuration
 - `memory` - Memory system docs
 - `commonWorkflows` - Common workflow examples
 - `interactiveMode` - Interactive mode guide

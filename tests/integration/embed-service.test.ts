@@ -4,23 +4,26 @@
  *
  * NOTE: These tests require:
  * - Qdrant running on localhost:6333
- * - Ollama with nomic-embed-text model (for full embedding tests)
+ * - Ollama with nomic-embed-text model (for Ollama provider tests)
  *
  * For unit tests with mocked dependencies, see tests/unit/services/embed-service/
  */
 
-import { describe, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+import { describe, it, beforeAll, beforeEach, afterEach, expect } from 'vitest';
 import { QdrantClient } from '@qdrant/js-client-rest';
+import { EmbedService } from '@/services/embed-service.js';
+import { generateEmbedding } from '@/utils/embeddings.js';
+import type { ClaudeDocOutput } from '@/services/embed-service.types.js';
 
-// Sample extraction matching actual ClaudeDocOutput structure (not used in skipped tests)
-const _sampleExtraction = {
+// Sample extraction matching actual ClaudeDocOutput structure
+const sampleExtraction: ClaudeDocOutput = {
   source: 'https://test.com/integration-test',
   pageTitle: 'Integration Test Page',
   summary: 'Testing EmbedService with real Qdrant and embeddings',
   sections: [
     {
       title: 'Getting Started',
-      content: 'This section covers how to get started with the integration tests',
+      content: 'This section covers how to get started with the integration tests and embeddings',
       searchKeywords: ['integration', 'testing', 'qdrant'],
       aliases: ['Setup', 'Initial Setup'],
       codeExamples: [
@@ -38,7 +41,8 @@ const _sampleExtraction = {
     },
     {
       title: 'Advanced Usage',
-      content: 'Advanced patterns for working with embeddings and Qdrant',
+      content:
+        'Advanced patterns for working with embeddings and Qdrant vector search capabilities',
       searchKeywords: ['advanced', 'patterns'],
       aliases: [],
       codeExamples: [],
@@ -71,16 +75,32 @@ const checkQdrantAvailable = async () => {
   }
 };
 
-describe('EmbedService Integration (requires Qdrant)', () => {
+// Check if Ollama is available
+const checkOllamaAvailable = async () => {
+  try {
+    await generateEmbedding('test', 'ollama');
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+describe('EmbedService Integration (requires Qdrant + Ollama)', () => {
   let qdrant: QdrantClient;
-  // CRITICAL: Use unique test collection names to avoid destroying production data
-  const testCollectionOllama = `test_embed_integration_ollama_${Date.now()}`;
-  const testCollectionOpenAI = `test_embed_integration_openai_${Date.now()}`;
+  let service: EmbedService;
+  let isQdrantAvailable = false;
+  let isOllamaAvailable = false;
+
+  // Use unique test collection names to avoid destroying production data
+  const getTestCollection = () =>
+    `test_embed_integration_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
   beforeAll(async () => {
-    // Check if Qdrant is available
-    const isAvailable = await checkQdrantAvailable();
-    if (!isAvailable) {
+    // Check if required services are available
+    isQdrantAvailable = await checkQdrantAvailable();
+    isOllamaAvailable = await checkOllamaAvailable();
+
+    if (!isQdrantAvailable) {
       console.info('⚠️  Qdrant is not running - skipping integration tests');
       console.info(
         '   To run these tests, start Qdrant with: docker run -p 6333:6333 qdrant/qdrant'
@@ -88,186 +108,341 @@ describe('EmbedService Integration (requires Qdrant)', () => {
       return;
     }
 
+    if (!isOllamaAvailable) {
+      console.info('⚠️  Ollama is not available - skipping embedding tests');
+      console.info('   To run these tests, install Ollama and pull nomic-embed-text model');
+      return;
+    }
+
     qdrant = new QdrantClient({
       host: process.env.QDRANT_HOST || 'localhost',
       port: parseInt(process.env.QDRANT_PORT || '6333')
     });
-  });
-
-  afterAll(async () => {
-    // Clean up test collections (NOT production collections)
-    try {
-      await qdrant.deleteCollection(testCollectionOllama);
-      await qdrant.deleteCollection(testCollectionOpenAI);
-    } catch {
-      // Collections might not exist
-    }
+    service = new EmbedService(qdrant, 'ollama');
   });
 
   describe('Collection Management', () => {
-    beforeEach(async () => {
-      // Clean up test collections before each test (NOT production)
-      try {
-        await qdrant.deleteCollection(testCollectionOllama);
-      } catch {
-        // Collection might not exist
-      }
+    let testCollection: string;
+
+    beforeEach(() => {
+      if (!isQdrantAvailable) return;
+      testCollection = getTestCollection();
     });
 
     afterEach(async () => {
-      // Clean up test collections after each test (NOT production)
+      if (!isQdrantAvailable || !testCollection) return;
       try {
-        await qdrant.deleteCollection(testCollectionOllama);
+        await qdrant.deleteCollection(testCollection);
       } catch {
         // Collection might not exist
       }
     });
 
-    it.skip('should create collection if it does not exist', async () => {
-      // SKIPPED: This test would use production collection names
-      // Collection creation is tested via other means without risking production data
+    it('should create collection with correct dimensions for Ollama (768)', async () => {
+      if (!isQdrantAvailable || !isOllamaAvailable) return;
+
+      await service.embed(sampleExtraction, 'ollama', testCollection);
+
+      const collection = await qdrant.getCollection(testCollection);
+      expect(collection.config?.params?.vectors).toMatchObject({
+        size: 768,
+        distance: 'Cosine'
+      });
     });
 
-    it.skip('should use existing collection if it exists', async () => {
-      // SKIPPED: This test would use production collection names
-      // Tested via unit tests with mocked Qdrant client
-    });
+    it('should reuse existing collection if it exists', async () => {
+      if (!isQdrantAvailable || !isOllamaAvailable) return;
 
-    it.skip('should use correct dimensions for Ollama (768)', async () => {
-      // SKIPPED: This test would use production collection names
-      // Collection dimensions are tested via unit tests with mocked Qdrant
-    });
+      // First embed creates collection
+      await service.embed(sampleExtraction, 'ollama', testCollection);
+      const firstCount = await qdrant.count(testCollection);
 
-    it.skip('should use correct dimensions for OpenAI (1536)', async () => {
-      // SKIPPED: Requires OPENAI_API_KEY
-      // Collection dimensions are tested via unit tests with mocked Qdrant
+      // Second embed reuses collection
+      await service.embed(sampleExtraction, 'ollama', testCollection);
+      const secondCount = await qdrant.count(testCollection);
+
+      expect(secondCount.count).toBeGreaterThan(firstCount.count);
     });
   });
 
-  describe('Document Processing', () => {
-    beforeEach(async () => {
-      try {
-        await qdrant.deleteCollection(testCollectionOllama);
-      } catch {
-        // Collection might not exist
-      }
+  describe('Document Processing & Storage', () => {
+    let testCollection: string;
+
+    beforeEach(() => {
+      if (!isQdrantAvailable) return;
+      testCollection = getTestCollection();
     });
 
     afterEach(async () => {
+      if (!isQdrantAvailable || !testCollection) return;
       try {
-        await qdrant.deleteCollection(testCollectionOllama);
+        await qdrant.deleteCollection(testCollection);
       } catch {
         // Collection might not exist
       }
     });
 
-    it.skip('should process and embed documents successfully', async () => {
-      // SKIPPED: Would use production collection name via EmbedService
-      // Document processing is tested via unit tests with mocked Qdrant
+    it('should store documents in Qdrant with correct count', async () => {
+      if (!isQdrantAvailable || !isOllamaAvailable) return;
+
+      const result = await service.embed(sampleExtraction, 'ollama', testCollection);
+
+      expect(result.success).toBe(true);
+      expect(result.documentsProcessed).toBeGreaterThan(0);
+
+      // Verify documents are actually in Qdrant
+      const count = await qdrant.count(testCollection);
+      expect(count.count).toBe(result.documentsProcessed);
     });
 
-    it.skip('should track statistics correctly', async () => {
-      // SKIPPED: Would use production collection name via EmbedService
-      // Statistics tracking is tested via unit tests
+    it('should store full payload with all metadata fields', async () => {
+      if (!isQdrantAvailable || !isOllamaAvailable) return;
+
+      await service.embed(sampleExtraction, 'ollama', testCollection);
+
+      // Retrieve stored documents
+      const points = await qdrant.scroll(testCollection, { limit: 5 });
+      expect(points.points.length).toBeGreaterThan(0);
+
+      const firstPoint = points.points[0];
+      expect(firstPoint.payload).toMatchObject({
+        content: expect.any(String),
+        title: expect.any(String),
+        section: expect.any(String),
+        url: sampleExtraction.source,
+        provider: 'ollama',
+        extractionMethod: 'claude-driven',
+        pageTitle: sampleExtraction.pageTitle,
+        summary: sampleExtraction.summary
+      });
+
+      // Verify arrays exist (even if empty)
+      expect(firstPoint.payload).toHaveProperty('codeExamples');
+      expect(firstPoint.payload).toHaveProperty('keyConcepts');
+      expect(firstPoint.payload).toHaveProperty('searchKeywords');
+      expect(firstPoint.payload).toHaveProperty('aliases');
     });
 
-    it.skip('should store documents in Qdrant', async () => {
-      // SKIPPED: Would check production collection
-      // Qdrant storage is tested via unit tests with mocked client
+    it('should preserve searchKeywords and aliases in payload', async () => {
+      if (!isQdrantAvailable || !isOllamaAvailable) return;
+
+      await service.embed(sampleExtraction, 'ollama', testCollection);
+
+      const points = await qdrant.scroll(testCollection, { limit: 10 });
+
+      // Find the "Getting Started" section specifically
+      const gettingStartedPoint = points.points.find(
+        p => p.payload && p.payload.section === 'Getting Started'
+      );
+
+      expect(gettingStartedPoint).toBeDefined();
+      expect(gettingStartedPoint?.payload?.searchKeywords).toContain('integration');
+      expect(gettingStartedPoint?.payload?.aliases).toContain('Setup');
     });
 
-    it.skip('should filter out short section content (< 100 chars)', async () => {
-      // SKIPPED: Would write to production collection
-      // Content filtering is tested via unit tests with mocked Qdrant
+    it('should filter out short section content (< 100 chars)', async () => {
+      if (!isQdrantAvailable || !isOllamaAvailable) return;
+
+      const shortContentExtraction: ClaudeDocOutput = {
+        ...sampleExtraction,
+        sections: [
+          {
+            title: 'Short',
+            content: 'Too short', // < 100 chars
+            searchKeywords: [],
+            aliases: [],
+            codeExamples: [],
+            keyConcepts: [],
+            warnings: [],
+            bestPractices: [],
+            relatedSections: []
+          }
+        ]
+      };
+
+      const result = await service.embed(shortContentExtraction, 'ollama', testCollection);
+
+      // Only overview document should be created (summary is long enough)
+      expect(result.documentsProcessed).toBe(1);
     });
 
-    it.skip('should filter out short code examples (< 50 chars)', async () => {
-      // SKIPPED: Would write to production collection
-      // Code example filtering is tested via unit tests
+    it('should filter out short code examples (< 50 chars)', async () => {
+      if (!isQdrantAvailable || !isOllamaAvailable) return;
+
+      const shortCodeExtraction: ClaudeDocOutput = {
+        ...sampleExtraction,
+        sections: [
+          {
+            title: 'Code Section',
+            content:
+              'This section has both short and long code examples for demonstration purposes and needs to be over 100 characters long',
+            searchKeywords: [],
+            aliases: [],
+            codeExamples: [
+              {
+                language: 'bash',
+                code: 'ls', // < 50 chars - should be filtered
+                description: 'List files',
+                demonstrates: []
+              },
+              {
+                language: 'typescript',
+                code: 'const service = new EmbedService(qdrant, "ollama");\nawait service.embed(output);', // > 50 chars
+                description: 'Use service',
+                demonstrates: ['embedding']
+              }
+            ],
+            keyConcepts: [],
+            warnings: [],
+            bestPractices: [],
+            relatedSections: []
+          }
+        ]
+      };
+
+      const result = await service.embed(shortCodeExtraction, 'ollama', testCollection);
+
+      // Should process: overview + section + 1 long code (not the 'ls' command)
+      expect(result.documentsProcessed).toBe(3);
     });
   });
 
   describe('Embedding Generation', () => {
-    it.skip('should generate embeddings for all documents', async () => {
-      // SKIPPED: Would write to production collection
-      // Embedding generation is tested via unit tests with mocked client
+    let testCollection: string;
+
+    beforeEach(() => {
+      if (!isQdrantAvailable) return;
+      testCollection = getTestCollection();
     });
 
-    it.skip('should use Ollama provider when specified', async () => {
-      // SKIPPED: Would write to production collection
-      // Provider usage is tested via unit tests
+    afterEach(async () => {
+      if (!isQdrantAvailable || !testCollection) return;
+      try {
+        await qdrant.deleteCollection(testCollection);
+      } catch {
+        // Collection might not exist
+      }
     });
 
-    it.skip('should use OpenAI provider when specified', async () => {
-      // SKIPPED: Would write to production collection
-      // Provider usage is tested via unit tests
+    it('should generate embeddings with correct dimensions (768 for Ollama)', async () => {
+      if (!isQdrantAvailable || !isOllamaAvailable) return;
+
+      await service.embed(sampleExtraction, 'ollama', testCollection);
+
+      const points = await qdrant.scroll(testCollection, { limit: 1, with_vector: true });
+      expect(points.points.length).toBeGreaterThan(0);
+
+      const vector = points.points[0].vector as number[];
+      expect(vector).toHaveLength(768);
+      expect(vector.every(v => typeof v === 'number')).toBe(true);
+    });
+
+    it('should track statistics correctly', async () => {
+      if (!isQdrantAvailable || !isOllamaAvailable) return;
+
+      const result = await service.embed(sampleExtraction, 'ollama', testCollection);
+
+      expect(result.stats.totalSections).toBe(sampleExtraction.sections.length);
+      expect(result.stats.totalCodeExamples).toBe(1); // One code example in "Getting Started"
+      expect(result.stats.totalConcepts).toBeGreaterThan(0);
+      expect(result.stats.processingTimeMs).toBeGreaterThanOrEqual(0);
+      expect(result.documentsProcessed).toBe(result.embeddingsGenerated);
+    });
+  });
+
+  describe('Semantic Search Quality', () => {
+    let testCollection: string;
+
+    beforeEach(() => {
+      if (!isQdrantAvailable) return;
+      testCollection = getTestCollection();
+    });
+
+    afterEach(async () => {
+      if (!isQdrantAvailable || !testCollection) return;
+      try {
+        await qdrant.deleteCollection(testCollection);
+      } catch {
+        // Collection might not exist
+      }
+    });
+
+    it('should enable semantic search for stored documents', async () => {
+      if (!isQdrantAvailable || !isOllamaAvailable) return;
+
+      await service.embed(sampleExtraction, 'ollama', testCollection);
+
+      // Generate search embedding for a related query
+      const searchVector = await generateEmbedding('how to get started with embeddings', 'ollama');
+
+      // Search Qdrant
+      const results = await qdrant.search(testCollection, {
+        vector: searchVector,
+        limit: 3
+      });
+
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].score).toBeGreaterThan(0.3); // Semantic relevance threshold
     });
   });
 
   describe('Error Handling', () => {
-    it.skip('should handle empty extraction gracefully', async () => {
-      // SKIPPED: Would write to production collection
-      // Error handling is tested via unit tests
+    let testCollection: string;
+
+    beforeEach(() => {
+      if (!isQdrantAvailable) return;
+      testCollection = getTestCollection();
     });
 
-    it.skip('should handle embedding generation failures', async () => {
-      // SKIPPED: Would write to production collection
-      // Better tested in unit tests with mocked generateEmbedding
+    afterEach(async () => {
+      if (!isQdrantAvailable || !testCollection) return;
+      try {
+        await qdrant.deleteCollection(testCollection);
+      } catch {
+        // Collection might not exist
+      }
     });
 
-    it.skip('should handle Qdrant connection failures', async () => {
-      // SKIPPED: Would write to production collection
-      // Better tested with mocked Qdrant client in unit tests
-    });
-  });
+    it('should handle empty extraction gracefully', async () => {
+      if (!isQdrantAvailable || !isOllamaAvailable) return;
 
-  describe('Real-World Scenarios', () => {
-    it.skip('should handle complex extraction with many sections', async () => {
-      // SKIPPED: Would write to production collection
-      // Complex document processing is tested via unit tests
-    });
+      const emptyExtraction: ClaudeDocOutput = {
+        source: 'https://test.com/empty',
+        pageTitle: 'Empty',
+        summary: '',
+        sections: [],
+        prerequisites: [],
+        useCases: [],
+        metadata: {
+          extractedAt: new Date().toISOString(),
+          modelUsed: 'claude-sonnet-4-5-20250929'
+        }
+      };
 
-    it.skip('should preserve metadata in Qdrant payload', async () => {
-      // SKIPPED: Would query production collection
-      // Metadata preservation is tested via unit tests
+      const result = await service.embed(emptyExtraction, 'ollama', testCollection);
+
+      expect(result.documentsProcessed).toBe(0);
+      expect(result.success).toBe(false);
     });
   });
 
   /**
-   * TESTS SKIPPED (require specific setup or are better tested elsewhere):
+   * TESTS NOT INCLUDED (better tested elsewhere):
    *
-   * 1. Content Formatting Details
-   *    - Exact format of "SEARCH TERMS:" prefix
-   *    - "ALSO KNOWN AS:" prefix for aliases
-   *    - Warning emoji (⚠️) and best practice checkmark (✓) formatting
-   *    Reason: Complex to verify in integration tests (requires payload inspection)
-   *    Alternative: Unit tests verify behavior, integration tests verify storage
+   * 1. Provider Comparison (Ollama vs OpenAI)
+   *    Reason: Requires OPENAI_API_KEY and costs money
+   *    Alternative: Unit tests verify provider parameter works
    *
-   * 2. Provider Switching
-   *    - Testing both Ollama and OpenAI in same test
-   *    - Comparing embedding quality between providers
-   *    Reason: Requires both providers configured and adds test complexity
-   *    Alternative: Separate manual testing for each provider
+   * 2. Large-Scale Performance (100+ documents)
+   *    Reason: Slow tests, better as manual benchmarks
+   *    Alternative: Manual performance testing with real workloads
    *
    * 3. Concurrent Embedding
-   *    - Multiple documents being embedded simultaneously
-   *    - Race conditions and thread safety
-   *    Reason: Complex to test reliably, better tested manually
+   *    Reason: Complex to test reliably, race conditions
+   *    Alternative: Manual testing with concurrent workloads
    *
-   * 4. Large-Scale Performance
-   *    - Embedding 100+ documents
-   *    - Memory usage and throughput
-   *    Reason: Slow tests, better as manual performance benchmarks
-   *
-   * 5. Semantic Search Quality
-   *    - Verifying search results are semantically relevant
-   *    - Comparing scores across different queries
-   *    Reason: Requires subjective evaluation, better tested manually
-   *    Alternative: Use recorded fixtures with known good results
-   *
-   * These scenarios are better tested with:
-   * - Unit tests with mocks (formatting, edge cases)
-   * - Manual integration testing (provider switching, performance)
-   * - Recorded fixtures (semantic quality regression)
+   * 4. Content Formatting Details (SEARCH TERMS:, ALSO KNOWN AS:, emoji)
+   *    Reason: Requires parsing stored content strings
+   *    Alternative: Unit tests verify formatting logic
    */
 });

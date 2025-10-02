@@ -52,7 +52,8 @@ export function formatSearchResults(results: SearchResult[]): string {
 
 export async function searchDocumentation(
   qdrant: QdrantClient,
-  params: SearchParams
+  params: SearchParams,
+  collectionNameOverride?: string
 ): Promise<SearchResult[]> {
   const { query, provider = 'ollama', limit = 3 } = params;
 
@@ -65,7 +66,7 @@ export async function searchDocumentation(
     try {
       // Generate query embedding
       const queryEmbedding = await generateEmbedding(query, searchProvider);
-      const collectionName = getCollectionName(searchProvider);
+      const collectionName = collectionNameOverride || getCollectionName(searchProvider);
 
       // Search in Qdrant
       const searchResults = await qdrant.query(collectionName, {

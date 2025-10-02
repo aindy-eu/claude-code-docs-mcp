@@ -35,7 +35,8 @@ export class EmbedService {
    */
   async embed(
     output: ClaudeDocOutput,
-    provider: EmbeddingProvider = this.defaultProvider
+    provider: EmbeddingProvider = this.defaultProvider,
+    collectionName?: string
   ): Promise<IngestionResult> {
     const startTime = Date.now();
     const result: IngestionResult = {
@@ -64,8 +65,8 @@ export class EmbedService {
       );
 
       // Generate embeddings and store
-      const collectionName = getCollectionName(provider);
-      await this.ensureCollection(collectionName, provider);
+      const collection = collectionName || getCollectionName(provider);
+      await this.ensureCollection(collection, provider);
 
       const points = [];
       for (const doc of documents) {
@@ -106,7 +107,7 @@ export class EmbedService {
 
       // Batch upsert to Qdrant
       if (points.length > 0) {
-        await this.qdrantClient.upsert(collectionName, {
+        await this.qdrantClient.upsert(collection, {
           points,
           wait: true
         });

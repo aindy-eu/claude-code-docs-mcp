@@ -10,7 +10,36 @@ fetch (HTML cache) → extract (JSON cache) → embed (vector DB)
 
 ## quick start
 
-### pipeline mode (recommended for development)
+### batch ingestion (fastest way to get started)
+
+```bash
+# Ingest 5 core pages (~2.5 minutes)
+npm run cli -- batch --core
+
+# Ingest all 10 pages (~5 minutes)
+npm run cli -- batch
+
+# Only update stale pages (older than 7 days)
+npm run cli -- batch --stale-only
+
+# Preview what would be ingested
+npm run cli -- batch --dry-run
+
+# Ingest specific pages
+npm run cli -- batch --pages overview,quickstart,hooks
+```
+
+### single page ingestion
+
+```bash
+# Full pipeline: fetch → extract → embed
+npm run cli -- ingest https://docs.claude.com/en/docs/claude-code/hooks
+
+# With custom model/provider
+npm run cli -- ingest URL --model claude-opus-4 --provider openai
+```
+
+### pipeline mode (original bash tools)
 
 ```bash
 # First run: ~2 minutes (fetches from network, Claude extraction, embedding)
@@ -18,13 +47,6 @@ fetch (HTML cache) → extract (JSON cache) → embed (vector DB)
 
 # Second run: <5 seconds (uses cached HTML and JSON)
 ./tools/ingest https://docs.claude.com/en/docs/claude-code/hooks --pipeline
-```
-
-### monolithic mode (original behavior)
-
-```bash
-# Always takes 2+ minutes (no caching between runs)
-./tools/ingest https://docs.claude.com/en/docs/claude-code/hooks
 ```
 
 ## individual stage tools
@@ -107,18 +129,30 @@ fetch (HTML cache) → extract (JSON cache) → embed (vector DB)
 
 ### batch operations
 
+The new TypeScript batch command is the recommended way to process multiple pages:
+
 ```bash
-# Process multiple URLs
+# Use modern batch command (recommended)
+npm run cli -- batch --core                    # 5 essential pages
+npm run cli -- batch --stale-only              # Only old docs
+npm run cli -- batch --pages overview,hooks    # Selective ingestion
+npm run cli -- batch --dry-run                 # Preview without executing
+
+# Legacy bash approach (still works)
 for url in $(cat urls.txt); do
   ./tools/ingest "$url" --pipeline
 done
 
-# Parallel processing (careful with rate limits)
-cat urls.txt | xargs -P 3 -I {} ./tools/ingest {} --pipeline --quiet
-
 # Batch embed all JSON files
 ./tools/embed --batch claude-outputs/
 ```
+
+**Batch command features:**
+- Progress tracking with task list UI
+- Automatic freshness checking (7-day TTL)
+- Smart skipping of already-ingested docs
+- Retry on failure (2 attempts per page)
+- Summary report with timing and results
 
 ### cache management
 

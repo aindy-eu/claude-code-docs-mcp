@@ -2,7 +2,7 @@
  * Tests for PipelineLogger service
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { PipelineLoggingService } from '@/services/pipeline-logging-service.js';
 import { existsSync, readFileSync, rmSync, appendFileSync } from 'fs';
 import path from 'path';
@@ -31,15 +31,16 @@ describe('PipelineLoggingService', () => {
 
   describe('Initialization', () => {
     it('should create log directory on construction', () => {
-      const _logger = new PipelineLoggingService(TEST_URL);
+      new PipelineLoggingService(TEST_URL);
       expect(existsSync(TEST_LOG_DIR)).toBe(true);
     });
 
-    it('should write logs to created directory', () => {
+    it('should extract domain from URL and create domain-specific log directory', () => {
       const logger = new PipelineLoggingService(TEST_URL);
       logger.logFetch(TEST_URL, 100);
 
       expect(existsSync(TEST_LOG_DIR)).toBe(true);
+      expect(TEST_LOG_DIR).toContain(TEST_DOMAIN);
       expect(existsSync(path.join(TEST_LOG_DIR, 'fetch.jsonl'))).toBe(true);
     });
 
@@ -246,7 +247,7 @@ describe('PipelineLoggingService', () => {
       expect(logs).toEqual([]);
     });
 
-    it('should handle corrupt log files gracefully', () => {
+    it('should return empty array when log file contains corrupt JSON', () => {
       const logger = new PipelineLoggingService(TEST_URL);
       logger.logFetch(TEST_URL, 100);
 
@@ -254,10 +255,62 @@ describe('PipelineLoggingService', () => {
       const logPath = path.join(TEST_LOG_DIR, 'fetch.jsonl');
       appendFileSync(logPath, '\nNOT VALID JSON\n');
 
-      // Should not throw, but may return empty array or partial results
-      expect(() => {
-        PipelineLoggingService.readLogs(TEST_DOMAIN, 'fetch');
-      }).not.toThrow();
+      // readLogs returns empty array on ANY JSON parse error
+      const logs = PipelineLoggingService.readLogs(TEST_DOMAIN, 'fetch');
+      expect(logs).toEqual([]);
+    });
+
+    it('should ignore empty lines in JSONL files', () => {
+      // Create logger to ensure directory exists
+      const logger = new PipelineLoggingService(TEST_URL);
+      logger.logFetch(TEST_URL, 100); // Creates the file
+
+      const logPath = path.join(TEST_LOG_DIR, 'fetch.jsonl');
+
+      // Append empty lines and another entry
+      const entry2 = { level: 'error', stage: 'fetch', timestamp: '2025-01-01T00:00:01Z' };
+
+      appendFileSync(logPath, '\n'); // Empty line
+      appendFileSync(logPath, '   \n'); // Whitespace-only line
+      appendFileSync(logPath, JSON.stringify(entry2) + '\n');
+
+      const logs = PipelineLoggingService.readLogs(TEST_DOMAIN, 'fetch');
+      expect(logs.length).toBe(2); // Original + new entry, empty lines ignored
+      expect(logs[0].level).toBe('info'); // From initial logFetch
+      expect(logs[1].level).toBe('error');
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should generate ISO 8601 timestamps', () => {
+      const logger = new PipelineLoggingService(TEST_URL);
+      logger.logFetch(TEST_URL, 100);
+
+      const logs = PipelineLoggingService.readLogs(TEST_DOMAIN, 'fetch');
+      // ISO 8601 format: 2025-01-01T12:34:56.789Z
+      expect(logs[0].timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    });
+
+    it('should handle readLogs errors gracefully and return empty array', () => {
+      // Spy on console to verify error logging
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const logger = new PipelineLoggingService(TEST_URL);
+      logger.logFetch(TEST_URL, 100);
+
+      // Corrupt the file with invalid JSON
+      const logPath = path.join(TEST_LOG_DIR, 'fetch.jsonl');
+      appendFileSync(logPath, 'INVALID JSON');
+
+      const logs = PipelineLoggingService.readLogs(TEST_DOMAIN, 'fetch');
+
+      expect(logs).toEqual([]);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        '[LOGGER] Failed to read logs:',
+        expect.any(Error)
+      );
+
+      consoleErrorSpy.mockRestore();
     });
   });
 

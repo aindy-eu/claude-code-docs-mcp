@@ -19,12 +19,12 @@ The ingestion pipeline now tracks documents through multiple stages, providing v
   - `status`: "extracted"
   - `rawResponseSize`: Size in bytes
 
-### 3. **formatted**
-- JSON successfully extracted and validated from Claude's response
-- Stored in: `.data/{domain}/extracted/{name}.json`
+### 3. **structured**
+- JSON successfully validated and cleaned from Claude's response
+- Stored in: `.data/{domain}/structured/{name}.json`
 - Manifest fields:
-  - `lastFormattedAt`: Timestamp
-  - `status`: "formatted"
+  - `lastStructuredAt`: Timestamp
+  - `status`: "structured"
   - `outputSize`: JSON file size
   - `sectionCount`: Number of sections
   - `codeExampleCount`: Number of code examples
@@ -57,7 +57,7 @@ The ingestion pipeline now tracks documents through multiple stages, providing v
       "url": "https://docs.claude.com/page",
       "lastFetchedAt": "2025-09-30T14:00:00Z",
       "lastExtractedAt": "2025-09-30T14:01:00Z",
-      "lastFormattedAt": "2025-09-30T14:01:10Z",
+      "lastStructuredAt": "2025-09-30T14:01:10Z",
       "lastEmbeddedAt": "2025-09-30T14:01:20Z",
       "status": "embedded",
       "rawResponseSize": 12000,
@@ -84,13 +84,13 @@ The manifest is automatically updated at each stage:
 
 ```bash
 # Fetch updates status to "fetched"
-./tools/fetch https://docs.claude.com/page
+npm run cli -- fetch https://docs.claude.com/page
 
-# Extract updates to "extracted" then "formatted"
-./tools/extract https://docs.claude.com/page
+# Extract updates to "extracted" then "structured"
+npm run cli -- extract https://docs.claude.com/page
 
 # Embed updates to "embedded"
-./tools/embed .data/docs.claude.com/extracted/page.json
+npm run cli -- embed https://docs.claude.com/page
 ```
 
 Check status:
@@ -103,6 +103,6 @@ jq '.records["https://docs.claude.com/page"]' .data/docs.claude.com/manifest.jso
 If a document is stuck in an intermediate state:
 
 - **fetched** but not extracted → Run extract
-- **extracted** but not formatted → Check raw-response.txt and run format-response
-- **formatted** but not embedded → Run embed
+- **extracted** but not structured → Check raw-response.txt for JSON issues
+- **structured** but not embedded → Run embed
 - **failed** → Check lastError and restart from appropriate stage
