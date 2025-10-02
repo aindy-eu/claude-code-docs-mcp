@@ -1,31 +1,35 @@
-import { jest } from '@jest/globals';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
-// First, let's mock the dependencies at module level
-const mockOllamaEmbeddings = jest.fn() as jest.MockedFunction<any>;
-const mockOpenAICreate = jest.fn() as jest.MockedFunction<any>;
+// Create shared mock function for OpenAI BEFORE vi.mock()
+const mockOpenAICreate = vi.fn();
 
-jest.mock('ollama', () => ({
+// Mock with proper factory functions
+vi.mock('ollama', () => ({
   __esModule: true,
   default: {
-    embeddings: mockOllamaEmbeddings
+    embeddings: vi.fn()
   }
 }));
 
-jest.mock('openai', () => ({
+vi.mock('openai', () => ({
   __esModule: true,
   default: class MockOpenAI {
     embeddings = {
-      create: mockOpenAICreate
+      create: mockOpenAICreate // Use the pre-defined function
     };
   }
 }));
 
 // Import the module we're testing
 import { generateEmbedding, getCollectionName, EMBEDDING_CONFIGS } from '@/utils/embeddings.js';
+import ollama from 'ollama';
+
+// Get typed reference to ollama mock
+const mockOllamaEmbeddings = vi.mocked(ollama.embeddings);
 
 describe('Embedding Service', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockOllamaEmbeddings.mockReset();
     mockOpenAICreate.mockReset();
 

@@ -1,7 +1,6 @@
 import eslint from '@eslint/js';
 import tseslint from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
-import jestPlugin from 'eslint-plugin-jest';
 import prettierConfig from 'eslint-config-prettier';
 import prettierPlugin from 'eslint-plugin-prettier';
 
@@ -31,7 +30,6 @@ export default [
     },
     plugins: {
       '@typescript-eslint': tseslint,
-      jest: jestPlugin,
       prettier: prettierPlugin
     },
     rules: {
@@ -54,12 +52,9 @@ export default [
   },
   {
     files: ['**/*.test.ts', '**/*.spec.ts', 'tests/**/*.ts'],
-    plugins: {
-      jest: jestPlugin
-    },
     languageOptions: {
       globals: {
-        jest: 'readonly',
+        vi: 'readonly',
         describe: 'readonly',
         it: 'readonly',
         expect: 'readonly',
@@ -72,7 +67,6 @@ export default [
       }
     },
     rules: {
-      ...jestPlugin.configs.recommended.rules,
       '@typescript-eslint/no-explicit-any': 'off' // More permissive in tests
     }
   },
@@ -83,6 +77,7 @@ export default [
       'node_modules/',
       'coverage/',
       '*.config.js',
+      '*.config.ts',
       '*.config.mjs',
       '*.config.cjs',
       'docs/',

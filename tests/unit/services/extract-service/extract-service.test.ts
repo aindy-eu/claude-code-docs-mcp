@@ -3,6 +3,7 @@
  * Uses REAL extracted JSON from .data/test.com/structured/test.json
  */
 
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ExtractService } from '@/services/extract-service.js';
 import { existsSync, readFileSync, rmSync } from 'fs';
 import path from 'path';

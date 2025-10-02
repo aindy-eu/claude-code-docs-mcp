@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { registerTools } from '@/mcp-tools/index.js';
@@ -42,9 +43,13 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
     }
 
     // Mock the generateEmbedding function to return our fixed embedding
-    jest.mock('../../src/utils/embeddings.js', () => ({
-      ...jest.requireActual('../../src/utils/embeddings.js'),
-      generateEmbedding: jest.fn(() => Promise.resolve(fixedEmbedding))
+    vi.mock('../../src/utils/embeddings.js', () => ({
+      generateEmbedding: vi.fn(() => Promise.resolve(fixedEmbedding)),
+      getCollectionName: vi.fn().mockReturnValue('test-collection'),
+      EMBEDDING_CONFIGS: {
+        ollama: { dimensions: 768, model: 'nomic-embed-text' },
+        openai: { dimensions: 1536, model: 'text-embedding-ada-002' }
+      }
     }));
 
     // Create test server
@@ -118,7 +123,7 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
     it('should list available tools', async () => {
       // Create a mock handler to capture the registered handler
       let registeredHandler: any;
-      const mockSetRequestHandler = jest.fn((schema, handler) => {
+      const mockSetRequestHandler = vi.fn((schema, handler) => {
         if (schema === ListToolsRequestSchema) {
           registeredHandler = handler;
         }
@@ -157,11 +162,10 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
     // Since we're doing integration tests, let's test with actual embeddings
     // The tests will use the real collection name 'claude_code_docs_ollama'
 
-    // eslint-disable-next-line jest/no-disabled-tests
     it.skip('should execute search tool successfully (requires populated collection)', async () => {
       // Create a mock handler to capture the registered handler
       let registeredHandler: any;
-      const mockSetRequestHandler = jest.fn((schema, handler) => {
+      const mockSetRequestHandler = vi.fn((schema, handler) => {
         if (schema === CallToolRequestSchema) {
           registeredHandler = handler;
         }
@@ -203,12 +207,11 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
       expect(response.content[0].text).toContain('Claude Code Documentation Search Results');
     });
 
-    // eslint-disable-next-line jest/no-disabled-tests
     it.skip('should handle search with different providers (requires populated collection)', async () => {
       // Set up test server and handler
       let registeredHandler: any;
       const testServer = {
-        setRequestHandler: jest.fn((schema, handler) => {
+        setRequestHandler: vi.fn((schema, handler) => {
           if (schema === CallToolRequestSchema) {
             registeredHandler = handler;
           }
@@ -239,7 +242,7 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
       // Test with a provider that requires API key we don't have
       let registeredHandler: any;
       const testServer = {
-        setRequestHandler: jest.fn((schema, handler) => {
+        setRequestHandler: vi.fn((schema, handler) => {
           if (schema === CallToolRequestSchema) {
             registeredHandler = handler;
           }
@@ -274,7 +277,7 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
       // Set up test server and handler
       let registeredHandler: any;
       const testServer = {
-        setRequestHandler: jest.fn((schema, handler) => {
+        setRequestHandler: vi.fn((schema, handler) => {
           if (schema === CallToolRequestSchema) {
             registeredHandler = handler;
           }
@@ -303,7 +306,7 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
       // Set up test server and handler
       let registeredHandler: any;
       const testServer = {
-        setRequestHandler: jest.fn((schema, handler) => {
+        setRequestHandler: vi.fn((schema, handler) => {
           if (schema === CallToolRequestSchema) {
             registeredHandler = handler;
           }
@@ -333,7 +336,7 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
       // Set up test server and handler
       let registeredHandler: any;
       const testServer = {
-        setRequestHandler: jest.fn((schema, handler) => {
+        setRequestHandler: vi.fn((schema, handler) => {
           if (schema === CallToolRequestSchema) {
             registeredHandler = handler;
           }
@@ -362,7 +365,7 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
       // Capture the tools list handler
       let listToolsHandler: any;
       const testServer = {
-        setRequestHandler: jest.fn((schema, handler) => {
+        setRequestHandler: vi.fn((schema, handler) => {
           if (schema === ListToolsRequestSchema) {
             listToolsHandler = handler;
           }

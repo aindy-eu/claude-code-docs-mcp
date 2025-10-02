@@ -2,6 +2,7 @@
  * Tests for ManifestService
  */
 
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ManifestService } from '@/services/manifest-service.js';
 import { existsSync, readFileSync, rmSync } from 'fs';
 import path from 'path';

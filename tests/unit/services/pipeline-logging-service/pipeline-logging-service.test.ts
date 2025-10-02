@@ -2,6 +2,7 @@
  * Tests for PipelineLogger service
  */
 
+import { describe, it, expect, beforeEach } from 'vitest';
 import { PipelineLoggingService } from '@/services/pipeline-logging-service.js';
 import { existsSync, readFileSync, rmSync, appendFileSync } from 'fs';
 import path from 'path';

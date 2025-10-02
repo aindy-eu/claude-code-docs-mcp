@@ -1,4 +1,5 @@
 import { config } from 'dotenv';
+import { vi, beforeAll } from 'vitest';
 
 // Load test environment variables
 config({ path: '.env.test' });
@@ -13,10 +14,10 @@ const originalConsoleInfo = console.info;
 global.beforeAll(() => {
   // Suppress logger output during tests
   // You can still see test results, but not [INFO]/[ERROR] spam
-  console.log = jest.fn();
-  console.error = jest.fn();
-  console.warn = jest.fn();
-  console.info = jest.fn();
+  console.log = vi.fn();
+  console.error = vi.fn();
+  console.warn = vi.fn();
+  console.info = vi.fn();
 });
 
 global.afterAll(() => {
@@ -41,6 +42,3 @@ beforeAll(async () => {
     process.env.DEFAULT_EMBEDDING_PROVIDER = 'ollama';
   }
 });
-
-// Global test timeout
-jest.setTimeout(30000);
