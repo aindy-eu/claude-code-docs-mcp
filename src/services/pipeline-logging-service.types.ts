@@ -20,5 +20,5 @@ export interface LogEntry {
   section_count?: number;
   code_example_count?: number;
   vector_count?: number;
-  [key: string]: any;
+  [key: string]: string | number | undefined;
 }

@@ -8,12 +8,7 @@ import { createHash } from 'crypto';
 import path from 'path';
 import fetch from 'node-fetch';
 import { logger } from '../utils/logger.js';
-import {
-  FetchResult,
-  CacheMetadata,
-  CachePaths,
-  ContentComparison
-} from './fetch-service.types.js';
+import { FetchResult, CachePaths, ContentComparison } from './fetch-service.types.js';
 
 export class FetchService {
   private domain: string;
@@ -68,7 +63,7 @@ export class FetchService {
       }
 
       return cachePath;
-    } catch (error) {
+    } catch {
       // Fallback to hash-based path for invalid URLs
       const hash = createHash('sha256').update(url).digest('hex');
       return `_invalid/${hash.substring(0, 16)}/`;

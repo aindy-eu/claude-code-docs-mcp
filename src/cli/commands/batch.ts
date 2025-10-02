@@ -51,20 +51,21 @@ export class BatchCommand {
    * Get URLs to process based on options
    */
   private getUrlsToProcess(options: BatchOptions): string[] {
-    let pageKeys: string[];
+    type PageKey = keyof typeof DOCUMENTATION_SOURCES.CLAUDE_CODE.pages;
+    let pageKeys: PageKey[];
 
     if (options.pages) {
       // Custom page selection
-      pageKeys = options.pages;
+      pageKeys = options.pages as PageKey[];
     } else if (options.core) {
       // Core pages only
-      pageKeys = CORE_PAGES as unknown as string[];
+      pageKeys = CORE_PAGES;
     } else {
       // All pages (default)
-      pageKeys = Object.keys(DOCUMENTATION_SOURCES.CLAUDE_CODE.pages);
+      pageKeys = Object.keys(DOCUMENTATION_SOURCES.CLAUDE_CODE.pages) as PageKey[];
     }
 
-    return pageKeys.map(key => this.urlService.getPageUrl(key as any));
+    return pageKeys.map(key => this.urlService.getPageUrl(key));
   }
 
   /**
@@ -305,10 +306,11 @@ export class BatchCommand {
                       } else {
                         ctx.results.success.push(url);
                       }
-                    } catch (error: any) {
+                    } catch (error: unknown) {
+                      const message = error instanceof Error ? error.message : String(error);
                       ctx.results.failed.push({
                         url,
-                        error: error.message
+                        error: message
                       });
                       throw error;
                     }
@@ -333,8 +335,9 @@ export class BatchCommand {
 
       // Show summary
       this.showSummary(ctx);
-    } catch (error: any) {
-      console.error(chalk.red('\n✗ Batch ingestion failed:'), error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(chalk.red('\n✗ Batch ingestion failed:'), message);
       process.exit(1);
     }
   }
@@ -372,7 +375,9 @@ export class BatchCommand {
       });
     }
     if (ctx.results.skipped.length > 0) {
-      console.info(chalk.yellow(`⏭️  Skipped: ${ctx.results.skipped.length} (fresh - not checked)`));
+      console.info(
+        chalk.yellow(`⏭️  Skipped: ${ctx.results.skipped.length} (fresh - not checked)`)
+      );
     }
 
     // Storage info

@@ -1,16 +1,19 @@
 #!/usr/bin/env tsx
 
 import { execSync } from 'child_process';
-import { existsSync } from 'fs';
+
+// Service URLs
+const QDRANT_URL = 'http://localhost:6333';
+const OLLAMA_URL = 'http://localhost:11434';
 
 console.info('🧪 Claude Code Documentation MCP Server - Test Runner\n');
 
 // Check if Qdrant is running for integration tests
 async function checkQdrantHealth(): Promise<boolean> {
   try {
-    const response = await fetch('http://localhost:6333/health');
+    const response = await globalThis.fetch(`${QDRANT_URL}/health`);
     return response.ok;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -18,9 +21,9 @@ async function checkQdrantHealth(): Promise<boolean> {
 // Check if Ollama is running for real embedding tests
 async function checkOllamaHealth(): Promise<boolean> {
   try {
-    const response = await fetch('http://localhost:11434/api/tags');
+    const response = await globalThis.fetch(`${OLLAMA_URL}/api/tags`);
     return response.ok;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -35,9 +38,9 @@ async function runTests() {
   const qdrantHealthy = await checkQdrantHealth();
   const ollamaHealthy = await checkOllamaHealth();
 
-  console.info('🔍 Dependency Check:');
-  console.info(`  Qdrant (localhost:6333): ${qdrantHealthy ? '✅ Available' : '❌ Not available'}`);
-  console.info(`  Ollama (localhost:11434): ${ollamaHealthy ? '✅ Available' : '❌ Not available'}`);
+  console.info('Dependency Check:');
+  console.info(`Qdrant (localhost:6333): ${qdrantHealthy ? '✅ Available' : '❌ Not available'}`);
+  console.info(`Ollama (localhost:11434): ${ollamaHealthy ? '✅ Available' : '❌ Not available'}`);
   console.info('');
 
   // Determine which tests to run

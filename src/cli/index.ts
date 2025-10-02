@@ -8,6 +8,10 @@ import { DEFAULT_TTL_DAYS } from '../config/constants.js';
 
 const program = new Command();
 
+// Helper to extract error message
+const getErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
+
 program
   .name('doc-mcp-cli')
   .description('Universal documentation intelligence CLI')
@@ -35,8 +39,8 @@ program
       }
 
       await batchCmd.run(options);
-    } catch (error: any) {
-      console.error(chalk.red('✗ Batch ingestion failed:'), error.message);
+    } catch (error: unknown) {
+      console.error(chalk.red('✗ Batch ingestion failed:'), getErrorMessage(error));
       process.exit(1);
     }
   });
@@ -54,8 +58,8 @@ program
     try {
       const orchestrator = new PipelineOrchestrator();
       await orchestrator.ingest(url, options);
-    } catch (error: any) {
-      console.error(chalk.red('✗ Ingestion failed:'), error.message);
+    } catch (error: unknown) {
+      console.error(chalk.red('✗ Ingestion failed:'), getErrorMessage(error));
       process.exit(1);
     }
   });
@@ -68,8 +72,8 @@ program
     try {
       const orchestrator = new PipelineOrchestrator();
       await orchestrator.fetch(url);
-    } catch (error: any) {
-      console.error(chalk.red('✗ Fetch failed:'), error.message);
+    } catch (error: unknown) {
+      console.error(chalk.red('✗ Fetch failed:'), getErrorMessage(error));
       process.exit(1);
     }
   });
@@ -85,8 +89,8 @@ program
     try {
       const orchestrator = new PipelineOrchestrator();
       await orchestrator.extract(url, options);
-    } catch (error: any) {
-      console.error(chalk.red('✗ Extraction failed:'), error.message);
+    } catch (error: unknown) {
+      console.error(chalk.red('✗ Extraction failed:'), getErrorMessage(error));
       process.exit(1);
     }
   });
@@ -100,8 +104,8 @@ program
     try {
       const orchestrator = new PipelineOrchestrator();
       await orchestrator.embed(url, options);
-    } catch (error: any) {
-      console.error(chalk.red('✗ Embedding failed:'), error.message);
+    } catch (error: unknown) {
+      console.error(chalk.red('✗ Embedding failed:'), getErrorMessage(error));
       process.exit(1);
     }
   });
@@ -114,8 +118,8 @@ program
     try {
       const orchestrator = new PipelineOrchestrator();
       await orchestrator.status(url);
-    } catch (error: any) {
-      console.error(chalk.red('✗ Status check failed:'), error.message);
+    } catch (error: unknown) {
+      console.error(chalk.red('✗ Status check failed:'), getErrorMessage(error));
       process.exit(1);
     }
   });
@@ -128,8 +132,8 @@ program
     try {
       const orchestrator = new PipelineOrchestrator();
       await orchestrator.list();
-    } catch (error: any) {
-      console.error(chalk.red('✗ List failed:'), error.message);
+    } catch (error: unknown) {
+      console.error(chalk.red('✗ List failed:'), getErrorMessage(error));
       process.exit(1);
     }
   });
@@ -147,8 +151,8 @@ program
         provider: options.provider,
         limit: parseInt(options.limit)
       });
-    } catch (error: any) {
-      console.error(chalk.red('✗ Search failed:'), error.message);
+    } catch (error: unknown) {
+      console.error(chalk.red('✗ Search failed:'), getErrorMessage(error));
       process.exit(1);
     }
   });

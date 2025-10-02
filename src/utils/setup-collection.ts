@@ -27,11 +27,12 @@ async function setupCollection(provider: EmbeddingProvider) {
     console.info(`   - Provider: ${provider}`);
     console.info(`   - Model: ${config.model}`);
     console.info(`   - Dimensions: ${config.dimensions}`);
-  } catch (error: any) {
-    if (error.message?.includes('already exists')) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes('already exists')) {
       console.info(`⚠️  Collection "${collectionName}" already exists`);
     } else {
-      console.error(`❌ Error creating collection "${collectionName}":`, error.message);
+      console.error(`❌ Error creating collection "${collectionName}":`, message);
       throw error;
     }
   }
@@ -56,8 +57,9 @@ async function setupAllCollections() {
     console.info('\nNext steps:');
     console.info('1. Use Claude-driven ingestion: npm run cli -- batch --core');
     console.info('2. Run "npm start" to start the MCP server');
-  } catch (error: any) {
-    console.error('❌ Setup failed:', error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ Setup failed:', message);
     console.info('\n💡 Make sure Qdrant is running:');
     console.info('   docker run -p 6333:6333 -p 6334:6334 qdrant/qdrant');
     process.exit(1);

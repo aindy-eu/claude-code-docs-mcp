@@ -5,16 +5,12 @@
 
 import chalk from 'chalk';
 import ora from 'ora';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { IngestOptions, ExtractOptions, EmbedOptions, FetchOptions } from './types.js';
+import { IngestOptions, ExtractOptions, EmbedOptions } from './types.js';
 import { fetchStage } from './fetch.js';
 import { extractStage } from './extract.js';
 import { embedStage } from './embed.js';
-
-const execAsync = promisify(exec);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -61,8 +57,9 @@ export class PipelineOrchestrator {
       await this.embed(finalUrl, { provider: options.provider }, true);
 
       spinner.succeed(chalk.green(`✓ Successfully ingested ${finalUrl}`));
-    } catch (error: any) {
-      spinner.fail(chalk.red(`✗ Ingestion failed: ${error.message}`));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      spinner.fail(chalk.red(`✗ Ingestion failed: ${message}`));
       throw error;
     }
   }
@@ -123,7 +120,7 @@ export class PipelineOrchestrator {
       if (record.codeExampleCount)
         console.info(`${chalk.cyan('Examples:')} ${record.codeExampleCount}`);
       console.info(chalk.gray('─'.repeat(50)));
-    } catch (error: any) {
+    } catch (error: unknown) {
       spinner.fail(chalk.red('✗ Status check failed'));
       throw error;
     }
@@ -145,14 +142,20 @@ export class PipelineOrchestrator {
       console.info(chalk.bold('\nIngested Documentation:'));
       console.info(chalk.gray('─'.repeat(80)));
 
-      const records = Object.values(manifest.records) as any[];
+      type ManifestRecord = {
+        url: string;
+        status: string;
+        lastExtractedAt?: string;
+        extractionModel?: string;
+      };
+      const records = Object.values(manifest.records) as ManifestRecord[];
 
       if (records.length === 0) {
         console.info(chalk.yellow('No documents ingested yet.'));
         return;
       }
 
-      records.forEach((record: any) => {
+      records.forEach(record => {
         const url = record.url.replace('https://docs.claude.com', '');
         console.info(
           `${this.colorStatus(record.status)} ${chalk.cyan(url)} ${chalk.gray(
@@ -163,14 +166,15 @@ export class PipelineOrchestrator {
 
       console.info(chalk.gray('─'.repeat(80)));
       console.info(chalk.bold(`Total: ${records.length} documents`));
-    } catch (error: any) {
+    } catch (error: unknown) {
       spinner.fail(chalk.red('✗ List failed'));
       throw error;
     }
   }
 
   private colorStatus(status: string): string {
-    const colors: Record<string, any> = {
+    type ChalkFunction = typeof chalk.yellow;
+    const colors: Record<string, ChalkFunction> = {
       fetched: chalk.yellow,
       extracted: chalk.blue,
       structured: chalk.blue,

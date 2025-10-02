@@ -38,7 +38,7 @@ export function formatSearchResults(results: SearchResult[]): string {
     // Add code examples if available
     if (result.codeExamples && result.codeExamples.length > 0) {
       formatted += `**Code Examples:**\\n`;
-      result.codeExamples.slice(0, 2).forEach((example, i) => {
+      result.codeExamples.slice(0, 2).forEach(example => {
         formatted += `\`\`\`\\n${example}\\n\`\`\`\\n`;
       });
       formatted += `\\n`;
@@ -93,7 +93,7 @@ export async function searchDocumentation(
       }));
 
       results.push(...providerResults);
-    } catch (error: any) {
+    } catch (error: unknown) {
       // If one provider fails, try to continue with others
       if (providersToSearch.length === 1) {
         throw error;

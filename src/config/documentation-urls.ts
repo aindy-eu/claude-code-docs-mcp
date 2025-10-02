@@ -225,7 +225,7 @@ export class DocumentationUrlService {
     lines.push('', '# Full URLs');
     for (const [key] of Object.entries(this.source.pages)) {
       const envKey = key.replace(/([A-Z])/g, '_$1').toUpperCase();
-      const url = this.getPageUrl(key as any);
+      const url = this.getPageUrl(key as keyof typeof DOCUMENTATION_SOURCES.CLAUDE_CODE.pages);
       lines.push(`DOCS_URL_${envKey}="${url}"`);
     }
 

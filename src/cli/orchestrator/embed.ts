@@ -61,10 +61,11 @@ export async function embedStage(
     logger.logEmbed(url, provider, duration, result.embeddingsGenerated);
 
     spinner?.succeed(chalk.green(`✓ Embedding complete (${result.embeddingsGenerated} vectors)`));
-  } catch (error: any) {
+  } catch (error: unknown) {
     const duration = Date.now() - startTime;
+    const message = error instanceof Error ? error.message : String(error);
     const logger = new PipelineLoggingService(url);
-    logger.logEmbedError(url, provider, error.message, duration);
+    logger.logEmbedError(url, provider, message, duration);
 
     spinner?.fail(chalk.red('✗ Embedding failed'));
     throw error;

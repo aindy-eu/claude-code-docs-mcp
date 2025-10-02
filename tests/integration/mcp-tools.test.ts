@@ -15,7 +15,7 @@ const checkQdrantAvailable = async () => {
   try {
     await qdrant.getCollections();
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 };
@@ -62,7 +62,7 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
     // Set up test collection with sample data - ensure clean state
     try {
       await qdrant.deleteCollection(testCollectionName);
-    } catch (error) {
+    } catch {
       // Collection might not exist
     }
 
@@ -109,7 +109,7 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
   afterAll(async () => {
     try {
       await qdrant.deleteCollection(testCollectionName);
-    } catch (error) {
+    } catch {
       // Collection might not exist
     }
   });
@@ -138,17 +138,18 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
         expect.any(Function)
       );
 
-      // Call the handler and verify response
-      if (registeredHandler) {
-        const response = await registeredHandler({ method: 'tools/list', params: {} });
-        expect(response).toHaveProperty('tools');
-        expect(Array.isArray(response.tools)).toBe(true);
-        expect(response.tools.length).toBeGreaterThan(0);
+      // Handler must be registered
+      expect(registeredHandler).toBeDefined();
 
-        const searchTool = response.tools.find((t: any) => t.name === 'search_claude_code_docs');
-        expect(searchTool).toBeDefined();
-        expect(searchTool?.description).toContain('Claude Code documentation');
-      }
+      // Call the handler and verify response
+      const response = await registeredHandler({ method: 'tools/list', params: {} });
+      expect(response).toHaveProperty('tools');
+      expect(Array.isArray(response.tools)).toBe(true);
+      expect(response.tools.length).toBeGreaterThan(0);
+
+      const searchTool = response.tools.find((t: any) => t.name === 'search_claude_code_docs');
+      expect(searchTool).toBeDefined();
+      expect(searchTool?.description).toContain('Claude Code documentation');
     });
   });
 
@@ -156,6 +157,7 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
     // Since we're doing integration tests, let's test with actual embeddings
     // The tests will use the real collection name 'claude_code_docs_ollama'
 
+    // eslint-disable-next-line jest/no-disabled-tests
     it.skip('should execute search tool successfully (requires populated collection)', async () => {
       // Create a mock handler to capture the registered handler
       let registeredHandler: any;
@@ -191,15 +193,17 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
         }
       };
 
-      if (registeredHandler) {
-        const response = await registeredHandler(request);
-        expect(response).toHaveProperty('content');
-        expect(Array.isArray(response.content)).toBe(true);
-        expect(response.content[0]).toHaveProperty('type', 'text');
-        expect(response.content[0].text).toContain('Claude Code Documentation Search Results');
-      }
+      // Handler must be registered
+      expect(registeredHandler).toBeDefined();
+
+      const response = await registeredHandler(request);
+      expect(response).toHaveProperty('content');
+      expect(Array.isArray(response.content)).toBe(true);
+      expect(response.content[0]).toHaveProperty('type', 'text');
+      expect(response.content[0].text).toContain('Claude Code Documentation Search Results');
     });
 
+    // eslint-disable-next-line jest/no-disabled-tests
     it.skip('should handle search with different providers (requires populated collection)', async () => {
       // Set up test server and handler
       let registeredHandler: any;
@@ -224,10 +228,11 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
         }
       };
 
-      if (registeredHandler) {
-        const response = await registeredHandler(request);
-        expect(response.content[0].text).toContain('Hooks');
-      }
+      // Handler must be registered
+      expect(registeredHandler).toBeDefined();
+
+      const response = await registeredHandler(request);
+      expect(response.content[0].text).toContain('Hooks');
     });
 
     it('should handle search errors gracefully', async () => {
@@ -257,11 +262,12 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
         }
       };
 
-      if (registeredHandler) {
-        const response = await registeredHandler(request);
-        // Should return error message, not throw
-        expect(response.content[0].text).toContain('Error searching Claude Code documentation');
-      }
+      // Handler must be registered
+      expect(registeredHandler).toBeDefined();
+
+      const response = await registeredHandler(request);
+      // Should return error message, not throw
+      expect(response.content[0].text).toContain('Error searching Claude Code documentation');
     });
 
     it('should validate required parameters', async () => {
@@ -285,11 +291,12 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
         }
       };
 
-      if (registeredHandler) {
-        const response = await registeredHandler(request);
-        // The search will fail due to missing query, but should return error message
-        expect(response.content[0].text).toContain('Error');
-      }
+      // Handler must be registered
+      expect(registeredHandler).toBeDefined();
+
+      const response = await registeredHandler(request);
+      // The search will fail due to missing query, but should return error message
+      expect(response.content[0].text).toContain('Error');
     });
 
     it('should use default parameters', async () => {
@@ -315,10 +322,11 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
         }
       };
 
-      if (registeredHandler) {
-        const response = await registeredHandler(request);
-        expect(response.content).toBeDefined();
-      }
+      // Handler must be registered
+      expect(registeredHandler).toBeDefined();
+
+      const response = await registeredHandler(request);
+      expect(response.content).toBeDefined();
     });
 
     it('should handle unknown tool names', async () => {
@@ -342,9 +350,10 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
         }
       };
 
-      if (registeredHandler) {
-        await expect(registeredHandler(request)).rejects.toThrow('Unknown tool: unknown_tool');
-      }
+      // Handler must be registered
+      expect(registeredHandler).toBeDefined();
+
+      await expect(registeredHandler(request)).rejects.toThrow('Unknown tool: unknown_tool');
     });
   });
 
@@ -362,19 +371,20 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
 
       registerTools(testServer, qdrant);
 
-      // Call the list tools handler to get the tool schemas
-      if (listToolsHandler) {
-        const response = await listToolsHandler({ method: 'tools/list', params: {} });
-        const searchTool = response.tools.find(
-          (tool: any) => tool.name === 'search_claude_code_docs'
-        );
+      // Handler must be registered
+      expect(listToolsHandler).toBeDefined();
 
-        expect(searchTool).toBeDefined();
-        expect(searchTool?.inputSchema).toHaveProperty('type', 'object');
-        expect(searchTool?.inputSchema).toHaveProperty('properties');
-        expect(searchTool?.inputSchema.properties).toHaveProperty('query');
-        expect(searchTool?.inputSchema.required).toContain('query');
-      }
+      // Call the list tools handler to get the tool schemas
+      const response = await listToolsHandler({ method: 'tools/list', params: {} });
+      const searchTool = response.tools.find(
+        (tool: any) => tool.name === 'search_claude_code_docs'
+      );
+
+      expect(searchTool).toBeDefined();
+      expect(searchTool?.inputSchema).toHaveProperty('type', 'object');
+      expect(searchTool?.inputSchema).toHaveProperty('properties');
+      expect(searchTool?.inputSchema.properties).toHaveProperty('query');
+      expect(searchTool?.inputSchema.required).toContain('query');
     });
   });
 });

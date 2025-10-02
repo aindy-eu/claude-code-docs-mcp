@@ -96,10 +96,11 @@ export class EmbedService {
           });
 
           result.embeddingsGenerated++;
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : String(error);
           logger.error(`Error generating embedding for document ${doc.id}:`, error);
           if (!result.errors) result.errors = [];
-          result.errors.push(`Embedding generation failed for ${doc.title}: ${error.message}`);
+          result.errors.push(`Embedding generation failed for ${doc.title}: ${message}`);
         }
       }
 
@@ -117,9 +118,10 @@ export class EmbedService {
       logger.info(
         `Processed ${result.documentsProcessed} documents in ${result.stats.processingTimeMs}ms`
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
       logger.error('Error processing Claude output:', error);
-      result.errors = [error.message];
+      result.errors = [message];
     }
 
     return result;
@@ -307,7 +309,7 @@ export class EmbedService {
   ): Promise<void> {
     try {
       await this.qdrantClient.getCollection(collectionName);
-    } catch (error: any) {
+    } catch {
       // Collection doesn't exist, create it
       const dimensions = EMBEDDING_CONFIGS[provider].dimensions;
       await this.qdrantClient.createCollection(collectionName, {

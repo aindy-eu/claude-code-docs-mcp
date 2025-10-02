@@ -57,11 +57,12 @@ export class SearchCommand {
       );
       console.info(chalk.green(`✓ Extraction method: Claude-driven`));
       console.info();
-    } catch (error: any) {
-      console.error(chalk.red('\n❌ Search failed:'), error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(chalk.red('\n❌ Search failed:'), message);
 
       // Helpful error messages
-      if (error.message.includes('Not Found')) {
+      if (message.includes('Not Found')) {
         console.warn(chalk.yellow('\nNo collection found. Try:'));
         console.info(chalk.cyan('  npm run setup           ') + chalk.gray('# Create collections'));
         console.info(

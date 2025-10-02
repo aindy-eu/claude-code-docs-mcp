@@ -10,7 +10,7 @@ export class MockQdrantClient {
     };
   }
 
-  async createCollection(name: string, config: any) {
+  async createCollection(name: string, _config: any) {
     if (this.collections.has(name)) {
       throw new Error(`Collection ${name} already exists`);
     }
@@ -35,7 +35,7 @@ export class MockQdrantClient {
     };
   }
 
-  async query(collectionName: string, params: any) {
+  async query(collectionName: string, _params: any) {
     if (!this.collections.has(collectionName)) {
       throw new Error(`Collection ${collectionName} not found`);
     }

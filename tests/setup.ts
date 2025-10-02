@@ -8,6 +8,7 @@ config({ path: '.env.test' });
 const originalConsoleLog = console.log;
 const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;
+const originalConsoleInfo = console.info;
 
 global.beforeAll(() => {
   // Suppress logger output during tests
@@ -15,6 +16,7 @@ global.beforeAll(() => {
   console.log = jest.fn();
   console.error = jest.fn();
   console.warn = jest.fn();
+  console.info = jest.fn();
 });
 
 global.afterAll(() => {
@@ -22,6 +24,7 @@ global.afterAll(() => {
   console.log = originalConsoleLog;
   console.error = originalConsoleError;
   console.warn = originalConsoleWarn;
+  console.info = originalConsoleInfo;
 });
 /* eslint-enable no-console */
 

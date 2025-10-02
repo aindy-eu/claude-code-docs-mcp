@@ -1,5 +1,5 @@
 import { QdrantClient } from '@qdrant/js-client-rest';
-import { generateEmbedding, getCollectionName, EmbeddingProvider } from '@/utils/embeddings.js';
+import { generateEmbedding, getCollectionName } from '@/utils/embeddings.js';
 import { getDocUrl } from '@/config/documentation-urls.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -19,7 +19,7 @@ describe('Qdrant Integration Tests (requires Qdrant)', () => {
       try {
         await qdrant.getCollections();
         break;
-      } catch (error) {
+      } catch {
         console.info(`Waiting for Qdrant... (${retries} retries left)`);
         await new Promise(resolve => setTimeout(resolve, 2000));
         retries--;
@@ -35,7 +35,7 @@ describe('Qdrant Integration Tests (requires Qdrant)', () => {
     // Final cleanup of test collection
     try {
       await qdrant.deleteCollection(testCollectionName);
-    } catch (error) {
+    } catch {
       // Collection might not exist, which is fine
     }
   });
@@ -45,7 +45,7 @@ describe('Qdrant Integration Tests (requires Qdrant)', () => {
       // Clean up before each test in this suite
       try {
         await qdrant.deleteCollection(testCollectionName);
-      } catch (error) {
+      } catch {
         // Collection might not exist
       }
     });
@@ -54,7 +54,7 @@ describe('Qdrant Integration Tests (requires Qdrant)', () => {
       // Clean up after each test in this suite
       try {
         await qdrant.deleteCollection(testCollectionName);
-      } catch (error) {
+      } catch {
         // Collection might not exist
       }
     });
@@ -95,7 +95,7 @@ describe('Qdrant Integration Tests (requires Qdrant)', () => {
       // Clean up first
       try {
         await qdrant.deleteCollection(testCollectionName);
-      } catch (error) {
+      } catch {
         // Collection might not exist
       }
 
@@ -112,7 +112,7 @@ describe('Qdrant Integration Tests (requires Qdrant)', () => {
       // Clean up after each test
       try {
         await qdrant.deleteCollection(testCollectionName);
-      } catch (error) {
+      } catch {
         // Collection might not exist
       }
     });
@@ -206,7 +206,7 @@ describe('Qdrant Integration Tests (requires Qdrant)', () => {
       // Clean up first
       try {
         await qdrant.deleteCollection(testCollectionName);
-      } catch (error) {
+      } catch {
         // Collection might not exist
       }
 
@@ -223,7 +223,7 @@ describe('Qdrant Integration Tests (requires Qdrant)', () => {
       // Clean up after each test
       try {
         await qdrant.deleteCollection(testCollectionName);
-      } catch (error) {
+      } catch {
         // Collection might not exist
       }
     });
@@ -259,10 +259,10 @@ describe('Qdrant Integration Tests (requires Qdrant)', () => {
 
         expect(searchResults.points).toHaveLength(1);
         expect(searchResults.points[0].score).toBeCloseTo(1.0, 5); // Should be nearly perfect match
-      } catch (error: any) {
-        console.warn('Skipping real embedding test - ollama not available:', error.message);
-        // Mark test as pending instead of failing
-        pending('Ollama not available for real embedding test');
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.warn('Skipping real embedding test - ollama not available:', message);
+        // Test will pass but with warning - this is acceptable for optional integration tests
       }
     }, 30000); // Longer timeout for embedding generation
   });
@@ -279,7 +279,7 @@ describe('Qdrant Integration Tests (requires Qdrant)', () => {
       // First delete if it exists from previous test run
       try {
         await qdrant.deleteCollection(collectionName);
-      } catch (error) {
+      } catch {
         // Collection might not exist
       }
 

@@ -3,10 +3,10 @@
  */
 
 export const logger = {
-  info: (...args: any[]) => console.info('[INFO]', ...args),
-  error: (...args: any[]) => console.error('[ERROR]', ...args),
-  warn: (...args: any[]) => console.warn('[WARN]', ...args),
-  debug: (...args: any[]) => {
+  info: (...args: unknown[]) => console.info('[INFO]', ...args),
+  error: (...args: unknown[]) => console.error('[ERROR]', ...args),
+  warn: (...args: unknown[]) => console.warn('[WARN]', ...args),
+  debug: (...args: unknown[]) => {
     if (process.env.DEBUG) {
       console.info('[DEBUG]', ...args);
     }

@@ -3,9 +3,9 @@
  * Structured logging for documentation ingestion pipeline
  */
 
-import { appendFileSync, mkdirSync, existsSync } from 'fs';
+import { appendFileSync, mkdirSync, existsSync, readFileSync } from 'fs';
 import path from 'path';
-import { LogEntry, LogLevel, PipelineStage } from './pipeline-logging-service.types.js';
+import { LogEntry, PipelineStage } from './pipeline-logging-service.types.js';
 
 export class PipelineLoggingService {
   private domain: string;
@@ -155,7 +155,6 @@ export class PipelineLoggingService {
     }
 
     try {
-      const { readFileSync } = require('fs');
       const content = readFileSync(logFile, 'utf-8');
       return content
         .trim()

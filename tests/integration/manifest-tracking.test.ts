@@ -97,10 +97,9 @@ describe('Manifest State Tracking', () => {
     expect(record?.lastFetchedAt).toBeDefined();
     expect(record?.lastEmbeddedAt).toBeDefined();
 
-    if (record && record.lastExtractedAt && record.lastFetchedAt && record.lastEmbeddedAt) {
-      expect(record.lastExtractedAt >= record.lastFetchedAt).toBe(true);
-      expect(record.lastEmbeddedAt >= record.lastExtractedAt).toBe(true);
-    }
+    // Verify chronological order (all timestamps must be defined at this point)
+    expect(record!.lastExtractedAt! >= record!.lastFetchedAt!).toBe(true);
+    expect(record!.lastEmbeddedAt! >= record!.lastExtractedAt!).toBe(true);
   });
 
   it('should track content check without full ingestion', async () => {

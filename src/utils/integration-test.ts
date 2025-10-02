@@ -21,8 +21,9 @@ async function testQdrantConnection() {
     await qdrant.getCollections();
     console.info('✅ Qdrant connection successful');
     return true;
-  } catch (error: any) {
-    console.error('❌ Qdrant connection failed:', error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ Qdrant connection failed:', message);
     console.info('💡 Make sure Qdrant is running: docker run -p 6333:6333 qdrant/qdrant');
     return false;
   }
@@ -45,8 +46,9 @@ async function testEmbeddingGeneration(provider: EmbeddingProvider) {
       );
       return false;
     }
-  } catch (error: any) {
-    console.error(`❌ ${provider} embedding failed:`, error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`❌ ${provider} embedding failed:`, message);
 
     if (provider === 'ollama') {
       console.info('💡 Make sure Ollama is running and nomic-embed-text is installed:');
@@ -70,8 +72,9 @@ async function testCollectionExists(provider: EmbeddingProvider) {
     console.info(`   - Vectors: ${info.config?.params?.vectors?.size || 'unknown'} dimensions`);
 
     return (info.points_count || 0) > 0;
-  } catch (error: any) {
-    console.error(`❌ Collection test failed:`, error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`❌ Collection test failed:`, message);
     console.info(`💡 Run "npm run setup" to create collections`);
     return false;
   }
@@ -102,8 +105,9 @@ async function testSearch(provider: EmbeddingProvider) {
       console.info(`💡 Use Claude-driven ingestion: npm run cli -- batch --core`);
       return false;
     }
-  } catch (error: any) {
-    console.error(`❌ Search test failed:`, error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`❌ Search test failed:`, message);
     return false;
   }
 }

@@ -22,13 +22,12 @@ describe('ExtractService', () => {
 
   describe('Initialization', () => {
     it('should create structured directory on construction', () => {
-      const service = new ExtractService(TEST_URL);
       expect(existsSync(STRUCTURED_DIR)).toBe(true);
     });
 
     it('should extract domain from URL', () => {
-      const service = new ExtractService('https://example.com/path/to/doc');
-      const jsonPath = service.getJsonPath('https://example.com/path/to/doc');
+      const testService = new ExtractService('https://example.com/path/to/doc');
+      const jsonPath = testService.getJsonPath('https://example.com/path/to/doc');
       expect(jsonPath).toContain('example.com');
     });
   });

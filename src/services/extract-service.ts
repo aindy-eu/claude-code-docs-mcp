@@ -53,7 +53,7 @@ export class ExtractService {
   /**
    * Save extracted JSON
    */
-  async save(url: string, json: any): Promise<void> {
+  async save(url: string, json: unknown): Promise<void> {
     const jsonPath = this.getJsonPath(url);
 
     // Ensure directory exists
@@ -69,7 +69,7 @@ export class ExtractService {
   /**
    * Get extracted JSON from cache
    */
-  async get(url: string): Promise<any | null> {
+  async get(url: string): Promise<unknown | null> {
     const jsonPath = this.getJsonPath(url);
 
     if (!existsSync(jsonPath)) {

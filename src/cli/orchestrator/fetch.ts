@@ -25,7 +25,7 @@ export async function fetchStage(
 
     // Fetch and cache (may detect redirect and compare content)
     const result = await fetchService.fetch(url, options.force || false);
-    const { html, finalUrl, skipPipeline, comparison } = result;
+    const { finalUrl, skipPipeline, comparison } = result;
 
     // Use finalUrl for all subsequent operations
     const manifest = new ManifestService(finalUrl);
@@ -56,10 +56,11 @@ export async function fetchStage(
     }
 
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     const duration = Date.now() - startTime;
+    const message = error instanceof Error ? error.message : String(error);
     const logger = new PipelineLoggingService(url);
-    logger.logFetchError(url, error.message, duration);
+    logger.logFetchError(url, message, duration);
 
     spinner?.fail(chalk.red('✗ Fetch failed'));
     throw error;
