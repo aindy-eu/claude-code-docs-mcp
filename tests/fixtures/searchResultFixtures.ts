@@ -1,5 +1,5 @@
 import { SearchResult } from '@/mcp-tools/search/search.types.js';
-import { getDocUrl } from '@/config/documentation-urls.js';
+import { getDocUrl } from '@/config/claude-code-documentation-urls.js';
 
 export const mockSearchResults: SearchResult[] = [
   {

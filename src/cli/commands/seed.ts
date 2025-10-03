@@ -7,7 +7,10 @@ import { Listr } from 'listr2';
 import chalk from 'chalk';
 import { Pipeline } from '../pipeline/index.js';
 import { ManifestService } from '../../services/manifest-service.js';
-import { DocumentationUrlService, CORE_PAGES } from '../../config/documentation-urls.js';
+import {
+  DocumentationUrlService,
+  CORE_PAGES
+} from '../../config/claude-code-documentation-urls.js';
 import type { SeedOptions, SeedContext } from './seed.types.js';
 
 export class SeedCommand {

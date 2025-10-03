@@ -3,7 +3,7 @@
  * Handles manifest tracking for documentation ingestion pipeline
  */
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync, statSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, statSync, readdirSync } from 'fs';
 import path from 'path';
 import { logger } from '../utils/logger.js';
 import { DEFAULT_TTL_DAYS } from '../config/constants.js';
@@ -17,6 +17,35 @@ export class ManifestService {
     // Extract domain from URL
     this.domain = new URL(url).hostname;
     this.manifestPath = path.join(process.cwd(), '.data', this.domain, 'manifest.json');
+  }
+
+  /**
+   * Discover all domains with manifests in .data/
+   * Static method - doesn't require instance
+   */
+  static getAllDomains(): string[] {
+    const dataDir = path.join(process.cwd(), '.data');
+
+    if (!existsSync(dataDir)) {
+      return [];
+    }
+
+    try {
+      // Get all directories in .data/
+      const entries = readdirSync(dataDir, { withFileTypes: true });
+
+      return entries
+        .filter(entry => entry.isDirectory())
+        .map(entry => entry.name)
+        .filter(domain => {
+          // Only include directories with a manifest.json
+          const manifestPath = path.join(dataDir, domain, 'manifest.json');
+          return existsSync(manifestPath);
+        });
+    } catch (error) {
+      logger.warn('Failed to discover domains', { error });
+      return [];
+    }
   }
 
   /**
@@ -90,6 +119,15 @@ export class ManifestService {
   getAllRecords(): ManifestRecord[] {
     const manifest = this.getManifest();
     return Object.values(manifest.records);
+  }
+
+  /**
+   * Get all ingested URLs
+   * Returns URLs that have been ingested (useful for sync operations)
+   */
+  getAllIngestedUrls(): string[] {
+    const manifest = this.getManifest();
+    return Object.keys(manifest.records);
   }
 
   /**

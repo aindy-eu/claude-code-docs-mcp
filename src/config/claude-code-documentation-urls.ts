@@ -1,13 +1,15 @@
 /**
- * Documentation URL Configuration Service
+ * Claude Code Documentation URLs for Seeding
  *
- * Single source of truth for all documentation URLs.
- * Handles URL migrations, redirects, and provides backward compatibility.
+ * Defines which Claude Code documentation pages to ingest during initial seed.
+ * This is NOT the source of truth for what's been ingested - that's the manifest.
  *
- * @module config/documentation-urls
+ * For sync operations, use ManifestService.getAllIngestedUrls() instead.
+ *
+ * @module config/claude-code-documentation-urls
  */
 
-import { DocumentationSource, UrlMigration } from './documentation-urls.types.js';
+import { DocumentationSource } from './claude-code-documentation-urls.types.js';
 
 /**
  * Main documentation sources configuration
@@ -89,71 +91,6 @@ export class DocumentationUrlService {
   }
 
   /**
-   * Check if a URL is a legacy URL that needs migration
-   */
-  isLegacyUrl(url: string): boolean {
-    try {
-      const urlObj = new URL(url);
-      return this.source.legacy.some(legacy => {
-        const legacyObj = new URL(legacy);
-        return urlObj.hostname === legacyObj.hostname;
-      });
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Migrate a legacy URL to the current format
-   */
-  migrateUrl(legacyUrl: string): string {
-    if (!this.isLegacyUrl(legacyUrl)) {
-      return legacyUrl;
-    }
-
-    try {
-      const urlObj = new URL(legacyUrl);
-
-      // Find which legacy domain this is
-      for (const legacyBase of this.source.legacy) {
-        const legacyObj = new URL(legacyBase);
-        if (urlObj.hostname === legacyObj.hostname) {
-          // Replace the base URL while keeping the path
-          const newUrl = legacyUrl.replace(
-            `${urlObj.protocol}//${urlObj.hostname}`,
-            this.source.current
-          );
-          return newUrl;
-        }
-      }
-    } catch (error) {
-      console.error(`Failed to migrate URL ${legacyUrl}:`, error);
-    }
-
-    return legacyUrl;
-  }
-
-  /**
-   * Batch migrate multiple URLs
-   */
-  migrateUrls(urls: string[]): UrlMigration[] {
-    const migrations: UrlMigration[] = [];
-
-    for (const url of urls) {
-      const migratedUrl = this.migrateUrl(url);
-      if (migratedUrl !== url) {
-        migrations.push({
-          from: url,
-          to: migratedUrl,
-          migratedAt: new Date().toISOString()
-        });
-      }
-    }
-
-    return migrations;
-  }
-
-  /**
    * Extract page key from a URL
    */
   getPageKeyFromUrl(url: string): string | null {
@@ -203,34 +140,6 @@ export class DocumentationUrlService {
       return false;
     }
   }
-
-  /**
-   * Get configuration for shell scripts
-   * Returns environment variable format for easy consumption
-   */
-  getShellConfig(): string {
-    const lines = [
-      `# Documentation URL Configuration`,
-      `DOCS_BASE_URL="${this.source.current}"`,
-      `DOCS_PATH_PREFIX="${this.source.pathPrefix}"`,
-      ``,
-      `# Page paths`
-    ];
-
-    for (const [key, value] of Object.entries(this.source.pages)) {
-      const envKey = key.replace(/([A-Z])/g, '_$1').toUpperCase();
-      lines.push(`DOCS_PAGE_${envKey}="${value}"`);
-    }
-
-    lines.push('', '# Full URLs');
-    for (const [key] of Object.entries(this.source.pages)) {
-      const envKey = key.replace(/([A-Z])/g, '_$1').toUpperCase();
-      const url = this.getPageUrl(key as keyof typeof DOCUMENTATION_SOURCES.CLAUDE_CODE.pages);
-      lines.push(`DOCS_URL_${envKey}="${url}"`);
-    }
-
-    return lines.join('\n');
-  }
 }
 
 // Default singleton instance
@@ -241,5 +150,3 @@ export const getDocUrl = (page: keyof typeof DOCUMENTATION_SOURCES.CLAUDE_CODE.p
   docUrlService.getPageUrl(page);
 
 export const getAllDocUrls = () => docUrlService.getAllUrls();
-
-export const migrateDocUrl = (url: string) => docUrlService.migrateUrl(url);

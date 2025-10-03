@@ -1,22 +1,22 @@
 /**
  * Sync Command
  * Update stale documentation based on TTL
+ *
+ * Note: Syncs ALL URLs from the manifest (not just known pages from config).
+ * This ensures user-ingested pages are also kept fresh.
  */
 
 import { Listr } from 'listr2';
 import chalk from 'chalk';
 import { Pipeline } from '../pipeline/index.js';
 import { ManifestService } from '../../services/manifest-service.js';
-import { DocumentationUrlService } from '../../config/documentation-urls.js';
 import { DEFAULT_TTL_DAYS } from '../../config/constants.js';
 import type { SyncOptions, SyncContext, UrlStatus } from './sync.types.js';
 
 export class SyncCommand {
-  private urlService: DocumentationUrlService;
   private pipeline: Pipeline;
 
   constructor() {
-    this.urlService = new DocumentationUrlService();
     this.pipeline = new Pipeline();
   }
 
@@ -79,19 +79,53 @@ export class SyncCommand {
   }
 
   /**
-   * Get all URLs and their freshness status
+   * Get all URLs and their freshness status across all domains
+   * Discovers all ingested domains and checks each URL
    */
   private async analyzeAllUrls(ttlDays: number): Promise<{
     stale: UrlStatus[];
     fresh: UrlStatus[];
   }> {
-    const allUrls = this.urlService.getAllUrls();
+    // Discover all domains with manifests
+    const domains = ManifestService.getAllDomains();
+
+    if (domains.length === 0) {
+      return { stale: [], fresh: [] };
+    }
+
+    // Collect URLs from all domains
+    const allUrls: string[] = [];
+    for (const domain of domains) {
+      const manifest = new ManifestService(`https://${domain}`);
+      const urls = manifest.getAllIngestedUrls();
+      allUrls.push(...urls);
+    }
+
+    // Handle empty manifests
+    if (allUrls.length === 0) {
+      return { stale: [], fresh: [] };
+    }
+
     const statuses = await Promise.all(allUrls.map(url => this.checkUrlFreshness(url, ttlDays)));
 
     return {
       stale: statuses.filter(s => s.needsUpdate),
       fresh: statuses.filter(s => !s.needsUpdate)
     };
+  }
+
+  /**
+   * Get display-friendly version of URL (domain-agnostic)
+   * Extracts just the path portion for cleaner output
+   */
+  private getDisplayUrl(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      // Return path without leading slash for brevity
+      return urlObj.pathname.startsWith('/') ? urlObj.pathname.slice(1) : urlObj.pathname;
+    } catch {
+      return url;
+    }
   }
 
   /**
@@ -194,8 +228,8 @@ export class SyncCommand {
     // Show stale pages
     console.info(chalk.yellow('\nPages to update:'));
     stale.forEach(s => {
-      const pageKey = this.urlService.getPageKeyFromUrl(s.url) || s.url;
-      console.info(`  • ${pageKey} - ${s.reason}`);
+      const displayUrl = this.getDisplayUrl(s.url);
+      console.info(`  • ${displayUrl} - ${s.reason}`);
     });
 
     // Check mode - exit if dry run
@@ -210,7 +244,7 @@ export class SyncCommand {
     // Create Listr tasks for stale URLs only
     const tasks = new Listr<SyncContext>(
       stale.map(({ url }) => ({
-        title: this.urlService.getPageKeyFromUrl(url) || url,
+        title: this.getDisplayUrl(url),
         task: async (ctx, task) => {
           try {
             // Smart ingest with resume capability
@@ -291,8 +325,8 @@ export class SyncCommand {
       if (failedResults.length > 0) {
         console.info(chalk.red('\nFailed URLs:'));
         failedResults.forEach(r => {
-          const pageKey = this.urlService.getPageKeyFromUrl(r.url) || r.url;
-          console.info(chalk.red(`  - ${pageKey}: ${r.error}`));
+          const displayUrl = this.getDisplayUrl(r.url);
+          console.info(chalk.red(`  - ${displayUrl}: ${r.error}`));
         });
       }
     }

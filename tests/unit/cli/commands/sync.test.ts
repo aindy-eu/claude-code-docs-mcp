@@ -9,22 +9,20 @@ import type { SyncOptions } from '@/cli/commands/sync.types.js';
 
 // Mock dependencies
 vi.mock('@/cli/pipeline/index.js');
-vi.mock('@/config/documentation-urls.js', () => ({
-  DocumentationUrlService: vi.fn().mockImplementation(() => ({
-    getAllUrls: vi.fn(() => [
-      'https://docs.claude.com/en/docs/claude-code/overview',
-      'https://docs.claude.com/en/docs/claude-code/hooks',
-      'https://docs.claude.com/en/docs/claude-code/settings'
-    ]),
-    getPageKeyFromUrl: vi.fn((url: string) => url.split('/').pop())
-  }))
-}));
 
 // Mock ManifestService
 const mockGetRecord = vi.fn();
+const mockGetAllIngestedUrls = vi.fn(() => [
+  'https://docs.claude.com/en/docs/claude-code/overview',
+  'https://docs.claude.com/en/docs/claude-code/hooks',
+  'https://docs.claude.com/en/docs/claude-code/settings'
+]);
+const mockGetAllDomains = vi.fn(() => ['docs.claude.com']);
+
 vi.mock('@/services/manifest-service.js', () => ({
   ManifestService: vi.fn().mockImplementation(() => ({
-    getRecord: mockGetRecord
+    getRecord: mockGetRecord,
+    getAllIngestedUrls: mockGetAllIngestedUrls
   }))
 }));
 
@@ -45,6 +43,10 @@ describe('SyncCommand', () => {
     syncCommand = new SyncCommand();
     const listr2 = await import('listr2');
     MockListr = listr2.Listr as any;
+
+    // Mock static getAllDomains method
+    const { ManifestService } = await import('@/services/manifest-service.js');
+    (ManifestService as any).getAllDomains = mockGetAllDomains;
   });
 
   describe('freshness detection logic', () => {

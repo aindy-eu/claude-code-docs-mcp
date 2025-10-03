@@ -3,9 +3,8 @@ import {
   docUrlService,
   getDocUrl,
   getAllDocUrls,
-  migrateDocUrl,
   DOCUMENTATION_SOURCES
-} from '@/config/documentation-urls.js';
+} from '@/config/claude-code-documentation-urls.js';
 
 describe('URL Configuration Service', () => {
   describe('getDocUrl', () => {
@@ -32,47 +31,6 @@ describe('URL Configuration Service', () => {
       expect(urls).toContain('https://docs.claude.com/en/docs/claude-code/overview');
       expect(urls).toContain('https://docs.claude.com/en/docs/claude-code/quickstart');
       expect(urls).toContain('https://docs.claude.com/en/docs/claude-code/hooks');
-    });
-  });
-
-  describe('URL Migration', () => {
-    it('should identify legacy URLs', () => {
-      const isLegacy = docUrlService.isLegacyUrl(
-        'https://docs.anthropic.com/en/docs/claude-code/overview'
-      );
-      expect(isLegacy).toBe(true);
-    });
-
-    it('should not identify current URLs as legacy', () => {
-      const isLegacy = docUrlService.isLegacyUrl(
-        'https://docs.claude.com/en/docs/claude-code/overview'
-      );
-      expect(isLegacy).toBe(false);
-    });
-
-    it('should migrate legacy URL to current format', () => {
-      const oldUrl = 'https://docs.anthropic.com/en/docs/claude-code/hooks';
-      const newUrl = migrateDocUrl(oldUrl);
-      expect(newUrl).toBe('https://docs.claude.com/en/docs/claude-code/hooks');
-    });
-
-    it('should not change current URLs during migration', () => {
-      const currentUrl = 'https://docs.claude.com/en/docs/claude-code/settings';
-      const result = migrateDocUrl(currentUrl);
-      expect(result).toBe(currentUrl);
-    });
-
-    it('should handle batch URL migration', () => {
-      const urls = [
-        'https://docs.anthropic.com/en/docs/claude-code/overview',
-        'https://docs.claude.com/en/docs/claude-code/quickstart',
-        'https://docs.anthropic.com/en/docs/claude-code/hooks'
-      ];
-
-      const migrations = docUrlService.migrateUrls(urls);
-      expect(migrations).toHaveLength(2); // Only 2 URLs need migration
-      expect(migrations[0].from).toContain('anthropic.com');
-      expect(migrations[0].to).toContain('claude.com');
     });
   });
 
@@ -122,16 +80,6 @@ describe('URL Configuration Service', () => {
     it('should return null for invalid URLs', () => {
       const key = docUrlService.getPageKeyFromUrl('https://example.com/invalid');
       expect(key).toBeNull();
-    });
-  });
-
-  describe('Shell Configuration', () => {
-    it('should generate valid shell configuration', () => {
-      const config = docUrlService.getShellConfig();
-      expect(config).toContain('DOCS_BASE_URL="https://docs.claude.com"');
-      expect(config).toContain('DOCS_PATH_PREFIX="/en/docs/claude-code"');
-      expect(config).toContain('DOCS_URL_OVERVIEW=');
-      expect(config).toContain('DOCS_URL_SLASH_COMMANDS=');
     });
   });
 

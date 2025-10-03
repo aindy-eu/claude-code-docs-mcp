@@ -69,7 +69,7 @@ describe('SeedCommand', () => {
       await seedCommand.run(options);
 
       const tasks = (Listr as any).mock.calls[0][0];
-      expect(tasks).toHaveLength(7); // All configured pages
+      expect(tasks).toHaveLength(10); // All configured pages
     });
   });
 

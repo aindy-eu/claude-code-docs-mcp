@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { generateEmbedding, getCollectionName } from '@/utils/embeddings.js';
-import { getDocUrl } from '@/config/documentation-urls.js';
+import { getDocUrl } from '@/config/claude-code-documentation-urls.js';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('Qdrant Integration Tests (requires Qdrant)', () => {
