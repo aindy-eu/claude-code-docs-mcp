@@ -1,4 +1,4 @@
-import { mockQdrantResponse } from '../fixtures/mockSearchResults.js';
+import { mockQdrantResponse } from '@tests/fixtures/searchResultFixtures.js';
 
 export class MockQdrantClient {
   private collections: Set<string> = new Set();

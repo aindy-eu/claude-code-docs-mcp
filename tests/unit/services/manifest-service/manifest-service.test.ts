@@ -16,7 +16,7 @@ import {
   structuredDocEmpty,
   structuredDocNoCodeExamples,
   structuredDocMissingSectionsField
-} from '../../../fixtures/manifestFixtures.js';
+} from '@tests/fixtures/manifestFixtures.js';
 
 // Mock logger to suppress logs during tests
 vi.mock('@/utils/logger.js', () => ({

@@ -17,8 +17,8 @@ vi.mock('@/utils/embeddings.js', () => {
 
 import { formatSearchResults, searchDocumentation } from '@/mcp-tools/search/search.js';
 import { SearchResult, SearchParams } from '@/mcp-tools/search/search.types.js';
-import { MockQdrantClient } from '../../../mocks/qdrantClient.js';
-import { mockSearchResults } from '../../../fixtures/mockSearchResults.js';
+import { MockQdrantClient } from '@tests/mocks/qdrantClient.js';
+import { mockSearchResults } from '@tests/fixtures/searchResultFixtures.js';
 
 describe('Search Functionality', () => {
   let mockQdrant: MockQdrantClient;

@@ -10,7 +10,7 @@ import {
   identicalContent,
   differentContent,
   edgeCases
-} from '../../../fixtures/fetchServiceFixtures.js';
+} from '@tests/fixtures/fetchServiceFixtures.js';
 
 // Mock logger
 vi.mock('@/utils/logger.js', () => ({

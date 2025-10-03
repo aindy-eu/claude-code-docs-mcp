@@ -21,7 +21,7 @@ import {
   mockQdrantUpsertResponse,
   mockOllamaEmbedding,
   mockOpenAIEmbedding
-} from '../../../fixtures/embedServiceFixtures.js';
+} from '@tests/fixtures/embedServiceFixtures.js';
 
 // Mock logger
 vi.mock('@/utils/logger.js', () => ({

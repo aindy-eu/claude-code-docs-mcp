@@ -12,7 +12,7 @@ import {
   extractedCodeHeavy,
   urlFilenameMappings,
   edgeCases
-} from '../../../fixtures/extractServiceFixtures.js';
+} from '@tests/fixtures/extractServiceFixtures.js';
 
 // Mock logger
 vi.mock('@/utils/logger.js', () => ({
