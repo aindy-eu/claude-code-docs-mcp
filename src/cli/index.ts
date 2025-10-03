@@ -22,6 +22,7 @@ import { registerListCommand } from './commands/list.js';
 import { SeedCommand } from './commands/seed.js';
 import { SyncCommand } from './commands/sync.js';
 import { SearchCommand } from './commands/search.js';
+import { SourcesCommand } from './commands/sources.js';
 import { DEFAULT_TTL_DAYS } from '../config/constants.js';
 
 const program = new Command();
@@ -71,6 +72,9 @@ program
     `Custom TTL in days (default: ${DEFAULT_TTL_DAYS})`,
     String(DEFAULT_TTL_DAYS)
   )
+  .option('--source <domain>', 'Sync specific domain (e.g., docs.claude.com)')
+  .option('--all', 'Explicitly sync all sources (default behavior)')
+  .option('--type <type>', 'Sync sources of specific type (e.g., documentation)')
   .option('--model <model>', 'Claude model for extraction', 'claude-sonnet-4-5-20250929')
   .option('--provider <provider>', 'Embedding provider (ollama/openai)', 'ollama')
   .option('--dev', 'Use minimal dev prompt for faster testing')
@@ -105,6 +109,20 @@ program
       });
     } catch (error: unknown) {
       console.error(chalk.red('✗ Search failed:'), getErrorMessage(error));
+      process.exit(1);
+    }
+  });
+
+// Sources command - list all documentation sources
+program
+  .command('sources')
+  .description('List all registered documentation sources')
+  .action(async () => {
+    try {
+      const sourcesCmd = new SourcesCommand();
+      await sourcesCmd.run();
+    } catch (error: unknown) {
+      console.error(chalk.red('✗ Sources command failed:'), getErrorMessage(error));
       process.exit(1);
     }
   });

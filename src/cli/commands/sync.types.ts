@@ -8,6 +8,9 @@ export interface SyncOptions {
   model?: string;
   provider?: string;
   dev?: boolean;
+  source?: string; // Filter by specific domain (e.g., 'docs.claude.com')
+  all?: boolean; // Explicit flag for all sources
+  type?: string; // Filter by source type (e.g., 'documentation')
 }
 
 export interface SyncContext {

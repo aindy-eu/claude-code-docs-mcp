@@ -8,6 +8,7 @@ import path from 'path';
 import { logger } from '../utils/logger.js';
 import { DEFAULT_TTL_DAYS } from '../config/constants.js';
 import { ManifestRecord, Manifest, UpdateOptions } from './manifest-service.types.js';
+import { MasterManifestService } from './master-manifest-service.js';
 
 export class ManifestService {
   private domain: string;
@@ -266,8 +267,33 @@ export class ManifestService {
     manifest.records[url] = record;
     this.saveManifest(manifest);
 
+    // Register source in master manifest
+    this.registerInMasterManifest();
+
     const providerInfo = options.provider ? ` (${options.provider})` : '';
     logger.info(`[MANIFEST] Updated: ${url} -> embedded${providerInfo}`);
+  }
+
+  /**
+   * Register this domain in master manifest
+   * Called when a URL completes ingestion
+   */
+  private registerInMasterManifest(): void {
+    try {
+      const masterManifest = new MasterManifestService();
+      const manifest = this.getManifest();
+      const urlCount = Object.keys(manifest.records).length;
+
+      // Infer type from domain
+      let type = 'documentation';
+      if (this.domain.includes('claude')) {
+        type = 'claude-code-docs';
+      }
+
+      masterManifest.registerSource(this.domain, type, urlCount);
+    } catch (error) {
+      logger.warn('Failed to register in master manifest', { error });
+    }
   }
 
   /**

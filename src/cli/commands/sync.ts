@@ -10,14 +10,38 @@ import { Listr } from 'listr2';
 import chalk from 'chalk';
 import { Pipeline } from '../pipeline/index.js';
 import { ManifestService } from '../../services/manifest-service.js';
+import { MasterManifestService } from '../../services/master-manifest-service.js';
 import { DEFAULT_TTL_DAYS } from '../../config/constants.js';
 import type { SyncOptions, SyncContext, UrlStatus } from './sync.types.js';
 
 export class SyncCommand {
   private pipeline: Pipeline;
+  private masterManifest: MasterManifestService;
 
   constructor() {
     this.pipeline = new Pipeline();
+    this.masterManifest = new MasterManifestService();
+  }
+
+  /**
+   * Get domains to sync based on options
+   */
+  private getDomainsToSync(options: SyncOptions): string[] {
+    const allDomains = ManifestService.getAllDomains();
+
+    // Filter by specific source
+    if (options.source) {
+      return allDomains.filter(d => d === options.source);
+    }
+
+    // Filter by type
+    if (options.type) {
+      const domainsByType = this.masterManifest.getSourcesByType(options.type);
+      return allDomains.filter(d => domainsByType.includes(d));
+    }
+
+    // Default: all domains
+    return allDomains;
   }
 
   /**
@@ -79,21 +103,24 @@ export class SyncCommand {
   }
 
   /**
-   * Get all URLs and their freshness status across all domains
-   * Discovers all ingested domains and checks each URL
+   * Get all URLs and their freshness status across filtered domains
+   * Discovers domains based on options and checks each URL
    */
-  private async analyzeAllUrls(ttlDays: number): Promise<{
+  private async analyzeAllUrls(
+    ttlDays: number,
+    options: SyncOptions
+  ): Promise<{
     stale: UrlStatus[];
     fresh: UrlStatus[];
   }> {
-    // Discover all domains with manifests
-    const domains = ManifestService.getAllDomains();
+    // Get domains to sync based on filters
+    const domains = this.getDomainsToSync(options);
 
     if (domains.length === 0) {
       return { stale: [], fresh: [] };
     }
 
-    // Collect URLs from all domains
+    // Collect URLs from filtered domains
     const allUrls: string[] = [];
     for (const domain of domains) {
       const manifest = new ManifestService(`https://${domain}`);
@@ -212,8 +239,17 @@ export class SyncCommand {
     console.info(chalk.bold('\n🔄 Syncing Documentation\n'));
     console.info(chalk.cyan(`TTL: ${ttlDays} days`));
 
-    // Analyze all URLs
-    const { stale, fresh } = await this.analyzeAllUrls(ttlDays);
+    // Show filter info
+    if (options.source) {
+      console.info(chalk.cyan(`Source: ${options.source}`));
+    } else if (options.type) {
+      console.info(chalk.cyan(`Type: ${options.type}`));
+    } else {
+      console.info(chalk.cyan('Mode: All sources'));
+    }
+
+    // Analyze URLs based on filters
+    const { stale, fresh } = await this.analyzeAllUrls(ttlDays, options);
 
     // Show preview
     console.info(chalk.yellow(`\n📊 Status:`));

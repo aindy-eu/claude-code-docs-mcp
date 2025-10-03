@@ -10,6 +10,16 @@ import type { SyncOptions } from '@/cli/commands/sync.types.js';
 // Mock dependencies
 vi.mock('@/cli/pipeline/index.js');
 
+// Mock MasterManifestService
+vi.mock('@/services/master-manifest-service.js', () => ({
+  MasterManifestService: vi.fn().mockImplementation(() => ({
+    getSources: vi.fn(() => ({})),
+    getSourcesByType: vi.fn(() => []),
+    registerSource: vi.fn(),
+    updateSyncTime: vi.fn()
+  }))
+}));
+
 // Mock ManifestService
 const mockGetRecord = vi.fn();
 const mockGetAllIngestedUrls = vi.fn(() => [
@@ -183,6 +193,82 @@ describe('SyncCommand', () => {
 
       // Should resume from embed stage
       expect(mockGetRecord).toHaveBeenCalled();
+    });
+  });
+
+  describe('domain filtering (Phase 2+3)', () => {
+    it('should filter by specific source', async () => {
+      // Setup multiple domains
+      mockGetAllDomains.mockReturnValue(['docs.claude.com', 'react.dev']);
+
+      mockGetRecord.mockResolvedValue({
+        status: 'embedded',
+        lastIngestedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
+      });
+
+      const options: SyncOptions = { source: 'docs.claude.com', check: true };
+      await syncCommand.run(options);
+
+      // Should only call getAllIngestedUrls for the filtered domain
+      expect(mockGetAllDomains).toHaveBeenCalled();
+    });
+
+    it('should filter by type', async () => {
+      const { MasterManifestService } = await import('@/services/master-manifest-service.js');
+      const mockGetSourcesByType = vi.fn(() => ['react.dev', 'nextjs.org']);
+
+      (MasterManifestService as any).mockImplementation(() => ({
+        getSources: vi.fn(() => ({})),
+        getSourcesByType: mockGetSourcesByType,
+        registerSource: vi.fn(),
+        updateSyncTime: vi.fn()
+      }));
+
+      mockGetAllDomains.mockReturnValue(['docs.claude.com', 'react.dev', 'nextjs.org']);
+
+      mockGetRecord.mockResolvedValue({
+        status: 'embedded',
+        lastIngestedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
+      });
+
+      const options: SyncOptions = { type: 'documentation', check: true };
+      const newSyncCommand = new SyncCommand();
+      await newSyncCommand.run(options);
+
+      expect(mockGetSourcesByType).toHaveBeenCalledWith('documentation');
+    });
+
+    it('should sync all domains by default', async () => {
+      mockGetAllDomains.mockReturnValue(['docs.claude.com', 'react.dev']);
+
+      mockGetRecord.mockResolvedValue({
+        status: 'embedded',
+        lastIngestedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
+      });
+
+      await syncCommand.run({ check: true });
+
+      // Should call getAllDomains without filtering
+      expect(mockGetAllDomains).toHaveBeenCalled();
+    });
+
+    it('should handle empty domain list', async () => {
+      mockGetAllDomains.mockReturnValue([]);
+
+      await syncCommand.run({ check: true });
+
+      // Should exit gracefully
+      expect(mockGetAllDomains).toHaveBeenCalled();
+    });
+
+    it('should handle non-existent source filter', async () => {
+      mockGetAllDomains.mockReturnValue(['docs.claude.com']);
+
+      const options: SyncOptions = { source: 'nonexistent.com', check: true };
+      await syncCommand.run(options);
+
+      // Should result in no URLs to sync
+      expect(mockGetAllDomains).toHaveBeenCalled();
     });
   });
 

@@ -310,3 +310,77 @@ export const failedRecord: ManifestRecord = {
   lastFailedAt: '2025-01-01T00:01:00Z',
   lastError: 'Network timeout'
 };
+
+// ============================================================================
+// Master Manifest Fixtures
+// ============================================================================
+
+import type { MasterManifest, SourceMetadata } from '@/services/master-manifest-service.types.js';
+
+export const emptyMasterManifest: MasterManifest = {
+  version: '1.0',
+  sources: {}
+};
+
+export const singleSourceMasterManifest: MasterManifest = {
+  version: '1.0',
+  sources: {
+    'docs.claude.com': {
+      type: 'claude-code-docs',
+      addedAt: '2025-01-15T10:00:00Z',
+      lastSyncedAt: '2025-01-16T14:00:00Z',
+      urlCount: 10,
+      status: 'active'
+    }
+  }
+};
+
+export const multiSourceMasterManifest: MasterManifest = {
+  version: '1.0',
+  sources: {
+    'docs.claude.com': {
+      type: 'claude-code-docs',
+      addedAt: '2025-01-15T10:00:00Z',
+      lastSyncedAt: '2025-01-16T14:00:00Z',
+      urlCount: 10,
+      status: 'active'
+    },
+    'react.dev': {
+      type: 'documentation',
+      addedAt: '2025-01-16T09:00:00Z',
+      lastSyncedAt: '2025-01-16T14:00:00Z',
+      urlCount: 20,
+      status: 'active'
+    },
+    'nextjs.org': {
+      type: 'documentation',
+      addedAt: '2025-01-16T09:00:00Z',
+      lastSyncedAt: '2025-01-16T14:00:00Z',
+      urlCount: 30,
+      status: 'active'
+    }
+  }
+};
+
+export const activeSource: SourceMetadata = {
+  type: 'documentation',
+  addedAt: '2025-01-15T10:00:00Z',
+  lastSyncedAt: '2025-01-16T14:00:00Z',
+  urlCount: 25,
+  status: 'active'
+};
+
+export const inactiveSource: SourceMetadata = {
+  type: 'documentation',
+  addedAt: '2025-01-01T10:00:00Z',
+  lastSyncedAt: '2025-01-02T10:00:00Z',
+  urlCount: 5,
+  status: 'inactive'
+};
+
+export const neverSyncedSource: SourceMetadata = {
+  type: 'claude-code-docs',
+  addedAt: '2025-01-15T10:00:00Z',
+  urlCount: 10,
+  status: 'active'
+};
