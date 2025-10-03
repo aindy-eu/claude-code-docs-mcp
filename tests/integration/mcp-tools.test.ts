@@ -278,9 +278,7 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
       expect(results.length).toBeGreaterThan(0);
 
       // Find the result with keyConcepts containing 'slash commands'
-      const slashCommandResult = results.find(r =>
-        r.keyConcepts?.includes('slash commands')
-      );
+      const slashCommandResult = results.find(r => r.keyConcepts?.includes('slash commands'));
 
       // Verify enhanced metadata from Claude-driven ingestion
       expect(slashCommandResult).toBeDefined();

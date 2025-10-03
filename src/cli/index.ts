@@ -1,8 +1,26 @@
 #!/usr/bin/env node
+
+/**
+ * Command Architecture:
+ * All commands live in src/cli/commands/
+ * - Simple commands: Function that registers a command (fetch, extract, etc)
+ * - Complex commands: Class with business logic (seed, sync, search)
+ *
+ * Rule: Use a class when business logic > 20 lines, otherwise use a function
+ */
+
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { PipelineOrchestrator } from './orchestrator/index.js';
-import { BatchCommand } from './commands/batch.js';
+// Pipeline commands (simple)
+import { registerIngestCommand } from './commands/ingest.js';
+import { registerFetchCommand } from './commands/fetch.js';
+import { registerExtractCommand } from './commands/extract.js';
+import { registerEmbedCommand } from './commands/embed.js';
+import { registerStatusCommand } from './commands/status.js';
+import { registerListCommand } from './commands/list.js';
+// Complex commands (classes)
+import { SeedCommand } from './commands/seed.js';
+import { SyncCommand } from './commands/sync.js';
 import { SearchCommand } from './commands/search.js';
 import { DEFAULT_TTL_DAYS } from '../config/constants.js';
 
@@ -17,123 +35,57 @@ program
   .description('Universal documentation intelligence CLI')
   .version('1.0.0');
 
-// Batch command - ingest multiple pages
+// Register pipeline commands (simple proxies)
+registerIngestCommand(program);
+registerFetchCommand(program);
+registerExtractCommand(program);
+registerEmbedCommand(program);
+registerStatusCommand(program);
+registerListCommand(program);
+
+// Seed command - bootstrap with core or all documentation
 program
-  .command('batch')
-  .description('Batch ingest configured documentation pages')
-  .option('--core', 'Only ingest 5 core pages (faster)')
-  .option('--pages <pages>', 'Comma-separated list of pages to ingest')
-  .option('--stale-only', `Only ingest pages older than ${DEFAULT_TTL_DAYS} days`)
-  .option('--force', 'Force re-ingestion of all pages')
-  .option('--dry-run', 'Preview what would be ingested')
+  .command('seed')
+  .description('Bootstrap documentation database with core pages (fast)')
+  .option('--all', 'Seed all configured pages instead of just core')
   .option('--model <model>', 'Claude model for extraction', 'claude-sonnet-4-5-20250929')
   .option('--provider <provider>', 'Embedding provider (ollama/openai)', 'ollama')
   .option('--dev', 'Use minimal dev prompt for faster testing')
   .action(async options => {
     try {
-      const batchCmd = new BatchCommand();
+      const seedCmd = new SeedCommand();
+      await seedCmd.run(options);
+    } catch (error: unknown) {
+      console.error(chalk.red('✗ Seed failed:'), getErrorMessage(error));
+      process.exit(1);
+    }
+  });
 
-      // Parse --pages if provided
-      if (options.pages) {
-        options.pages = options.pages.split(',').map((p: string) => p.trim());
+// Sync command - update stale documentation
+program
+  .command('sync')
+  .description(`Update documentation older than ${DEFAULT_TTL_DAYS} days`)
+  .option('--check', 'Preview what would be updated without making changes')
+  .option(
+    '--ttl <days>',
+    `Custom TTL in days (default: ${DEFAULT_TTL_DAYS})`,
+    String(DEFAULT_TTL_DAYS)
+  )
+  .option('--model <model>', 'Claude model for extraction', 'claude-sonnet-4-5-20250929')
+  .option('--provider <provider>', 'Embedding provider (ollama/openai)', 'ollama')
+  .option('--dev', 'Use minimal dev prompt for faster testing')
+  .action(async options => {
+    try {
+      const syncCmd = new SyncCommand();
+
+      // Parse TTL if provided
+      if (options.ttl) {
+        options.ttl = parseInt(options.ttl);
       }
 
-      await batchCmd.run(options);
+      await syncCmd.run(options);
     } catch (error: unknown) {
-      console.error(chalk.red('✗ Batch ingestion failed:'), getErrorMessage(error));
-      process.exit(1);
-    }
-  });
-
-// Ingest command - full pipeline
-program
-  .command('ingest <url>')
-  .description('Full ingestion pipeline: fetch → extract → embed → store')
-  .option('--force', 'Force re-extraction even if cached')
-  .option('--model <model>', 'Claude model for extraction', 'claude-sonnet-4-5-20250929')
-  .option('--provider <provider>', 'Embedding provider (ollama/openai)', 'ollama')
-  .option('--quiet', 'Suppress info messages')
-  .option('--dev', 'Use minimal dev prompt for faster testing')
-  .action(async (url: string, options) => {
-    try {
-      const orchestrator = new PipelineOrchestrator();
-      await orchestrator.ingest(url, options);
-    } catch (error: unknown) {
-      console.error(chalk.red('✗ Ingestion failed:'), getErrorMessage(error));
-      process.exit(1);
-    }
-  });
-
-// Fetch command - download and cache HTML
-program
-  .command('fetch <url>')
-  .description('Fetch and cache clean HTML content')
-  .action(async (url: string) => {
-    try {
-      const orchestrator = new PipelineOrchestrator();
-      await orchestrator.fetch(url);
-    } catch (error: unknown) {
-      console.error(chalk.red('✗ Fetch failed:'), getErrorMessage(error));
-      process.exit(1);
-    }
-  });
-
-// Extract command - extract structured data with Claude
-program
-  .command('extract <url>')
-  .description('Extract structured data using Claude')
-  .option('--model <model>', 'Claude model for extraction', 'claude-sonnet-4-5-20250929')
-  .option('--force', 'Force re-extraction even if cached')
-  .option('--dev', 'Use minimal dev prompt for faster testing')
-  .action(async (url: string, options) => {
-    try {
-      const orchestrator = new PipelineOrchestrator();
-      await orchestrator.extract(url, options);
-    } catch (error: unknown) {
-      console.error(chalk.red('✗ Extraction failed:'), getErrorMessage(error));
-      process.exit(1);
-    }
-  });
-
-// Embed command - generate embeddings
-program
-  .command('embed <url>')
-  .description('Generate embeddings and store in Qdrant')
-  .option('--provider <provider>', 'Embedding provider (ollama/openai)', 'ollama')
-  .action(async (url: string, options) => {
-    try {
-      const orchestrator = new PipelineOrchestrator();
-      await orchestrator.embed(url, options);
-    } catch (error: unknown) {
-      console.error(chalk.red('✗ Embedding failed:'), getErrorMessage(error));
-      process.exit(1);
-    }
-  });
-
-// Status command - show manifest record
-program
-  .command('status <url>')
-  .description('Show manifest record for a URL')
-  .action(async (url: string) => {
-    try {
-      const orchestrator = new PipelineOrchestrator();
-      await orchestrator.status(url);
-    } catch (error: unknown) {
-      console.error(chalk.red('✗ Status check failed:'), getErrorMessage(error));
-      process.exit(1);
-    }
-  });
-
-// List command - list all ingested docs
-program
-  .command('list')
-  .description('List all ingested documentation')
-  .action(async () => {
-    try {
-      const orchestrator = new PipelineOrchestrator();
-      await orchestrator.list();
-    } catch (error: unknown) {
-      console.error(chalk.red('✗ List failed:'), getErrorMessage(error));
+      console.error(chalk.red('✗ Sync failed:'), getErrorMessage(error));
       process.exit(1);
     }
   });

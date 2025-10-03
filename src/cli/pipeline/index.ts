@@ -1,5 +1,5 @@
 /**
- * Pipeline Orchestrator
+ * Pipeline
  * Coordinates the documentation ingestion pipeline stages
  */
 
@@ -15,11 +15,11 @@ import { embedStage } from './embed.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export class PipelineOrchestrator {
+export class Pipeline {
   private projectRoot: string;
 
   constructor() {
-    // Resolve project root (src/cli/orchestrator -> project root)
+    // Resolve project root (src/cli/pipeline -> project root)
     this.projectRoot = path.resolve(__dirname, '../../..');
   }
 
