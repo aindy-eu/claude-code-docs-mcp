@@ -9,31 +9,7 @@ import { Pipeline } from '../pipeline/index.js';
 import { ManifestService } from '../../services/manifest-service.js';
 import { DocumentationUrlService } from '../../config/documentation-urls.js';
 import { DEFAULT_TTL_DAYS } from '../../config/constants.js';
-
-export interface SyncOptions {
-  check?: boolean; // Dry run - show what would be updated
-  ttl?: number; // Custom TTL in days
-  model?: string;
-  provider?: string;
-  dev?: boolean;
-}
-
-interface SyncContext {
-  results: Array<{
-    url: string;
-    status: 'success' | 'unchanged' | 'failed';
-    error?: string;
-  }>;
-  startTime: number;
-}
-
-interface UrlStatus {
-  url: string;
-  needsUpdate: boolean;
-  reason: string;
-  lastIngested?: Date;
-  daysSinceIngestion?: number;
-}
+import type { SyncOptions, SyncContext, UrlStatus } from './sync.types.js';
 
 export class SyncCommand {
   private urlService: DocumentationUrlService;

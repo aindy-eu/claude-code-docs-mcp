@@ -8,22 +8,7 @@ import chalk from 'chalk';
 import { Pipeline } from '../pipeline/index.js';
 import { ManifestService } from '../../services/manifest-service.js';
 import { DocumentationUrlService, CORE_PAGES } from '../../config/documentation-urls.js';
-
-export interface SeedOptions {
-  all?: boolean;
-  model?: string;
-  provider?: string;
-  dev?: boolean;
-}
-
-interface SeedContext {
-  results: Array<{
-    url: string;
-    status: 'success' | 'failed';
-    error?: string;
-  }>;
-  startTime: number;
-}
+import type { SeedOptions, SeedContext } from './seed.types.js';
 
 export class SeedCommand {
   private urlService: DocumentationUrlService;
