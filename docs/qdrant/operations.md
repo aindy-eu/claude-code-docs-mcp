@@ -21,7 +21,7 @@ When you re-ingest the same documentation page:
 
 ```bash
 # Example: Re-ingesting a page
-./tools/ingest https://docs.claude.com/en/docs/claude-code/overview
+npm run cli:ingest https://docs.claude.com/en/docs/claude-code/overview
 # Creates new documents with new IDs - old ones remain
 ```
 
@@ -82,7 +82,7 @@ filter: {
   must: [{
     key: "lastUpdated",
     range: {
-      gte: "2024-01-01"
+      gte: "2025-01-01"
     }
   }]
 }
@@ -113,5 +113,6 @@ Potential improvements for handling re-ingestion:
 ## Related Resources
 
 - [Qdrant Setup](./setup.md) - Initial configuration
-- [Ingestion Tracking](../ingestion/README.md) - Preventing unnecessary re-ingestion
+- [Manifest System](../manifest-system.md) - How ingestion is tracked
 - [RAG Architecture](../rag/README.md) - Overall storage strategy
+- [Pipeline Stages](../pipeline.md) - How documents are processed

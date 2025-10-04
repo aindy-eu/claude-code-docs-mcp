@@ -1,83 +1,93 @@
-# Claude Code Documentation MCP Server
+# Documentation
 
-MCP server that enables Claude to search documentation it has read and understood.
+Navigate the Claude Code Documentation MCP Server documentation.
 
-## Quick Start
+## 📚 Core Documentation
+
+| Document                                | Purpose                      | Read this if...                               |
+| --------------------------------------- | ---------------------------- | --------------------------------------------- |
+| [Architecture](./architecture.md)       | System design and components | You want the big picture                      |
+| [CLI Guide](./how-to-use-the-cli.md)    | Command reference            | You need to run commands                      |
+| [Pipeline](./pipeline.md)               | How ingestion works          | You want to understand fetch→extract→embed    |
+| [Manifest System](./manifest-system.md) | State tracking and TTL       | You want to know how we track what's ingested |
+| [MCP Server](./mcp-server.md)           | MCP integration              | You want to connect to Claude Desktop         |
+| [Testing](./testing.md)                 | Test suite and patterns      | You want to run tests                         |
+
+## 🗺️ Reading Paths
+
+### Path 1: Understanding the System
+
+**Goal**: Comprehend the architecture and design decisions
+
+1. [Architecture Overview](./architecture.md) - Components and flow
+2. [Pipeline Stages](./pipeline.md) - How ingestion works + philosophy
+3. [Manifest System](./manifest-system.md) - State tracking details
+
+### Path 2: Using the System
+
+**Goal**: Get productive quickly with the CLI
+
+1. [CLI Command Reference](./how-to-use-the-cli.md) - All commands explained
+2. [MCP Server Guide](./mcp-server.md) - Connect to Claude Desktop
+3. [Pipeline Stages](./pipeline.md#pipeline-commands) - Individual stage commands
+
+### Path 3: Contributing/Developing
+
+**Goal**: Extend or improve the codebase
+
+1. [Architecture Overview](./architecture.md) - System structure
+2. [Testing Guide](./testing.md) - Run tests and patterns
+3. Specific component docs as needed
+
+## 📖 Additional Resources
+
+### RAG System
+
+- [RAG Overview](./rag/README.md) - How semantic search works
+- [Enhanced Search](./rag/enhanced-search.md) - Advanced search features
+
+### Qdrant Vector Database
+
+- [Qdrant Setup](./qdrant/setup.md) - Docker installation and config
+- [Client Integration](./qdrant/client-integration.md) - TypeScript client usage
+- [Embeddings](./qdrant/embeddings.md) - Ollama vs OpenAI providers
+- [Performance](./qdrant/performance.md) - Optimization strategies
+- [Monitoring](./qdrant/monitoring.md) - Health checks and security
+
+## 🔍 Quick Reference
+
+### Common Commands
 
 ```bash
-# 1. Install Qdrant
-docker run -p 6333:6333 qdrant/qdrant
+# Ingest documentation
+npm run cli:ingest <url>
 
-# 2. Setup project
-npm install
-npm run setup
-
-# 3. Add to Claude
-claude mcp add claude-docs node $(pwd)/build/index.js
-
-# 4. Search
-claude "search the docs for error handling"
-```
-
-## How It Works
-
-1. **Claude reads** documentation pages naturally (not HTML parsing)
-2. **Extracts** content, code examples, concepts, relationships
-3. **Stores** as vector embeddings in Qdrant
-4. **Searches** semantically - finds meaning, not just keywords
-
-That's it. No complex architecture. Just AI understanding + vector search.
-
-## Documentation
-
-- [**Ingestion**](./ingestion/README.md) - How Claude reads and processes docs
-- [**Search**](./rag/README.md) - How semantic search works with metadata
-- [**Storage**](./qdrant/README.md) - Qdrant vector database 
-- [**Setup Guide**](./mcp-server-guide.md) - Detailed MCP configuration
-- [**Testing**](./testing.md) - Running the test suite
-
-## Development
-
-```bash
-# Ingest Claude Code docs
-./tools/batch-ingest
-
-# Process existing Claude output
-npm run process-claude file.json
-
-# Search from CLI
+# Search your knowledge base
 npm run search "your query"
 
-# Check ingestion status
-npm run ingestion-status
+# Sync stale documentation (>7 days)
+npm run sync
 
-# Run tests
-npm test
+# Check document status
+npm run cli:status <url>
 ```
 
-## Project Structure
+### Key Concepts
 
-```
-src/
-  config/         # URL configuration
-  scripts/        # Processing scripts
-  services/       # Core services (embeddings, ingestion)
-  tools/          # MCP tool definitions
-docs/
-  ingestion/      # Ingestion documentation
-  rag/            # Search architecture
-  qdrant/         # Vector storage
-tools/            # Shell scripts for operations
-tests/            # Test suite
-```
+- **Pipeline**: `fetch → extract → embed` (see [Pipeline](./pipeline.md))
+- **Manifests**: Two-tier state tracking (see [Manifest System](./manifest-system.md))
+- **TTL**: 7-day default freshness window
+- **Claude-driven**: AI understanding vs mechanical parsing (see [Pipeline: The Key Insight](./pipeline.md#the-key-insight))
 
-## Key Features
+## 📊 Documentation Status
 
-- **Natural Understanding**: Claude reads docs like a human would
-- **Rich Metadata**: Extracts concepts, relationships, best practices
-- **Flexible Storage**: Supports Ollama (local) or OpenAI embeddings
-- **Smart Caching**: 7-day TTL prevents redundant API calls
+All documentation has been verified against the actual codebase implementation (as of October 2025):
+
+- ✅ **Verified**: Matches actual code
+- 🔮 **Example**: Future/potential implementations (marked in docs)
+
+The Qdrant documentation contains both ✅ implemented features and 🔮 example implementations for future reference. Check individual sections for status markers.
 
 ---
 
-For the main project overview, see [../README.md](../README.md)
+**Note**: This documentation represents the current state of the project. For historical documentation, see `docs/.legacy/`.

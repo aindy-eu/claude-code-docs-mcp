@@ -49,16 +49,16 @@ Claude understands relationships between concepts:
 
 ```json
 {
-  "relatedConcepts": [
-    "pair programming",
-    "AI code review",
-    "developer productivity",
-    "IDE alternatives"
+  "relatedSections": [
+    "Getting Started with Claude Code",
+    "MCP Integration Guide",
+    "Advanced Features",
+    "Troubleshooting"
   ]
 }
 ```
 
-Searching for "pair programming" might return Claude Code docs because Claude understood the conceptual connection.
+Searching for related topics might return Claude Code docs because Claude understood the conceptual connection between sections.
 
 ### 3. Best Practices Identification
 
@@ -226,17 +226,20 @@ claude mcp add claude-docs node $(pwd)/build/index.js
 claude "search for error handling in the docs"
 ```
 
-### Direct API Call
+### Programmatic Access
 
 ```typescript
-const results = await documentStore.search(
-  "your query",
-  (limit = 5),
-  (provider = "ollama")
+// Via the search service
+import { searchDocumentation } from './mcp-tools/search/search.js';
+
+const results = await searchDocumentation(
+  qdrantClient,
+  { query: "your query", limit: 5, provider: "ollama" }
 );
 ```
 
 ## Related Documentation
 
 - [RAG Architecture](./README.md) - The RAG System design and Architecture
-- [Ingestion Guide](../ingestion/README.md) - How to ingest documentation
+- [Pipeline Stages](../pipeline.md) - How documents are ingested and processed
+- [CLI Guide](../how-to-use-the-cli.md) - Command-line search usage

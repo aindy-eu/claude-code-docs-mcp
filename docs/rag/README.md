@@ -91,12 +91,12 @@ interface ProcessedDocument {
   content: string;      // Main text content
   metadata: {
     section: string;
-    codeExamples: CodeExample[];
-    keyConcepts: string[];
-    bestPractices: string[];
-    relatedConcepts: string[];
+    codeExamples: string[];      // Code example strings
+    keyConcepts: string[];       // Key concepts extracted
     lastUpdated: string;
+    provider: 'claude-extracted';
     extractionMethod: 'claude-driven';
+    qualityScore?: number;       // Optional quality metric
   };
 }
 ```
@@ -116,19 +116,20 @@ const embedding = await generateEmbedding(content, 'openai');
 ### Search Implementation
 
 ```typescript
-async function search(query: string, limit: number = 5) {
+async function search(query: string, limit: number = 3) {
   // 1. Generate query embedding
-  const queryVector = await generateEmbedding(query);
-  
+  const queryVector = await generateEmbedding(query, provider);
+
   // 2. Search Qdrant
   const results = await qdrantClient.search(collectionName, {
     vector: queryVector,
     limit,
-    withPayload: true
+    withPayload: true,
+    scoreThreshold: 0.5  // Filter low-relevance results
   });
-  
-  // 3. Format with metadata
-  return results.map(formatWithMetadata);
+
+  // 3. Format results with metadata
+  return formatSearchResults(results);
 }
 ```
 
@@ -139,14 +140,13 @@ The RAG system integrates with Model Context Protocol:
 ### Available Tool
 
 **search_claude_code_docs** - Search documentation
-```json
+
+Input schema:
+```typescript
 {
-  "name": "search_claude_code_docs",
-  "arguments": {
-    "query": "string",
-    "limit": "number (optional, 1-10, default: 3)",
-    "provider": "ollama | openai (optional, default: ollama)"
-  }
+  query: string;                              // Required: search query
+  provider?: 'ollama' | 'openai' | 'both';   // Optional: embedding provider (default: 'ollama')
+  limit?: number;                             // Optional: 1-10 results (default: 3)
 }
 ```
 

@@ -1,307 +1,295 @@
 # Testing Guide
 
-How to test the Claude Code Documentation MCP Server.
+Complete guide to the test architecture and practices in this project.
 
-## Running Tests
+## Overview
 
-```bash
-# Run all tests
-npm test
-
-# Run unit tests only
-npm run test:unit
-
-# Run integration tests only
-npm run test:integration
-
-# Run with coverage
-npm run test:coverage
-
-# Run in watch mode
-npm run test:watch
-```
+**Test Statistics:**
+- **32 test files** with **375 tests** passing
+- **~80% code coverage**
+- Mix of unit tests (fast, mocked) and integration tests (real services)
 
 ## Test Structure
 
 ```
 tests/
-├── fixtures/               # Test data
-│   └── mockSearchResults.ts
-├── mocks/                  # Mock implementations
-│   └── qdrantClient.ts
-├── unit/                   # Unit tests
-│   ├── embeddings.test.ts
-│   ├── search.test.ts
-│   ├── types.test.ts
-│   └── url-configuration.test.ts
-├── integration/            # Integration tests
-│   ├── mcp-tools.test.ts
-│   └── qdrant.test.ts
-└── setup.ts               # Global test setup
+├── unit/                      # 25 test files - Fast, isolated tests
+│   ├── cli/
+│   │   ├── commands/         # CLI command tests
+│   │   ├── pipeline/         # Pipeline stage tests
+│   │   └── index.test.ts     # CLI entry point smoke test
+│   ├── config/               # Configuration tests
+│   ├── mcp-tools/            # MCP tool tests
+│   ├── services/             # Service layer tests
+│   └── utils/                # Utility function tests
+│
+├── integration/               # 7 test files - Real service tests
+│   ├── pipeline-end-to-end.test.ts
+│   ├── fetch-service.test.ts
+│   ├── extract-service.test.ts
+│   ├── embed-service.test.ts
+│   ├── manifest-tracking.test.ts
+│   ├── qdrant.test.ts
+│   └── mcp-tools.test.ts
+│
+├── fixtures/                  # Test data (realistic examples)
+│   ├── embedServiceFixtures.ts
+│   ├── extractServiceFixtures.ts
+│   ├── fetchServiceFixtures.ts
+│   ├── manifestFixtures.ts
+│   └── searchResultFixtures.ts
+│
+└── mocks/                     # Fake implementations
+    └── qdrantClient.ts       # Mock Qdrant client
+
 ```
 
-## Jest Configuration
+## Running Tests
 
-The project uses Jest with TypeScript and ES modules:
+### Quick Commands
 
-```javascript
-// jest.config.js
-export default {
-  preset: 'ts-jest/presets/default-esm',
-  testEnvironment: 'node',
-  extensionsToTreatAsEsm: ['.ts'],
-  transform: {
-    '^.+\\.ts$': ['ts-jest', {
-      useESM: true,
-      tsconfig: {
-        module: 'ESNext',
-        target: 'ES2022'
-      }
-    }]
-  },
-  moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.(js|ts)$': '$1'
-  },
-  testTimeout: 30000
-};
+```bash
+# Run all tests once and exit
+npm test
+
+# Run tests in watch mode (development)
+npm run test:watch
+
+# Run with coverage (CI/production)
+npm run test:ci
+
+# Run with coverage report
+npm run test:coverage
+
+# Run specific test suites
+npm run test:unit          # Unit tests only (fast)
+npm run test:integration   # Integration tests (requires services)
+
+# Interactive UI for debugging
+npm run test:ui
 ```
 
-## Unit Testing
+### Quality Checklist (Before Committing)
 
-### Testing Search Functionality
+Always run these commands before marking any task complete:
+
+1. `npm run lint:fix` - Fix all linting/formatting issues
+2. `npm run build` - Ensure TypeScript compiles
+3. `npm run test:unit` - Run unit tests quickly
+4. `npm test` - Verify all tests pass
+
+## Test Patterns
+
+### Fixtures vs Mocks
+
+**Fixtures** (`tests/fixtures/`) - **Test data** (what data looks like)
+- Real HTML samples
+- Claude extraction results
+- Embedding vectors
+- Manifest records
+- Search results
+
+**Mocks** (`tests/mocks/`) - **Fake implementations** (how dependencies behave)
+- `MockQdrantClient` - Simulates Qdrant database behavior
+
+### Path Aliases
+
+Tests use clean imports with path aliases:
 
 ```typescript
-// tests/unit/search.test.ts
-import { formatSearchResults } from '../../src/tools/search.js';
-import { mockSearchResults } from '../fixtures/mockSearchResults.js';
+import { Service } from '@/services/foo.js';              // Production code
+import { MockClient } from '@tests/mocks/qdrant.js';      // Test mocks
+import { fixture } from '@tests/fixtures/results.js';     // Test data
+```
 
-describe('Search Functionality', () => {
-  it('should format search results correctly', () => {
-    const formatted = formatSearchResults(mockSearchResults);
+Configured in:
+- `tsconfig.json` - TypeScript path mapping
+- `vitest.config.ts` - Vitest module resolution
 
-    expect(formatted).toContain('## Claude Code Documentation Search Results');
-    expect(formatted).toContain('### 1. Slash Commands Overview');
-    expect(formatted).toContain('**Relevance Score:** 95.0%');
-  });
+### Test Naming Conventions
 
-  it('should handle empty results', () => {
-    const formatted = formatSearchResults([]);
-    expect(formatted).toBe('No relevant Claude Code documentation found for your query.');
+**Unit Tests:**
+```typescript
+describe('ServiceName', () => {
+  describe('methodName', () => {
+    it('should do expected behavior', () => {
+      // Test single behavior
+    });
   });
 });
 ```
 
-### Mocking External Dependencies
-
+**Integration Tests:**
 ```typescript
-// Mock Qdrant client
-jest.mock('../../src/services/hybrid-embeddings.js', () => ({
-  generateEmbedding: jest.fn().mockResolvedValue(new Array(768).fill(0.5)),
-  getCollectionName: jest.fn().mockReturnValue('test-collection'),
-  EMBEDDING_CONFIGS: {
-    ollama: { dimensions: 768, model: 'nomic-embed-text' },
-    openai: { dimensions: 1536, model: 'text-embedding-3-small' }
-  }
-}));
-```
-
-## Integration Testing
-
-### Testing with Real Qdrant
-
-```typescript
-// tests/integration/qdrant.test.ts
-import { QdrantClient } from '@qdrant/js-client-rest';
-
-describe('Qdrant Integration', () => {
-  let qdrant: QdrantClient;
-  const testCollectionName = 'test-collection';
-
+describe('Feature Integration (requires Services)', () => {
   beforeAll(async () => {
-    qdrant = new QdrantClient({
-      host: process.env.QDRANT_HOST || 'localhost',
-      port: parseInt(process.env.QDRANT_PORT || '6333')
-    });
+    // Check service availability
+    // Set up real connections
   });
 
-  beforeEach(async () => {
-    try {
-      await qdrant.deleteCollection(testCollectionName);
-    } catch {
-      // Collection might not exist
-    }
-  });
-
-  it('should create a collection', async () => {
-    await qdrant.createCollection(testCollectionName, {
-      vectors: {
-        size: 768,
-        distance: 'Cosine'
-      }
-    });
-
-    const info = await qdrant.getCollection(testCollectionName);
-    expect(info.status).toBe('green');
-  });
+  it('should perform end-to-end operation', async () => {
+    // Test real service interaction
+  }, 60000); // Realistic timeout
 });
 ```
 
-### Testing MCP Tools
+## Testing Best Practices
 
+### 1. Educational Tests
+Tests should teach developers about the system:
+- Clear naming (`should resume from extracted state`)
+- Helpful comments explaining "why"
+- Realistic examples
+
+### 2. Smoke vs Business Logic
+
+**Smoke Tests** - Simple commands, just verify registration:
 ```typescript
-// tests/integration/mcp-tools.test.ts
-describe('MCP Tools', () => {
-  it('should register search_claude_code_docs tool', async () => {
-    const server = new Server(
-      { name: 'test', version: '1.0.0' },
-      { capabilities: { tools: {} } }
-    );
-
-    registerTools(server, qdrant);
-
-    // Test tool registration and execution
-  });
+it('should register the ingest command', () => {
+  registerIngestCommand(mockProgram);
+  expect(mockProgram.command).toHaveBeenCalledWith('ingest <url>');
 });
 ```
 
-## Test Fixtures
-
-### Mock Search Results
-
+**Business Logic Tests** - Complex commands, test actual logic:
 ```typescript
-// tests/fixtures/mockSearchResults.ts
-export const mockSearchResults: SearchResult[] = [
-  {
-    content: 'Claude Code supports slash commands for quick actions.',
-    title: 'Slash Commands Overview',
-    section: 'Getting Started',
-    url: getDocUrl('slashCommands'),
-    score: 0.95,
-    codeExamples: ['/help', '/settings'],
-    provider: 'ollama'
-  }
-];
-
-export const mockEmbedding = new Array(768).fill(0).map(() => Math.random());
+it('should identify stale documents (>7 days old)', async () => {
+  const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000);
+  mockGetRecord.mockResolvedValue({
+    status: 'embedded',
+    lastIngestedAt: eightDaysAgo.toISOString()
+  });
+  await syncCommand.run({});
+  expect(mockGetRecord).toHaveBeenCalled();
+});
 ```
 
-### Mock Qdrant Client
+### 3. Integration Test Safety
+
+Always use unique collections to avoid production data corruption:
 
 ```typescript
-// tests/mocks/qdrantClient.ts
-export class MockQdrantClient {
-  private collections = new Map<string, any>();
+const testCollectionName = `test_pipeline_e2e_${Date.now()}`;
+```
 
-  async createCollection(name: string, config: any) {
-    if (this.collections.has(name)) {
-      throw new Error(`Collection ${name} already exists`);
-    }
-    this.collections.set(name, { config, points: [] });
-  }
+Always clean up after tests:
 
-  async query(collection: string, params: any) {
-    return {
-      points: [{
-        id: '1',
-        score: 0.95,
-        payload: mockSearchResults[0]
-      }]
-    };
+```typescript
+afterAll(async () => {
+  if (qdrant) {
+    await qdrant.deleteCollection(testCollectionName);
   }
+});
+```
 
-  reset() {
-    this.collections.clear();
-  }
+### 4. Graceful Degradation
+
+Integration tests should skip gracefully when services unavailable:
+
+```typescript
+const qdrantAvailable = await checkQdrantAvailable();
+if (!qdrantAvailable) {
+  console.info('⚠️  Qdrant is not running - skipping integration tests');
+  return;
 }
 ```
 
-## Environment Setup
+## Framework: Vitest
 
-Create `.env.test` for test-specific configuration:
+We use **Vitest** (not Jest) for better performance and TypeScript support.
 
-```bash
-# .env.test
-QDRANT_HOST=localhost
-QDRANT_PORT=6333
-DEFAULT_EMBEDDING_PROVIDER=ollama
-NODE_ENV=test
-```
+**Key differences from Jest:**
+- `vi` instead of `jest` for mocking
+- Much faster execution (~1-3s typical)
+- Watch mode via `npm run test:watch`
+- CI mode via `npm run test:ci` (includes coverage)
 
-The `tests/setup.ts` file loads these automatically:
+**Vitest advantages:**
+- Native ESM support
+- Faster test execution
+- Better TypeScript integration
+- Compatible with Vite ecosystem
+
+## Common Patterns
+
+### Mocking Services
 
 ```typescript
-// tests/setup.ts
-import { config } from 'dotenv';
-
-config({ path: '.env.test' });
-
-beforeAll(async () => {
-  // Set defaults if not provided
-  process.env.QDRANT_HOST ||= 'localhost';
-  process.env.QDRANT_PORT ||= '6333';
-});
-
-jest.setTimeout(30000);
+vi.mock('@/services/fetch.js', () => ({
+  FetchService: vi.fn().mockImplementation(() => ({
+    fetch: vi.fn().mockResolvedValue({ finalUrl: 'https://...' })
+  }))
+}));
 ```
 
-## Running Tests in CI
+### Testing Async Operations
 
-Tests run automatically on GitHub Actions for pull requests:
+```typescript
+it('should complete async operation', async () => {
+  const result = await service.asyncMethod();
+  expect(result).toBeDefined();
+}, 30000); // Timeout for slow operations
+```
 
-```yaml
-# .github/workflows/test.yml
-name: Tests
-on: [push, pull_request]
+### Testing Error Handling
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    services:
-      qdrant:
-        image: qdrant/qdrant:latest
-        ports:
-          - 6333:6333
-
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-    - run: npm ci
-    - run: npm test
+```typescript
+it('should handle errors gracefully', async () => {
+  mockService.mockRejectedValue(new Error('Test error'));
+  await expect(service.method()).rejects.toThrow('Test error');
+});
 ```
 
 ## Debugging Tests
 
+### Interactive UI
+
 ```bash
-# Run specific test file
-npm test search.test.ts
-
-# Run tests matching pattern
-npm test -- --testNamePattern="should format"
-
-# Debug with VS Code
-# Add breakpoint and use "Debug: Jest Current File"
+npm run test:ui
 ```
 
-## Common Issues
+Opens Vitest UI for:
+- Filtering tests
+- Viewing coverage
+- Debugging failures
+- Re-running specific tests
 
-### Module Resolution Errors
-If you see `Cannot find module` errors, ensure:
-- Files use `.js` extensions in imports (even for `.ts` files)
-- The `moduleNameMapper` in Jest config is correct
+### Watch Mode Tips
 
-### Qdrant Connection Failed
-Integration tests require Qdrant:
+In watch mode (`npm run test:watch`):
+- Press `a` to run all tests
+- Press `f` to run only failed tests
+- Press `p` to filter by filename
+- Press `q` to quit
+
+### Coverage Reports
+
 ```bash
-docker run -p 6333:6333 qdrant/qdrant
+npm run test:coverage
 ```
 
-### Timeout Errors
-Increase timeout in specific tests:
-```typescript
-it('slow test', async () => {
-  // test code
-}, 60000);
-```
+Generates:
+- Console summary
+- `coverage/lcov-report/index.html` (detailed HTML report)
+
+## Continuous Integration
+
+Tests run automatically in CI via `npm run test:ci`:
+- Runs all tests once
+- Fails on any test failure
+- Ideal for GitHub Actions / CI pipelines
+
+**Note:** Integration tests requiring external services (Qdrant, Claude API) are skipped in CI unless services are available.
+
+## Future Improvements
+
+**Potential additions:**
+1. E2E CLI tests using child processes
+2. Performance benchmarks for critical paths
+3. Snapshot tests for CLI output formatting
+4. Contract tests for MCP protocol compliance
+
+**Coverage targets:**
+- Increase Sync command coverage (currently 43%)
+- Add edge case tests for error handling
+- Test CLI error message formatting
