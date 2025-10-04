@@ -83,7 +83,6 @@ CLAUDE.local.md
 
 # Claude ingestion outputs
 .data/*
-!.data/test.com/
 
 # AI Handovers (keep README, ignore actual handovers)
 # .claude/handovers/*.md
