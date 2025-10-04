@@ -4,7 +4,6 @@
 
 export interface SyncOptions {
   check?: boolean; // Dry run - show what would be updated
-  ttl?: number; // Custom TTL in days
   model?: string;
   provider?: string;
   dev?: boolean;

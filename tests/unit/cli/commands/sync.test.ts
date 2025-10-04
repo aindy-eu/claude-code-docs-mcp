@@ -118,7 +118,7 @@ describe('SyncCommand', () => {
   });
 
   describe('TTL configuration', () => {
-    it('should use default TTL of 7 days', async () => {
+    it('should use fixed TTL of 7 days', async () => {
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
       mockGetRecord.mockResolvedValue({
@@ -128,22 +128,21 @@ describe('SyncCommand', () => {
 
       await syncCommand.run({ check: true });
 
-      // Default TTL should be applied
+      // Fixed 7-day TTL should be applied
       expect(mockGetRecord).toHaveBeenCalled();
     });
 
-    it('should respect custom TTL', async () => {
-      const fourDaysAgo = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString();
+    it('should identify documents older than 7 days as stale', async () => {
+      const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString();
 
       mockGetRecord.mockResolvedValue({
         status: 'embedded',
-        lastIngestedAt: fourDaysAgo
+        lastIngestedAt: eightDaysAgo
       });
 
-      const options: SyncOptions = { ttl: 3, check: true };
-      await syncCommand.run(options);
+      await syncCommand.run({ check: true });
 
-      // Should identify as stale with custom TTL of 3 days
+      // Should identify as stale (older than 7 days)
       expect(mockGetRecord).toHaveBeenCalled();
     });
   });

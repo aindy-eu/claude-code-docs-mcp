@@ -67,11 +67,6 @@ program
   .command('sync')
   .description(`Update documentation older than ${DEFAULT_TTL_DAYS} days`)
   .option('--check', 'Preview what would be updated without making changes')
-  .option(
-    '--ttl <days>',
-    `Custom TTL in days (default: ${DEFAULT_TTL_DAYS})`,
-    String(DEFAULT_TTL_DAYS)
-  )
   .option('--source <domain>', 'Sync specific domain (e.g., docs.claude.com)')
   .option('--all', 'Explicitly sync all sources (default behavior)')
   .option('--type <type>', 'Sync sources of specific type (e.g., documentation)')
@@ -81,12 +76,6 @@ program
   .action(async options => {
     try {
       const syncCmd = new SyncCommand();
-
-      // Parse TTL if provided
-      if (options.ttl) {
-        options.ttl = parseInt(options.ttl);
-      }
-
       await syncCmd.run(options);
     } catch (error: unknown) {
       console.error(chalk.red('✗ Sync failed:'), getErrorMessage(error));

@@ -47,7 +47,8 @@ export class SyncCommand {
   /**
    * Check if URL needs update based on TTL and status
    */
-  private async checkUrlFreshness(url: string, ttlDays: number): Promise<UrlStatus> {
+  private async checkUrlFreshness(url: string): Promise<UrlStatus> {
+    const ttlDays = DEFAULT_TTL_DAYS; // Always use 7 days
     const manifestService = new ManifestService(url);
     const record = manifestService.getRecord(url);
 
@@ -106,10 +107,7 @@ export class SyncCommand {
    * Get all URLs and their freshness status across filtered domains
    * Discovers domains based on options and checks each URL
    */
-  private async analyzeAllUrls(
-    ttlDays: number,
-    options: SyncOptions
-  ): Promise<{
+  private async analyzeAllUrls(options: SyncOptions): Promise<{
     stale: UrlStatus[];
     fresh: UrlStatus[];
   }> {
@@ -133,7 +131,7 @@ export class SyncCommand {
       return { stale: [], fresh: [] };
     }
 
-    const statuses = await Promise.all(allUrls.map(url => this.checkUrlFreshness(url, ttlDays)));
+    const statuses = await Promise.all(allUrls.map(url => this.checkUrlFreshness(url)));
 
     return {
       stale: statuses.filter(s => s.needsUpdate),
@@ -234,10 +232,9 @@ export class SyncCommand {
    */
   async run(options: SyncOptions = {}): Promise<void> {
     const startTime = Date.now();
-    const ttlDays = options.ttl || DEFAULT_TTL_DAYS;
 
     console.info(chalk.bold('\n🔄 Syncing Documentation\n'));
-    console.info(chalk.cyan(`TTL: ${ttlDays} days`));
+    console.info(chalk.cyan(`Checking for documentation older than ${DEFAULT_TTL_DAYS} days`));
 
     // Show filter info
     if (options.source) {
@@ -249,7 +246,7 @@ export class SyncCommand {
     }
 
     // Analyze URLs based on filters
-    const { stale, fresh } = await this.analyzeAllUrls(ttlDays, options);
+    const { stale, fresh } = await this.analyzeAllUrls(options);
 
     // Show preview
     console.info(chalk.yellow(`\n📊 Status:`));

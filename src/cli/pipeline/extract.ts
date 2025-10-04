@@ -38,7 +38,7 @@ export async function extractStage(
     // Call Python extraction script
     const pythonScript = path.join(projectRoot, 'tools/extract.py');
     const promptFile = options.dev ? 'claude-docs.dev.prompt.md' : 'claude-docs.prompt.md';
-    const promptPath = path.join(projectRoot, 'docs/ingestion/prompts', promptFile);
+    const promptPath = path.join(projectRoot, 'src/prompts', promptFile);
 
     // Safe subprocess execution with spawn (prevents command injection)
     const { stdout, stderr } = await new Promise<{ stdout: string; stderr: string }>(
