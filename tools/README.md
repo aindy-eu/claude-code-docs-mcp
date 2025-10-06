@@ -1,110 +1,115 @@
-# Claude Documentation Ingestion Tools
+# Documentation Tools
 
-This directory contains operational scripts for ingesting documentation using Claude Code.
+Python utilities that support the documentation ingestion pipeline and analysis workflows.
 
-## Scripts
+## Extraction Pipeline
 
-### `ingest` - Single Page Ingestion
-Ingest a single documentation page with intelligent tracking and caching.
+### `extract.py` - Documentation Extraction
 
-```bash
-# Basic usage
-./tools/ingest https://docs.claude.com/en/docs/claude-code/overview
+Entry point the pipeline calls to run a Claude extraction.
 
-# With custom output name
-./tools/ingest https://docs.claude.com/en/docs/claude-code/hooks hooks-docs
-```
+**Shared modules in `lib/`:**
+- `claude_client.py` cleans the environment and invokes the `claude` CLI.
+- `html_cleaner.py` trims HTML noise before prompting.
+- `json_utils.py` extracts and validates Claude's JSON response.
+- `logger.py` writes JSONL logs to `.data/<domain>/logs/`.
 
-Features:
-- Checks if page was recently ingested (7-day TTL)
-- Interactive prompt for re-ingestion
-- Automatic JSON cleaning
-- Progress indicators
-- Immediate embedding generation
+## Requirements
 
-### `batch-ingest` - Batch Processing
-Process multiple documentation pages efficiently.
+- Python 3.9+
+- Claude Code CLI available on `PATH`
+- Optional: set `DOC_URL` so logs include the source URL
 
-```bash
-# Normal run (skips fresh pages)
-./tools/batch-ingest
+## Usage
 
-# Force re-ingestion of all pages
-./tools/batch-ingest --force
-```
-
-Features:
-- Processes predefined list of pages
-- Automatically skips recently ingested pages
-- 30-second delay between requests
-- Comprehensive logging
-- Summary statistics
-
-### `utils/clean-json` - JSON Cleaner
-Utility to clean Claude's JSON output when it includes markdown formatting.
+### Running `extract.py`
 
 ```bash
-# Clean a specific file
-./tools/utils/clean-json input.json output.json
+# From the repository root
+DOC_URL="https://docs.example.com/guide" \
+python tools/extract.py /tmp/content.html src/prompts/claude-docs.prompt.md claude-sonnet-4
 ```
 
-Handles:
-- Markdown code block wrappers (```json...```)
-- Leading/trailing whitespace
-- Text before JSON content
+**Arguments:**
+1. Path to the cleaned HTML to process
+2. Path to the extraction prompt file
+3. Claude model identifier (e.g. `claude-sonnet-4.1`)
 
-## Configuration
+**The script:**
+- Ensures the Claude CLI is accessible before running.
+- Builds the full prompt (including a pointer to the HTML file) and sends it to
+  Claude.
+- Parses the response, normalises the JSON, performs structural validation, and
+  prints formatted JSON to stdout for the Node pipeline to consume.
+- Logs success or failure details under `.data/<domain>/logs/extract.jsonl`.
 
-### Ingestion Tracking
-- Manifest stored in `claude-outputs/ingestion-manifest.json`
-- Default TTL: 7 days (configurable)
-- Tracks success/failure status
-- Prevents unnecessary API calls
+### Reusing the Helpers
 
-### Output Location
-All outputs are saved to `./claude-outputs/`:
-- JSON files from Claude
-- Ingestion manifest
-- Processing logs
+Import from `tools.lib` if you need these utilities elsewhere:
 
-## Best Practices
+```python
+from tools.lib.html_cleaner import prepare_html_for_extraction
+from tools.lib.json_utils import parse_and_validate
+```
 
-1. **Check Status First**: Run `npm run ingestion-status` to see what needs updating
-2. **Use Batch for Multiple Pages**: More efficient than running single ingestions
-3. **Respect Rate Limits**: Don't remove the delays between requests
-4. **Monitor Logs**: Check `claude-outputs/ingestion-log.txt` for issues
-5. **Clean Up**: Periodically remove old JSON files you no longer need
+They behave independently of the Node pipeline, so you can use them in custom
+Python scripts or experiments.
 
-## Integration with MCP Server
+### Troubleshooting
 
-After ingestion, the documentation is available through the MCP server:
+- **`claude` command not found** – install Claude Code or ensure its CLI is on
+  the `PATH` that Python inherits.
+- **Empty or invalid JSON** – check Claude's raw output (logged in the
+  `.jsonl` file on errors); you may need to tweak the prompt or HTML cleaning.
+- **Permission errors writing logs** – confirm you are running from the
+  repository root so the `.data` directory resolves correctly.
+
+---
+
+## Token Counter Utility
+
+### `token_counter.py` - File Token Analysis
+
+Standalone utility to estimate token counts in files and directories.
+
+### Usage
 
 ```bash
-# Search ingested documentation
-npm run search "your query"
+# Count tokens in a file or directory (read-only)
+python3 tools/token_counter.py .claude/scruaim
 
-# Check ingestion status
-npm run ingestion-status
+# Count tokens and add YAML frontmatter to files
+python3 tools/token_counter.py .claude/scruaim --add-frontmatter
+
+# Process single directory level (no subdirectories)
+python3 tools/token_counter.py docs/ --no-recursive
+
+# Get help
+python3 tools/token_counter.py --help
 ```
 
-## Customization
+### Features
 
-To add new documentation pages to batch ingestion:
-1. Edit `tools/batch-ingest`
-2. Add URLs to the `PAGES` array
-3. Consider creating custom prompts in `docs/ingestion/prompts/`
+- **Read-only by default** - shows token counts without modifying files
+- **Optional frontmatter** - use `--add-frontmatter` to add YAML metadata with token estimates
+- **Recursive scanning** - processes subdirectories by default
+- **Smart filtering** - skips binary files and common non-text formats
 
-## Troubleshooting
+### Output
 
-**"Ingestion tracking not available"**
-- Run `npm run build` first
-- Ensure you're in the project root directory
+Without `--add-frontmatter`:
+```
+- file1.md: 245 tokens
+- file2.md: 892 tokens
 
-**"Invalid JSON output"**
-- The scripts automatically clean JSON
-- For manual cleaning: `./tools/utils/clean-json file.json cleaned.json`
+📊 Summary:
+   Processed files: 2
+   Total tokens: 1,137
+```
 
-**Rate limiting concerns**
-- Keep the 30-second delay in batch processing
-- Use single ingestion for testing
-- Consider spreading large batches over time
+With `--add-frontmatter`:
+```
+✅ file1.md: 245 tokens (frontmatter added)
+✅ file2.md: 892 tokens (frontmatter updated)
+```
+

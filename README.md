@@ -1,6 +1,14 @@
 # Claude Code Documentation MCP Server
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://img.shields.io/badge/tests-375%20passing-brightgreen.svg)](https://github.com/aindy-eu/claude-code-docs-mcp)
+[![Coverage](https://img.shields.io/badge/coverage-81.52%25-green.svg)](https://github.com/aindy-eu/claude-code-docs-mcp)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
+[![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
+
 MCP server that uses Claude to read and understand documentation for intelligent semantic search.
+
+> **Project status:** Archived hobby project. I treat this as a finished weekend build, so the code stays available but I’m not actively shepherding new features.
 
 ## ✨ Why This Matters
 
@@ -63,6 +71,7 @@ Claude can now use the `search_claude_code_docs` tool to search your ingested do
 **[→ Complete Documentation](./docs/README.md)**
 
 Quick links:
+
 - [CLI Commands](./docs/how-to-use-the-cli.md) - All available commands
 - [Architecture](./docs/architecture.md) - How the system works
 - [MCP Setup](./docs/mcp-server.md) - Claude Desktop integration
@@ -96,11 +105,55 @@ See [CLI Guide](./docs/how-to-use-the-cli.md) for all commands and options.
 
 ## 🤝 Contributing
 
-Contributions welcome! See [Testing Guide](./docs/testing.md) for running tests and [Architecture](./docs/architecture.md) for system design.
+I’m happy if this sparks ideas, but I rarely review changes anymore. If you do open something, please skim [CONTRIBUTING.md](./CONTRIBUTING.md) for:
+
+- Development setup instructions
+- Code quality guidelines
+- Testing requirements
+- Pull request process
+
+See also: [Testing Guide](./docs/testing.md) and [Architecture](./docs/architecture.md)
+
+## 🔒 Security
+
+Found a security vulnerability? Please see [SECURITY.md](./SECURITY.md) for responsible disclosure guidelines.
 
 ## 📄 License
 
-MIT
+MIT - see [LICENSE](./LICENSE) for details.
+
+## 💎 Hidden Gems for the Curious
+
+### 🔍 The Code-Truth Analyzer
+
+A slash command that forces Claude to analyze code **without reading any documentation**. Zero assumptions, pure discovery.
+
+**[→ Read the full gem documentation](./docs/gems/code-analysis.md)** to learn:
+- How to force AI to verify every assumption
+- Why Sonnet won on accuracy but Opus won on brevity
+- How to try this on your own projects
+- The "code is truth" philosophy
+
+### 📝 AI Handovers
+
+A system for preserving **institutional knowledge** across AI context resets. When Claude's memory fills up, handovers capture the "why" that code can't show.
+
+**[→ Read the full gem documentation](./docs/gems/ai-handovers.md)** to learn:
+- How to preserve reasoning across AI sessions
+- Real examples: security fixes, test overhauls, architecture decisions
+- Why "failed attempts" are as valuable as successes
+- How to onboard new AI or human developers instantly
+
+### 🎯 scruaim Framework
+
+**Scrum + AI** - A lightweight framework for systematic development with AI assistance. This entire project was built using scruaim.
+
+**[→ Read the full gem documentation](./docs/gems/scruaim-framework.md)** to learn:
+- How pre-flight verification prevents wasted work
+- The 2+ Rule (avoid premature abstraction)
+- Real user story example (adding React docs)
+- Why bash verification beats reading docs
+- How to build institutional knowledge story by story
 
 ---
 

@@ -78,16 +78,6 @@ qdrant_storage/
 coverage/
 *.lcov
 
-CLAUDE.local.md
-.claude/
-
-# Claude ingestion outputs
-.data/*
-
-# AI Handovers (keep README, ignore actual handovers)
-# .claude/handovers/*.md
-# !.claude/handovers/README.md
-
 # Python
 __pycache__/
 *.py[cod]
@@ -106,6 +96,68 @@ dist/
 build/
 *.egg
 
-# Project specific
+# Local development artifacts (project-specific temp files, dev scripts)
 .local/
-local-resources/
+
+# Ingested documentation data (domain-specific: docs.claude.com/, react.dev/, etc.)
+# Contains: structured JSON, embeddings, manifests
+# Regenerated via: npm run cli:ingest
+.data/*
+
+# ===========================================
+# Claude AI Development Frameworks
+# ===========================================
+# EDUCATIONAL NOTE: This section shows how AI-assisted development
+# artifacts are typically managed in production projects.
+#
+# In a normal project, these would be ACTIVE (uncommented) because:
+# - User stories are work-in-progress documents
+# - AI handovers contain session-specific context
+# - Reviews and analysis are temporal snapshots
+#
+# For THIS open-source demo, they're COMMENTED OUT so you can:
+# - See real user stories that built this project
+# - Understand the scruaim framework in action
+# - Learn from actual AI pair-programming artifacts
+# - Explore how systematic development works
+#
+# In your own projects, uncomment these lines:
+# ===========================================
+
+# Scruaim framework (user stories & backlog)
+# --------------------------------------------
+# Normally you'd hide work-in-progress stories:
+# .claude/scruaim/**/*.md
+# !.claude/scruaim/**/README.md
+# !.claude/scruaim/**/INSTRUCTIONS.md
+# !.claude/scruaim/**/STORY-REVIEW.md
+# !.claude/scruaim/**/*.gitkeep
+
+# AI Handovers (context preservation)
+# ------------------------------------
+# These preserve context between AI sessions:
+# .claude/handovers/*.md
+# !.claude/handovers/README.md
+
+# AI Analyses (code analysis snapshots)
+# -------------------------------------
+# These are point-in-time analysis documents:
+# .claude/analyses/**/*.md
+
+# AI Plans (Vision & Roadmap)
+# -----------------------------------------
+# Strategic planning docs, project vision, multi-phase roadmaps
+# .claude/plans/**/*.md
+
+# ===========================================
+# WHY THESE ARE VISIBLE IN THIS PROJECT:
+# ===========================================
+# This project serves as a TEACHING TOOL showing:
+# 1. How to work systematically with AI tools
+# 2. Real user stories from idea to implementation
+# 3. The evolution of a project through stories
+# 4. How AI and humans collaborate effectively
+#
+# The .claude/ folder is your window into the
+# development process, not just the final code.
+# ===========================================
