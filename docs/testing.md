@@ -6,7 +6,7 @@ Complete guide to the test architecture and practices in this project.
 
 **Test Statistics:**
 - **32 test files** with **375 tests** passing
-- **~80% code coverage**
+- **81.86% code coverage**
 - Mix of unit tests (fast, mocked) and integration tests (real services)
 
 ## Test Structure

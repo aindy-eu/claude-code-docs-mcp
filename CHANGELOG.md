@@ -43,7 +43,7 @@ First stable release of Claude Code Documentation MCP Server - a semantic search
 
 #### Testing
 - 375 tests across 32 test files
-- 81.52% code coverage
+- 81.86% code coverage
 - Unit and integration test suites
 - Fast execution (~3.9s)
 
@@ -63,7 +63,7 @@ Complete documentation suite:
 - **Runtime**: Node.js 18+ with TypeScript 5.6
 - **Vector DB**: Qdrant (Docker)
 - **Embeddings**: Ollama (nomic-embed-text) or OpenAI (ada-002)
-- **MCP**: @modelcontextprotocol/sdk 1.0.0
+- **MCP**: @modelcontextprotocol/sdk 1.17.0
 - **Testing**: Vitest 3.2.4
 - **CLI**: Commander 14.0.1
 
@@ -88,8 +88,10 @@ Complete documentation suite:
 
 ## [Unreleased]
 
+### Implemented
+- ✅ GitHub Actions CI/CD pipeline
+
 ### Planned
-- GitHub Actions CI/CD pipeline
 - npm package publication
 - Docker image for easier deployment
 - Performance optimizations (parallel embedding generation)

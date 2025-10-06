@@ -21,7 +21,7 @@ The project is ready to run - no modifications needed.
 ### Learn From It
 
 - Study the [Architecture](./docs/architecture.md) - Service-oriented design with dependency injection
-- Review the [Testing Patterns](./docs/testing.md) - 375 tests, 81.52% coverage
+- Review the [Testing Patterns](./docs/testing.md) - 375 tests, 81.86% coverage
 - Understand the [Pipeline Design](./docs/pipeline.md) - Claude-driven extraction philosophy
 - Explore the [Manifest System](./docs/manifest-system.md) - Two-tier state tracking
 
@@ -164,7 +164,7 @@ Ended up being better than expected. Maybe useful to others learning the same co
 - Works with ANY documentation source, not just specific formats
 
 **Production-ready quality**:
-- 375 tests with 81.52% coverage
+- 375 tests with 81.86% coverage
 - Zero linting errors
 - Comprehensive documentation
 - Type-safe with TypeScript strict mode

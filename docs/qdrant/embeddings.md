@@ -158,7 +158,7 @@ const results = await qdrantClient.search(getCollectionName('ollama'), {
 
 ## 🔄 Hybrid Strategy
 
-### 🔮 Using Both Providers (EXAMPLE/FUTURE IMPLEMENTATION)
+### ✅ Using Both Providers (IMPLEMENTED in search, example standalone function below)
 
 The system can use both providers simultaneously:
 

@@ -60,7 +60,7 @@ Please include the following information in your report:
 
 **Dependency Security**:
 - Regular dependency updates
-- No known vulnerabilities in dependencies (check with `npm audit`)
+- Dependencies regularly audited with `npm audit` (currently 0 vulnerabilities)
 
 **Data Security**:
 - Local-first architecture (Ollama provider)

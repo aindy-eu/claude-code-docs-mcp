@@ -156,7 +156,7 @@ Then have each model review the competitor's analysis.
 
 ### Real-World Impact
 
-**Before Code-Truth Analysis** (this project):
+**Before Code-Truth Analysis** (as of Oct 2, 2025):
 
 - Docs claimed 353 tests
 - Actually had 375 tests

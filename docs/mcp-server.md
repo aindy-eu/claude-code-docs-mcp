@@ -411,8 +411,7 @@ Vector Database (localhost:6333)
 
 ## Related Documentation
 
-- [Architecture Overview](./architecture.md) - System design
-- [Service Layer](./services.md) - Business logic
+- [Architecture Overview](./architecture.md) - System design and service layer
 - [Pipeline Stages](./pipeline.md) - Ingestion process
 
 ## Resources

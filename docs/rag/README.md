@@ -177,4 +177,4 @@ Search results include:
 
 - [Qdrant Operations](../qdrant/operations.md) - Vector database details
 - [Enhanced Search](./enhanced-search.md) - Advanced search features
-- [Ingestion Guide](../ingestion/README.md) - How documents are processed
+- [Pipeline Design](../pipeline.md) - How documents are processed

@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/tests-375%20passing-brightgreen.svg)](https://github.com/aindy-eu/claude-code-docs-mcp)
-[![Coverage](https://img.shields.io/badge/coverage-81.52%25-green.svg)](https://github.com/aindy-eu/claude-code-docs-mcp)
+[![Coverage](https://img.shields.io/badge/coverage-81.86%25-green.svg)](https://github.com/aindy-eu/claude-code-docs-mcp)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
 

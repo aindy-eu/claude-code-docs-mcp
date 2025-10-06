@@ -176,7 +176,7 @@ rm -rf qdrant_storage/*
 
 ## 📚 Next Steps
 
-1. **Initialize Collections**: The MCP server creates collections automatically on first use
+1. **Initialize Collections**: Run `npm run setup` to create collections, or they'll be auto-created on first embed
 2. **Ingest Documentation**: Run `npm run seed` to populate with Claude docs
 3. **Test Search**: Run `npm run search "test query"`
 

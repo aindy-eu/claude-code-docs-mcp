@@ -64,7 +64,7 @@ Each document in our collection contains:
     "size": 768,
     "distance": "Cosine"
   },
-  "points_count": 60-100  // typical range
+  "points_count": 60-100  // typical observed range after seeding
 }
 ```
 
