@@ -236,7 +236,7 @@ const searchResults = await qdrant.query(collectionName, {
   query: queryEmbedding,
   limit: Math.ceil(limit / providersToSearch.length),
   with_payload: true,
-  score_threshold: 0.5
+  score_threshold: SEARCH_SCORE_THRESHOLD // 0.75 - high-quality results only
 });
 ```
 
@@ -310,7 +310,7 @@ async function searchWithThreshold(
   client: QdrantClient,
   collectionName: string,
   queryVector: number[],
-  scoreThreshold: number = 0.5
+  scoreThreshold: number = 0.75 // Default to high-quality results
 ) {
   const results = await client.search(collectionName, {
     vector: queryVector,
@@ -322,6 +322,8 @@ async function searchWithThreshold(
   return results.filter(r => r.score >= scoreThreshold);
 }
 ```
+
+**Note**: Our production code uses `SEARCH_SCORE_THRESHOLD = 0.75` from `src/config/constants.ts` to ensure high-quality search results.
 
 ## 🛠️ Utility Functions
 

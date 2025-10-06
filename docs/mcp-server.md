@@ -368,7 +368,7 @@ Vector Database (localhost:6333)
 **Optimization**:
 - Qdrant uses HNSW index (O(log n) search)
 - Cosine distance for similarity
-- Score threshold 0.5 filters irrelevant results
+- Score threshold 0.75 ensures high-quality results (configured in `src/config/constants.ts`)
 
 ## Security
 

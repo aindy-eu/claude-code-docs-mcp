@@ -4,6 +4,7 @@ import { QdrantClient } from '@qdrant/js-client-rest';
 import { registerTools } from '@/mcp-tools/index.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { getDocUrl } from '@/config/claude-code-documentation-urls.js';
+import { SEARCH_SCORE_THRESHOLD } from '@/config/constants.js';
 import { v4 as uuidv4 } from 'uuid';
 
 // Mock embeddings at module level with fixed embedding
@@ -179,7 +180,7 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
       const titles = results.map(r => r.title);
       expect(titles).toContain('Slash Commands');
       expect(results[0].provider).toBe('ollama');
-      expect(results[0].score).toBeGreaterThan(0.5);
+      expect(results[0].score).toBeGreaterThan(SEARCH_SCORE_THRESHOLD);
     });
 
     it('should execute search tool successfully via MCP handler', async () => {
@@ -246,8 +247,8 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
       expect(hookResult?.content).toContain('custom commands');
     });
 
-    it('should filter results by score threshold (0.5)', async () => {
-      // All our test documents have score > 0.5, so they should appear
+    it(`should filter results by score threshold (${SEARCH_SCORE_THRESHOLD})`, async () => {
+      // All our test documents have score > SEARCH_SCORE_THRESHOLD, so they should appear
       const results = await searchDocumentation(
         qdrant,
         {
@@ -260,7 +261,7 @@ describe('MCP Tools Integration (requires Qdrant)', () => {
 
       // Verify all results are above threshold
       results.forEach(result => {
-        expect(result.score).toBeGreaterThan(0.5);
+        expect(result.score).toBeGreaterThan(SEARCH_SCORE_THRESHOLD);
       });
     });
 

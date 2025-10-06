@@ -125,7 +125,7 @@ async function search(query: string, limit: number = 3) {
     vector: queryVector,
     limit,
     withPayload: true,
-    scoreThreshold: 0.5  // Filter low-relevance results
+    scoreThreshold: 0.75  // High-quality results only (SEARCH_SCORE_THRESHOLD)
   });
 
   // 3. Format results with metadata

@@ -185,9 +185,12 @@ Before searching, queries are:
 ### Understanding Scores
 
 - **0.9+**: Nearly exact match
-- **0.7-0.9**: Highly relevant
-- **0.5-0.7**: Related content
-- **<0.5**: Loosely related
+- **0.75-0.89**: Highly relevant (our minimum threshold)
+- **0.60-0.74**: Moderately relevant (not returned)
+- **0.50-0.59**: Somewhat related (not returned)
+- **<0.50**: Loosely related (not returned)
+
+**Note**: Our system uses a **0.75 score threshold** (`SEARCH_SCORE_THRESHOLD`). Results below this indicate query quality issues and suggest refining your search terms.
 
 ### Leveraging Metadata
 

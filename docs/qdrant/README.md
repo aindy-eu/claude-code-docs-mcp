@@ -89,9 +89,12 @@ curl -X DELETE http://localhost:6333/collections/claude_code_docs_ollama
 Qdrant uses **cosine similarity** to find related documents:
 
 - `1.0` = Identical meaning
-- `0.7-0.9` = Highly related
-- `0.5-0.7` = Somewhat related
-- `<0.5` = Different topics
+- `0.75-0.99` = Highly related (our search threshold)
+- `0.60-0.74` = Moderately related
+- `0.50-0.59` = Somewhat related
+- `<0.50` = Different topics
+
+**Our Configuration**: We use a **0.75 threshold** to ensure high-quality search results. Queries returning results below 75% relevance often indicate the query needs refinement (see `SEARCH_SCORE_THRESHOLD` in `src/config/constants.ts`).
 
 This is why searching for "fix bugs" finds documents about "error handling" - their vectors point in similar directions in 768-dimensional space.
 

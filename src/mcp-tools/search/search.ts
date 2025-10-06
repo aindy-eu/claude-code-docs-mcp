@@ -1,6 +1,7 @@
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { generateEmbedding, getCollectionName, EmbeddingProvider } from '@/utils/embeddings.js';
 import { SearchResult, SearchParams } from './search.types.js';
+import { SEARCH_SCORE_THRESHOLD } from '@/config/constants.js';
 
 export function formatSearchResults(results: SearchResult[]): string {
   if (results.length === 0) {
@@ -73,7 +74,7 @@ export async function searchDocumentation(
         query: queryEmbedding,
         limit: Math.ceil(limit / providersToSearch.length),
         with_payload: true,
-        score_threshold: 0.5 // Lowered threshold to capture more results (was 0.7)
+        score_threshold: SEARCH_SCORE_THRESHOLD
       });
 
       // Format results

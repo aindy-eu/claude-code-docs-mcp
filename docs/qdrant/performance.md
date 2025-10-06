@@ -434,7 +434,7 @@ const searchResults = await qdrant.query(collectionName, {
   query: queryEmbedding,
   limit: Math.ceil(limit / providersToSearch.length),
   with_payload: true,
-  score_threshold: 0.5 // Lowered threshold to capture more results
+  score_threshold: SEARCH_SCORE_THRESHOLD // 0.75 - high-quality results only
 });
 ```
 
@@ -444,8 +444,8 @@ const searchResults = await qdrant.query(collectionName, {
 // 1. Use appropriate limit
 const optimalLimit = Math.min(desiredResults * 1.5, 20);
 
-// 2. Use score threshold to filter early
-const scoreThreshold = 0.5; // Adjust based on quality needs
+// 2. Use score threshold to filter early (production uses 0.75)
+const scoreThreshold = 0.75; // High-quality results threshold
 
 // 3. Use filters to reduce search space
 const filter = {
