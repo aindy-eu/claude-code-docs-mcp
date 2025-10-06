@@ -50,21 +50,24 @@ npm run search "how do hooks work"
 
 **That's it!** You now have a searchable knowledge base of Claude Code documentation.
 
-## 🤖 Connect to Claude Desktop
+## 🤖 Connect to Claude Code
 
-Enable Claude to search your documentation via MCP:
+Enable Claude Code to search your documentation via MCP:
 
 ```bash
 # Build the server
 npm run build
 
-# Start the MCP server
-npm start
+# Add to Claude Code (automatic, recommended)
+claude mcp add claude-docs node $(pwd)/build/index.js
 ```
 
-Then configure Claude Desktop to use the server (see [MCP Server Guide](./docs/mcp-server.md) for details).
+**For manual configuration or Claude Desktop integration**, see [MCP Server Guide](./docs/mcp-server.md) for:
+- Project scope (team sharing via `.mcp.json`)
+- User scope (cross-project personal use)
+- Claude Desktop app configuration
 
-Claude can now use the `search_claude_code_docs` tool to search your ingested documentation.
+Claude Code can now use the `search_claude_code_docs` tool to search your ingested documentation.
 
 ## 📖 Documentation
 

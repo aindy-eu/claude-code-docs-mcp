@@ -49,7 +49,7 @@ npm run debug
 
 Opens browser UI for testing MCP tools interactively.
 
-## Integration with Claude Desktop
+## Integration with Claude Code CLI
 
 ### Automatic Registration (Recommended)
 
@@ -60,9 +60,42 @@ npm run build
 claude mcp add claude-docs node $(pwd)/build/index.js
 ```
 
+This adds the server to local scope (current project only).
+
 ### Manual Configuration
 
-Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+Choose the appropriate scope for your use case:
+
+#### Project Scope (Team Sharing)
+
+Create `.mcp.json` in your project root:
+
+```json
+{
+  "mcpServers": {
+    "claude-code-docs": {
+      "command": "node",
+      "args": ["${PROJECT_ROOT}/build/index.js"],
+      "env": {
+        "QDRANT_HOST": "${QDRANT_HOST:-localhost}",
+        "QDRANT_PORT": "${QDRANT_PORT:-6333}",
+        "DEFAULT_EMBEDDING_PROVIDER": "${EMBEDDING_PROVIDER:-ollama}"
+      }
+    }
+  }
+}
+```
+
+**Note**: `${PROJECT_ROOT}` is a Claude Code built-in variable that resolves to the project directory.
+
+**Benefits**:
+- ✅ Commit to version control - team members automatically get the server
+- ✅ Environment variable expansion with defaults (`${VAR:-default}`)
+- ⚠️ Claude Code prompts for approval before using project-scoped servers
+
+#### User Scope (Personal, Cross-Project)
+
+Add to `~/.claude/settings.json`:
 
 ```json
 {
@@ -80,7 +113,101 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 }
 ```
 
-**Important**: Use absolute paths, environment variables are expanded in config.
+**Benefits**:
+- ✅ Available across all Claude Code projects
+- ✅ Private to your machine (not shared)
+- ⚠️ Must use absolute paths (no `~` or environment variables)
+
+#### Local Scope (Current Project Only)
+
+Add to `.claude/settings.local.json` (git-ignored):
+
+```json
+{
+  "mcpServers": {
+    "claude-code-docs": {
+      "command": "node",
+      "args": ["/absolute/path/to/build/index.js"],
+      "env": {
+        "QDRANT_HOST": "localhost",
+        "QDRANT_PORT": "6333"
+      }
+    }
+  }
+}
+```
+
+**Benefits**:
+- ✅ Private configuration (automatically git-ignored)
+- ✅ Project-specific without team sharing
+- ⚠️ Only available in current project directory
+
+### Scope Selection Guide
+
+| Scope | When to Use | Configuration File |
+|-------|-------------|-------------------|
+| **Project** | Team needs shared MCP tools | `.mcp.json` (commit to git) |
+| **User** | Personal tool needed across all projects | `~/.claude/settings.json` |
+| **Local** | Experimental/personal config in one project | `.claude/settings.local.json` |
+
+**Scope Precedence**: Local → Project → User (local overrides others)
+
+### Verification
+
+After configuration:
+
+```bash
+# List configured servers
+claude mcp list
+
+# Verify server appears
+claude mcp get claude-docs
+
+# Test the server
+claude "Use mcp docs slash commands"
+```
+
+## Integration with Claude Desktop App
+
+To use this server in **Claude Desktop** (the GUI application, not Claude Code CLI), you need to manually edit Claude Desktop's configuration file.
+
+**Note**: The `claude mcp add` command configures Claude Code CLI only, not Claude Desktop. These are separate applications with different configuration systems.
+
+### Manual Claude Desktop Configuration
+
+Edit Claude Desktop's configuration file:
+
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+**Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "claude-code-docs": {
+      "command": "node",
+      "args": ["/absolute/path/to/claude-code-docs-mcp/build/index.js"],
+      "env": {
+        "QDRANT_HOST": "localhost",
+        "QDRANT_PORT": "6333",
+        "DEFAULT_EMBEDDING_PROVIDER": "ollama"
+      }
+    }
+  }
+}
+```
+
+**Important**:
+- ✅ Use absolute paths (required)
+- ✅ Restart Claude Desktop after configuration changes
+- ⚠️ This configures the **Claude Desktop app**, not Claude Code CLI
+
+### Verification (Claude Desktop)
+
+1. Restart Claude Desktop completely
+2. Check Settings → Developer → MCP Servers
+3. Verify "claude-code-docs" appears in the server list
+4. Test: Ask Claude Desktop to "search claude code docs for hooks"
 
 ## MCP Tool Reference
 

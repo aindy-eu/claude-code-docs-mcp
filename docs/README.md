@@ -28,7 +28,7 @@ Navigate the Claude Code Documentation MCP Server documentation.
 **Goal**: Get productive quickly with the CLI
 
 1. [CLI Command Reference](./how-to-use-the-cli.md) - All commands explained
-2. [MCP Server Guide](./mcp-server.md) - Connect to Claude Desktop
+2. [MCP Server Guide](./mcp-server.md) - Connect to Claude Code or Claude Desktop
 3. [Pipeline Stages](./pipeline.md#pipeline-commands) - Individual stage commands
 
 ### Path 3: Contributing/Developing
