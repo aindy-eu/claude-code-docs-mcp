@@ -5,6 +5,7 @@
 
 import chalk from 'chalk';
 import ora from 'ora';
+import { performance } from 'perf_hooks';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { ExtractService } from '../../services/extract-service.js';
 import { ManifestService } from '../../services/manifest-service.js';
@@ -21,7 +22,7 @@ export async function embedStage(
   silent: boolean = false
 ): Promise<void> {
   const spinner = silent ? null : ora('Generating embeddings...').start();
-  const startTime = Date.now();
+  const startTime = performance.now();
   const provider = (options.provider || 'ollama') as EmbeddingProvider;
 
   try {
@@ -49,24 +50,28 @@ export async function embedStage(
       throw new Error('Embedding failed: ' + errorMsg);
     }
 
+    // Calculate duration
+    const durationMs = Math.round(performance.now() - startTime);
+
     // Update manifest
     const manifest = new ManifestService(url);
     const jsonPath = extractService.getJsonPath(url);
     manifest.updateEmbedded(url, {
       provider,
-      jsonPath
+      jsonPath,
+      embedDurationMs: durationMs
     });
 
     // Log success
-    const duration = Date.now() - startTime;
+    const duration = durationMs;
     logger.logEmbed(url, provider, duration, result.embeddingsGenerated);
 
     spinner?.succeed(chalk.green(`✓ Embedding complete (${result.embeddingsGenerated} vectors)`));
   } catch (error: unknown) {
-    const duration = Date.now() - startTime;
+    const durationMs = Math.round(performance.now() - startTime);
     const message = error instanceof Error ? error.message : String(error);
     const logger = new PipelineLoggingService(url);
-    logger.logEmbedError(url, provider, message, duration);
+    logger.logEmbedError(url, provider, message, durationMs);
 
     spinner?.fail(chalk.red('✗ Embedding failed'));
     throw error;

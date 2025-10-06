@@ -92,7 +92,8 @@ describe('extractStage orchestrator', () => {
       expect(ExtractService.prototype.save).toHaveBeenCalledWith(TEST_URL, mockExtracted);
       expect(ManifestService.prototype.updateExtracted).toHaveBeenCalledWith(TEST_URL, {
         model: 'claude-sonnet-4-5-20250929',
-        jsonPath: '/path/to.json'
+        jsonPath: '/path/to.json',
+        extractDurationMs: expect.any(Number)
       });
     });
 
@@ -135,7 +136,8 @@ describe('extractStage orchestrator', () => {
 
       expect(ManifestService.prototype.updateExtracted).toHaveBeenCalledWith(TEST_URL, {
         model: 'claude-opus-4',
-        jsonPath: '/path/to.json'
+        jsonPath: '/path/to.json',
+        extractDurationMs: expect.any(Number)
       });
     });
   });

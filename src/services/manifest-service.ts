@@ -134,17 +134,29 @@ export class ManifestService {
   /**
    * Update record - fetched status
    */
-  updateFetched(url: string): void {
+  updateFetched(url: string, options: UpdateOptions = {}): void {
     const manifest = this.getManifest();
     const existing = manifest.records[url] || {};
 
-    manifest.records[url] = {
+    const record: ManifestRecord = {
       ...existing,
       url,
       status: 'fetched',
       lastFetchedAt: new Date().toISOString()
     };
 
+    // Add HTML cache size if path provided
+    if (options.htmlPath && existsSync(options.htmlPath)) {
+      const stats = statSync(options.htmlPath);
+      record.htmlCacheSize = stats.size;
+    }
+
+    // Add fetch duration if provided
+    if (options.fetchDurationMs !== undefined) {
+      record.fetchDurationMs = options.fetchDurationMs;
+    }
+
+    manifest.records[url] = record;
     this.saveManifest(manifest);
     logger.info(`[MANIFEST] Updated: ${url} -> fetched`);
   }
@@ -168,10 +180,17 @@ export class ManifestService {
       record.extractionModel = options.model;
     }
 
-    // Add raw size if JSON path provided
+    // Add structured JSON size if path provided
     if (options.jsonPath && existsSync(options.jsonPath)) {
       const stats = statSync(options.jsonPath);
+      record.structuredJsonSize = stats.size;
+      // Keep deprecated field for backward compatibility
       record.rawResponseSize = stats.size;
+    }
+
+    // Add extract duration if provided
+    if (options.extractDurationMs !== undefined) {
+      record.extractDurationMs = options.extractDurationMs;
     }
 
     manifest.records[url] = record;
@@ -248,6 +267,8 @@ export class ManifestService {
         const data = JSON.parse(readFileSync(options.jsonPath, 'utf-8'));
         const stats = statSync(options.jsonPath);
 
+        record.structuredJsonSize = stats.size;
+        // Keep deprecated field for backward compatibility
         record.outputSize = stats.size;
         record.sectionCount = data.sections?.length || 0;
 
@@ -262,6 +283,21 @@ export class ManifestService {
       } catch (error) {
         logger.warn('Failed to parse JSON for counts', { error });
       }
+    }
+
+    // Add embed duration if provided
+    if (options.embedDurationMs !== undefined) {
+      record.embedDurationMs = options.embedDurationMs;
+    }
+
+    // Calculate total duration if all stages complete
+    if (
+      record.fetchDurationMs !== undefined &&
+      record.extractDurationMs !== undefined &&
+      record.embedDurationMs !== undefined
+    ) {
+      record.totalDurationMs =
+        record.fetchDurationMs + record.extractDurationMs + record.embedDurationMs;
     }
 
     manifest.records[url] = record;

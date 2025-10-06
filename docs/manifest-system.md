@@ -81,21 +81,75 @@ The system uses **two levels of manifests** for scalability and organization.
     "https://docs.claude.com/en/docs/claude-code/hooks": {
       "url": "https://docs.claude.com/en/docs/claude-code/hooks",
       "status": "embedded",
+
+      // Timestamps
       "lastFetchedAt": "2025-01-15T10:30:00Z",
       "lastExtractedAt": "2025-01-15T10:31:45Z",
       "lastEmbeddedAt": "2025-01-15T10:32:30Z",
       "lastIngestedAt": "2025-01-15T10:32:30Z",
       "lastCheckedAt": "2025-01-16T14:00:00Z",
+
+      // File Sizes (bytes)
+      "htmlCacheSize": 205012,           // Body-only HTML cache file size
+      "structuredJsonSize": 43928,       // Extracted JSON file size
+
+      // Duration Metrics (milliseconds)
+      "fetchDurationMs": 254,            // Fetch stage duration
+      "extractDurationMs": 85205,        // Claude extraction duration
+      "embedDurationMs": 818,            // Embedding generation duration
+      "totalDurationMs": 86277,          // Total pipeline duration (sum of above)
+
+      // Metadata
       "extractionModel": "claude-sonnet-4-5-20250929",
       "embeddingProvider": "ollama",
       "sectionCount": 30,
       "codeExampleCount": 14,
-      "outputSize": 43928,
-      "rawResponseSize": 51234
+
+      // Deprecated (kept for backward compatibility)
+      "outputSize": 43928,               // @deprecated Use structuredJsonSize
+      "rawResponseSize": 43928           // @deprecated Use structuredJsonSize
     }
   }
 }
 ```
+
+## Manifest Record Fields
+
+Each URL in the domain manifest tracks comprehensive metadata about its ingestion state.
+
+### Timestamps
+- `lastFetchedAt`: When HTML was last downloaded and cached
+- `lastExtractedAt`: When Claude last extracted structured data
+- `lastEmbeddedAt`: When embeddings were last generated
+- `lastIngestedAt`: When the full pipeline last completed
+- `lastCheckedAt`: When content was last checked for changes (even if unchanged)
+
+### File Sizes (bytes)
+- `htmlCacheSize`: Size of body-only HTML cache file (after removing `<head>`, navigation, sidebars, etc.)
+- `structuredJsonSize`: Size of extracted JSON file containing sections and code examples
+
+### Duration Metrics (milliseconds)
+- `fetchDurationMs`: Time to fetch HTML and save to cache
+- `extractDurationMs`: Time for Claude to extract structured data (typically 60-120s)
+- `embedDurationMs`: Time to generate embeddings and upsert to Qdrant (typically <1s)
+- `totalDurationMs`: Sum of all stage durations (fetch + extract + embed)
+
+**Performance insights**:
+- Fetch: <500ms (network dependent)
+- Extract: 60-120s (Claude API call, varies by page complexity)
+- Embed: <1s (local Ollama or OpenAI API)
+
+### Metadata
+- `extractionModel`: Claude model used for extraction (e.g., `claude-sonnet-4-5-20250929`)
+- `embeddingProvider`: Embedding provider (`ollama` or `openai`)
+- `sectionCount`: Number of documentation sections extracted
+- `codeExampleCount`: Number of code examples found
+
+### Deprecated Fields
+- `outputSize`: Alias for `structuredJsonSize` (kept for backward compatibility)
+- `rawResponseSize`: Alias for `structuredJsonSize` (kept for backward compatibility)
+
+These fields are maintained for existing manifests but should not be used in new code.
 
 ## Status Lifecycle
 

@@ -7,6 +7,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { spawn } from 'child_process';
 import path from 'path';
+import { performance } from 'perf_hooks';
 import { FetchService } from '../../services/fetch-service.js';
 import { ExtractService } from '../../services/extract-service.js';
 import { ManifestService } from '../../services/manifest-service.js';
@@ -19,6 +20,7 @@ export async function extractStage(
   silent: boolean = false
 ): Promise<void> {
   const spinner = silent ? null : ora('Extracting with Claude...').start();
+  const startTime = performance.now();
 
   try {
     const fetchService = new FetchService(url);
@@ -78,12 +80,16 @@ export async function extractStage(
     const extracted = JSON.parse(stdout);
     await extractService.save(url, extracted);
 
+    // Calculate duration
+    const durationMs = Math.round(performance.now() - startTime);
+
     // Update manifest
     const manifest = new ManifestService(url);
     const jsonPath = extractService.getJsonPath(url);
     manifest.updateExtracted(url, {
       model,
-      jsonPath
+      jsonPath,
+      extractDurationMs: durationMs
     });
 
     if (!silent && stderr) {

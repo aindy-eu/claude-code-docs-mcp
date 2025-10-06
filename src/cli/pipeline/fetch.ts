@@ -5,6 +5,7 @@
 
 import chalk from 'chalk';
 import ora from 'ora';
+import { performance } from 'perf_hooks';
 import { FetchService } from '../../services/fetch-service.js';
 import { FetchResult } from '../../services/fetch-service.types.js';
 import { ManifestService } from '../../services/manifest-service.js';
@@ -18,7 +19,7 @@ export async function fetchStage(
   silent: boolean = false
 ): Promise<FetchResult> {
   const spinner = silent ? null : ora('Fetching HTML...').start();
-  const startTime = Date.now();
+  const startTime = performance.now();
 
   try {
     const fetchService = new FetchService(url);
@@ -31,13 +32,20 @@ export async function fetchStage(
     const manifest = new ManifestService(finalUrl);
     const logger = new PipelineLoggingService(finalUrl);
 
+    // Calculate duration
+    const durationMs = Math.round(performance.now() - startTime);
+
     // Update manifest with final URL (only if not skipping)
     if (!skipPipeline) {
-      manifest.updateFetched(finalUrl);
+      const paths = fetchService.getCachePaths(finalUrl);
+      manifest.updateFetched(finalUrl, {
+        htmlPath: paths.htmlPath,
+        fetchDurationMs: durationMs
+      });
     }
 
     // Log success
-    const duration = Date.now() - startTime;
+    const duration = durationMs; // Already in milliseconds
     logger.logFetch(finalUrl, duration);
 
     // Notify user

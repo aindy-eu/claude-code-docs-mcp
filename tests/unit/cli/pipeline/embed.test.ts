@@ -66,7 +66,8 @@ describe('embedStage orchestrator', () => {
       expect(EmbedService.prototype.embed).toHaveBeenCalledWith(mockExtracted, 'ollama');
       expect(ManifestService.prototype.updateEmbedded).toHaveBeenCalledWith(TEST_URL, {
         provider: 'ollama',
-        jsonPath: '/path/to.json'
+        jsonPath: '/path/to.json',
+        embedDurationMs: expect.any(Number)
       });
     });
 

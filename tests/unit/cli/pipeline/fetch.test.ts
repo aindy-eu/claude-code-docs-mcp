@@ -45,6 +45,13 @@ const TEST_PROJECT_ROOT = '/project';
 describe('fetchStage orchestrator', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Mock getCachePaths for all tests
+    vi.mocked(FetchService.prototype.getCachePaths).mockReturnValue({
+      dir: '/test/cache',
+      htmlPath: '/test/cache/content.html',
+      metaPath: '/test/cache/meta.json'
+    });
   });
 
   afterEach(() => {
@@ -84,7 +91,10 @@ describe('fetchStage orchestrator', () => {
 
       await fetchStage(TEST_URL, TEST_PROJECT_ROOT, {}, true);
 
-      expect(ManifestService.prototype.updateFetched).toHaveBeenCalledWith(TEST_URL);
+      expect(ManifestService.prototype.updateFetched).toHaveBeenCalledWith(TEST_URL, {
+        htmlPath: '/test/cache/content.html',
+        fetchDurationMs: expect.any(Number)
+      });
     });
 
     it('should NOT update manifest when skipping pipeline (content unchanged)', async () => {
@@ -167,7 +177,10 @@ describe('fetchStage orchestrator', () => {
       await fetchStage(TEST_URL, TEST_PROJECT_ROOT, {}, true);
 
       // Should use redirected URL, not original
-      expect(ManifestService.prototype.updateFetched).toHaveBeenCalledWith(redirectedUrl);
+      expect(ManifestService.prototype.updateFetched).toHaveBeenCalledWith(redirectedUrl, {
+        htmlPath: '/test/cache/content.html',
+        fetchDurationMs: expect.any(Number)
+      });
       expect(PipelineLoggingService.prototype.logFetch).toHaveBeenCalledWith(
         redirectedUrl,
         expect.any(Number)

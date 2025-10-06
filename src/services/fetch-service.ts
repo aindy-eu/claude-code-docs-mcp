@@ -132,7 +132,10 @@ export class FetchService {
 
   /**
    * Extract body content from HTML
-   * Removes <head>, <script>, <style> and other non-content elements
+   * Website-agnostic cleanup: removes UI chrome while preserving main content
+   *
+   * Strategy: Extract body, then remove common non-content elements that appear
+   * across documentation sites (navigation, headers, footers, decorative elements)
    */
   private extractBodyContent(html: string): string {
     // Extract body content only
@@ -150,8 +153,44 @@ export class FetchService {
     // Remove style tags and their content
     content = content.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
 
-    // Remove comments
+    // Remove HTML comments
     content = content.replace(/<!--[\s\S]*?-->/g, '');
+
+    // Remove semantic UI chrome elements (website-agnostic)
+    content = content.replace(/<nav\b[^>]*>[\s\S]*?<\/nav>/gi, '');
+    content = content.replace(/<header\b[^>]*>[\s\S]*?<\/header>/gi, '');
+    content = content.replace(/<footer\b[^>]*>[\s\S]*?<\/footer>/gi, '');
+    content = content.replace(/<aside\b[^>]*>[\s\S]*?<\/aside>/gi, '');
+
+    // Remove common navigation/UI divs by ID/class patterns (website-agnostic)
+    // Match any div with common UI identifiers
+    const uiPatterns = [
+      /navbar/i,
+      /navigation/i,
+      /sidebar/i,
+      /menu/i,
+      /toc\b/i, // table of contents
+      /breadcrumb/i,
+      /^nav-/i,
+      /^side-/i
+    ];
+
+    // Remove divs matching UI patterns (greedy matching for nested content)
+    uiPatterns.forEach(pattern => {
+      const regex = new RegExp(
+        `<div[^>]*(?:id|class)=["'][^"']*${pattern.source}[^"']*["'][^>]*>[\\s\\S]*?<\\/div>`,
+        'gi'
+      );
+      // Keep applying until no more matches (handles nested divs)
+      let prevContent = '';
+      while (prevContent !== content) {
+        prevContent = content;
+        content = content.replace(regex, '');
+      }
+    });
+
+    // Remove inline SVG elements (typically decorative icons)
+    content = content.replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, '');
 
     return content.trim();
   }
