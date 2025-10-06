@@ -67,7 +67,7 @@ claude-code-docs-mcp/
 │   ├── extract.py                # Claude extraction script
 │   └── lib/                      # Python libraries
 │       ├── claude_client.py      # Claude API client
-│       ├── html_cleaner.py       # HTML preprocessing
+│       # (html_cleaner.py removed - HTML cleaning now in TypeScript fetch-service)
 │       ├── json_utils.py         # JSON utilities
 │       └── logger.py             # Python logging
 │

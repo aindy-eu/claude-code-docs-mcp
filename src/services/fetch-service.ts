@@ -86,6 +86,7 @@ export class FetchService {
 
   /**
    * Save HTML with metadata
+   * Extracts only body content to avoid false-positive changes from head/scripts
    */
   private async saveHTML(
     url: string,
@@ -97,15 +98,18 @@ export class FetchService {
     // Create directory structure
     this.ensureDirectoryExists(paths.dir);
 
-    // Save HTML
-    writeFileSync(paths.htmlPath, html);
+    // Extract body content only (removes <head>, <script>, <style>)
+    const bodyContent = this.extractBodyContent(html);
 
-    // Save metadata
+    // Save cleaned HTML (body content only)
+    writeFileSync(paths.htmlPath, bodyContent);
+
+    // Save metadata (track size of cleaned content)
     const meta = {
       url,
       cachedAt: new Date().toISOString(),
-      size: Buffer.byteLength(html, 'utf8'),
-      contentHash: createHash('sha256').update(html).digest('hex'),
+      size: Buffer.byteLength(bodyContent, 'utf8'),
+      contentHash: createHash('sha256').update(bodyContent).digest('hex'),
       headers: headers || {}
     };
     writeFileSync(paths.metaPath, JSON.stringify(meta, null, 2));
@@ -127,14 +131,42 @@ export class FetchService {
   }
 
   /**
+   * Extract body content from HTML
+   * Removes <head>, <script>, <style> and other non-content elements
+   */
+  private extractBodyContent(html: string): string {
+    // Extract body content only
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    if (!bodyMatch) {
+      // Fallback: if no body tag, return as-is (might be fragment)
+      return html;
+    }
+
+    let content = bodyMatch[1];
+
+    // Remove script tags and their content
+    content = content.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+
+    // Remove style tags and their content
+    content = content.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+
+    // Remove comments
+    content = content.replace(/<!--[\s\S]*?-->/g, '');
+
+    return content.trim();
+  }
+
+  /**
    * Normalize HTML content for comparison
    * Removes dynamic elements that change but aren't meaningful
+   * Note: In production, input is body-only (scripts/styles already removed by extractBodyContent)
+   * However, we keep these replacements for robustness and test compatibility
    */
   private normalizeForComparison(html: string): string {
     return html
-      .replace(/<!--.*?-->/gs, '') // Remove comments
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '') // Remove inline styles
+      .replace(/<!--.*?-->/gs, '') // Remove comments (defensive)
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts (defensive)
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '') // Remove styles (defensive)
       .replace(/\s+/g, ' ') // Normalize whitespace
       .replace(/timestamp="[^"]*"/gi, '') // Remove timestamps
       .replace(/updated="[^"]*"/gi, '') // Remove update dates
@@ -207,7 +239,7 @@ export class FetchService {
       logger.info(`Redirect detected: ${url} → ${finalUrl}`);
     }
 
-    const html = await response.text();
+    const rawHtml = await response.text();
     const headers: Record<string, string> = {};
 
     // Convert headers to plain object
@@ -215,13 +247,17 @@ export class FetchService {
       headers[key] = value;
     });
 
+    // Extract body content from fetched HTML
+    const bodyContent = this.extractBodyContent(rawHtml);
+
     // Compare with existing cache if not forced
     let comparison: ContentComparison | undefined;
     let skipPipeline = false;
 
     if (!force && existsSync(paths.htmlPath)) {
       const existingHtml = readFileSync(paths.htmlPath, 'utf-8');
-      comparison = this.compareContent(existingHtml, html);
+      // Compare body content only (both are body-only now)
+      comparison = this.compareContent(existingHtml, bodyContent);
 
       if (!comparison.hasChanged) {
         logger.info(`Content unchanged for ${finalUrl} (hash match) - can skip pipeline`);
@@ -235,11 +271,11 @@ export class FetchService {
       );
     }
 
-    // Save to cache using final URL
-    await this.saveHTML(finalUrl, html, headers);
+    // Save to cache using final URL (saves body content only)
+    await this.saveHTML(finalUrl, rawHtml, headers);
 
-    logger.info(`Fetched and cached ${finalUrl} (${Buffer.byteLength(html, 'utf8')} bytes)`);
+    logger.info(`Fetched and cached ${finalUrl} (${Buffer.byteLength(bodyContent, 'utf8')} bytes)`);
 
-    return { html, finalUrl, skipPipeline, comparison };
+    return { html: bodyContent, finalUrl, skipPipeline, comparison };
   }
 }

@@ -30,6 +30,13 @@ export const htmlSamples = {
 </html>`,
 
   /**
+   * Body-only content (what gets saved to cache after extraction)
+   */
+  simpleBody: `<h1>Quick Start</h1>
+  <p>Install Claude Code globally using npm.</p>
+  <pre><code>npm install -g @anthropic-ai/claude-code</code></pre>`,
+
+  /**
    * HTML with scripts (should be removed during normalization)
    */
   withScript: `<html>
@@ -250,7 +257,11 @@ export const identicalContent = {
   <h1>Title</h1>
   <p>Content</p>
 </body>
-</html>`
+</html>`,
+
+  // Body-only (after extraction)
+  bodyContent: `<h1>Title</h1>
+  <p>Content</p>`
 };
 
 /**
@@ -266,7 +277,15 @@ export const differentContent = {
 <h1>Updated Title</h1>
 <p>Updated content here with more information.</p>
 <p>Additional paragraph added.</p>
-</body></html>`
+</body></html>`,
+
+  // Body-only versions
+  originalBody: `<h1>Original Title</h1>
+<p>Original content here.</p>`,
+
+  updatedBody: `<h1>Updated Title</h1>
+<p>Updated content here with more information.</p>
+<p>Additional paragraph added.</p>`
 };
 
 // ============================================================================

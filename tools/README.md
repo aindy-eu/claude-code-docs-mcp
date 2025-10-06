@@ -10,9 +10,10 @@ Entry point the pipeline calls to run a Claude extraction.
 
 **Shared modules in `lib/`:**
 - `claude_client.py` cleans the environment and invokes the `claude` CLI.
-- `html_cleaner.py` trims HTML noise before prompting.
 - `json_utils.py` extracts and validates Claude's JSON response.
 - `logger.py` writes JSONL logs to `.data/<domain>/logs/`.
+
+**Note:** HTML cleaning is handled by the TypeScript fetch service (body-only extraction) before files reach the Python extraction script.
 
 ## Requirements
 
@@ -31,7 +32,7 @@ python tools/extract.py /tmp/content.html src/prompts/claude-docs.prompt.md clau
 ```
 
 **Arguments:**
-1. Path to the cleaned HTML to process
+1. Path to the HTML file to process (body-only content from cache)
 2. Path to the extraction prompt file
 3. Claude model identifier (e.g. `claude-sonnet-4.1`)
 
@@ -48,19 +49,17 @@ python tools/extract.py /tmp/content.html src/prompts/claude-docs.prompt.md clau
 Import from `tools.lib` if you need these utilities elsewhere:
 
 ```python
-from tools.lib.html_cleaner import prepare_html_for_extraction
 from tools.lib.json_utils import parse_and_validate
 ```
 
-They behave independently of the Node pipeline, so you can use them in custom
-Python scripts or experiments.
+These utilities behave independently of the Node pipeline, so you can use them in custom Python scripts or experiments.
 
 ### Troubleshooting
 
 - **`claude` command not found** – install Claude Code or ensure its CLI is on
   the `PATH` that Python inherits.
 - **Empty or invalid JSON** – check Claude's raw output (logged in the
-  `.jsonl` file on errors); you may need to tweak the prompt or HTML cleaning.
+  `.jsonl` file on errors); you may need to tweak the prompt.
 - **Permission errors writing logs** – confirm you are running from the
   repository root so the `.data` directory resolves correctly.
 

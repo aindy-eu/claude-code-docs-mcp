@@ -268,9 +268,9 @@ describe('FetchService (Mocked)', () => {
         'content-type': 'text/html'
       });
 
-      // Check HTML was written
+      // Check HTML was written (body content only)
       const htmlPath = service.getCachePaths(TEST_URL).htmlPath;
-      expect(writeFileSync).toHaveBeenCalledWith(htmlPath, htmlSamples.simple);
+      expect(writeFileSync).toHaveBeenCalledWith(htmlPath, htmlSamples.simpleBody);
 
       // Check metadata was written
       const metaPath = service.getCachePaths(TEST_URL).metaPath;
@@ -282,7 +282,7 @@ describe('FetchService (Mocked)', () => {
 
       expect(metadata.url).toBe(TEST_URL);
       expect(metadata.cachedAt).toBeDefined();
-      expect(metadata.size).toBe(Buffer.byteLength(htmlSamples.simple, 'utf8'));
+      expect(metadata.size).toBe(Buffer.byteLength(htmlSamples.simpleBody, 'utf8'));
       expect(metadata.contentHash).toBeDefined();
       expect(metadata.headers).toEqual({ 'content-type': 'text/html' });
     });
@@ -351,7 +351,7 @@ describe('FetchService (Mocked)', () => {
 
       const result = await service.fetch(TEST_URL, false);
 
-      expect(result.html).toBe(htmlSamples.simple);
+      expect(result.html).toBe(htmlSamples.simpleBody);
       expect(fetch).toHaveBeenCalledWith(TEST_URL);
     });
 
@@ -359,8 +359,8 @@ describe('FetchService (Mocked)', () => {
       const service = new FetchService(TEST_URL);
       const paths = service.getCachePaths(TEST_URL);
 
-      // Pre-populate cache with original
-      virtualFS.set(paths.htmlPath, identicalContent.version1);
+      // Pre-populate cache with body content (what's actually saved)
+      virtualFS.set(paths.htmlPath, identicalContent.bodyContent);
 
       // Force=true to bypass "use cached" path and trigger network fetch + comparison
       vi.mocked(fetch).mockResolvedValueOnce({
@@ -380,19 +380,19 @@ describe('FetchService (Mocked)', () => {
       // When force=true, comparison still happens but skipPipeline won't be set
       // Let's test the comparison directly instead
       const comparison = service['compareContent'](
-        identicalContent.version1,
-        identicalContent.version2
+        identicalContent.bodyContent,
+        identicalContent.bodyContent
       );
       expect(comparison.hasChanged).toBe(false);
-      expect(result.html).toBe(identicalContent.version2);
+      expect(result.html).toBe(identicalContent.bodyContent);
     });
 
     it('should detect changed content and update cache', async () => {
       const service = new FetchService(TEST_URL);
       const paths = service.getCachePaths(TEST_URL);
 
-      // Pre-populate cache with original
-      virtualFS.set(paths.htmlPath, differentContent.original);
+      // Pre-populate cache with original body content
+      virtualFS.set(paths.htmlPath, differentContent.originalBody);
 
       // Force=true to trigger network fetch + comparison
       vi.mocked(fetch).mockResolvedValueOnce({
@@ -410,11 +410,11 @@ describe('FetchService (Mocked)', () => {
 
       // Verify comparison logic directly
       const comparison = service['compareContent'](
-        differentContent.original,
-        differentContent.updated
+        differentContent.originalBody,
+        differentContent.updatedBody
       );
       expect(comparison.hasChanged).toBe(true);
-      expect(result.html).toBe(differentContent.updated);
+      expect(result.html).toBe(differentContent.updatedBody);
     });
 
     it('should handle redirects and log them', async () => {
@@ -473,7 +473,7 @@ describe('FetchService (Mocked)', () => {
 
       const result = await service.fetch(TEST_URL, true); // force=true
 
-      expect(result.html).toBe(htmlSamples.simple); // New content, not cached
+      expect(result.html).toBe(htmlSamples.simpleBody); // New content (body extracted), not cached
       expect(fetch).toHaveBeenCalled(); // Network was hit
     });
   });

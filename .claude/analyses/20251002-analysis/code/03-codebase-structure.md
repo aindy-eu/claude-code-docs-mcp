@@ -82,7 +82,7 @@ claude-code-docs-mcp/
 │   └── lib/                      # Python utilities
 │       ├── __init__.py
 │       ├── claude_client.py      # Claude CLI interface
-│       ├── html_cleaner.py       # HTML utilities
+│       # (html_cleaner.py removed - HTML cleaning now in TypeScript fetch-service)
 │       ├── json_utils.py         # JSON validation
 │       └── logger.py             # Python logging
 │
