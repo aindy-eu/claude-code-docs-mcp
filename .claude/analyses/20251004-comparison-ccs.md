@@ -416,8 +416,8 @@ db50262 refactor(sync): remove custom TTL option, fix prompt paths
 
 ## Comparison Metadata
 
-- **Oct 3 Analysis**: `claude-code-docs-mcp/.claude/analyses/20251003-analysis-ccs/`
-- **Oct 4 Analysis**: `claude-code-docs-mcp/.claude/analyses/20251004-analysis-ccs/`
+- **Oct 3 Analysis**: `.claude/analyses/20251003-analysis-ccs/`
+- **Oct 4 Analysis**: `.claude/analyses/20251004-analysis-ccs/`
 - **Files Compared**: 8 analysis reports each (README + 7 detailed reports)
 - **Lines Analyzed**: ~10.5K total (both analyses combined)
 - **Comparison Method**: Manual side-by-side review + metric validation

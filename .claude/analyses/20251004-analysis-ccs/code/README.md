@@ -2,7 +2,7 @@
 
 **Generated**: 2025-10-04
 **Analysis Method**: Pure Code Analysis (No Documentation Read)
-**Codebase Location**: `claude-code-docs-mcp`
+**Codebase Location**: `./` (repository root)
 
 ## Project Health Score: 8.2/10
 
