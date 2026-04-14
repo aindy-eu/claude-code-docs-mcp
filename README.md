@@ -1,10 +1,10 @@
 # Claude Code Documentation MCP Server
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-375%20passing-brightgreen.svg)](https://github.com/aindy-eu/claude-code-docs-mcp)
-[![Coverage](https://img.shields.io/badge/coverage-81.86%25-green.svg)](https://github.com/aindy-eu/claude-code-docs-mcp)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
-[![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
+[![Tests](https://img.shields.io/badge/tests-294%20passing-brightgreen.svg)](https://github.com/aindy-eu/claude-code-docs-mcp)
+[![Coverage](https://img.shields.io/badge/coverage-78.92%25-green.svg)](https://github.com/aindy-eu/claude-code-docs-mcp)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
+[![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org/)
 
 MCP server that uses Claude to read and understand documentation for intelligent semantic search.
 
@@ -19,7 +19,7 @@ MCP server that uses Claude to read and understand documentation for intelligent
 ### Prerequisites
 
 1. **Docker** - For running Qdrant (vector database)
-2. **Node.js 18+** - For running the MCP server
+2. **Node.js 20+** - For running the MCP server
 3. **Embedding Provider** (choose one):
    - **Ollama** (default, free, local) - Recommended for privacy and cost
    - **OpenAI API** - Better quality embeddings but requires API key and costs money

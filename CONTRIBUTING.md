@@ -21,7 +21,7 @@ The project is ready to run - no modifications needed.
 ### Learn From It
 
 - Study the [Architecture](./docs/architecture.md) - Service-oriented design with dependency injection
-- Review the [Testing Patterns](./docs/testing.md) - 375 tests, 81.86% coverage
+- Review the [Testing Patterns](./docs/testing.md) - 294 unit tests, ~79% coverage (plus integration tests requiring Qdrant + Ollama)
 - Understand the [Pipeline Design](./docs/pipeline.md) - Claude-driven extraction philosophy
 - Explore the [Manifest System](./docs/manifest-system.md) - Two-tier state tracking
 
@@ -62,7 +62,7 @@ The author's unrealized vision:
 
 ### Prerequisites
 
-- **Node.js 18+**
+- **Node.js 20+**
 - **Docker** (for Qdrant)
 - **Ollama** (recommended) or OpenAI API key
 - **Claude Code** (for extraction)
@@ -85,7 +85,7 @@ cp .env.example .env
 # Edit .env with OPENAI_API_KEY
 
 # 4. Verify everything works
-npm test  # 375 tests should pass
+npm run test:unit  # 294 unit tests should pass
 
 # Now you're ready to make changes
 ```
@@ -164,7 +164,7 @@ Ended up being better than expected. Maybe useful to others learning the same co
 - Works with ANY documentation source, not just specific formats
 
 **Production-ready quality**:
-- 375 tests with 81.86% coverage
+- 294 unit tests + integration suite, ~79% coverage on unit scope
 - Zero linting errors
 - Comprehensive documentation
 - Type-safe with TypeScript strict mode
